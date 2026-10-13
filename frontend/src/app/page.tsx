@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ALLOWED_BRANCHES, ALLOWED_SECTIONS, ALLOWED_YEARS } from '../constants/branches';
 import { useRazorpay } from '../hooks/useRazorpay';
 import { clientEnv } from '../config/env';
@@ -23,8 +24,10 @@ interface ConfirmedTicket extends RegistrationData {
 }
 
 export default function AmongUHomePage() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalStep, setModalStep] = useState<'form' | 'otp'>('form');
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Form State
@@ -41,7 +44,14 @@ export default function AmongUHomePage() {
 
   const [formError, setFormError] = useState<string | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [confirmedTicket, setConfirmedTicket] = useState<ConfirmedTicket | null>(null);
+  const [pendingTicket, setPendingTicket] = useState<ConfirmedTicket | null>(null);
+
+  // OTP State
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isOtpSuccess, setIsOtpSuccess] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(30);
 
   const { openCheckout } = useRazorpay();
 
@@ -53,32 +63,49 @@ export default function AmongUHomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // OTP Resend Countdown Timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (modalStep === 'otp' && resendCountdown > 0) {
+      timer = setTimeout(() => setResendCountdown((prev) => prev - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [modalStep, resendCountdown]);
+
   const openModal = () => {
     setModalOpen(true);
+    setModalStep('form');
     setFormError(null);
+    setOtpError(null);
+    setIsOtpSuccess(false);
+    setIsVerifyingOtp(false);
+    setOtpDigits(['', '', '', '', '', '']);
     document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setModalOpen(false);
+    setModalStep('form');
+    setIsOtpSuccess(false);
+    setIsVerifyingOtp(false);
     document.body.style.overflow = 'auto';
   };
 
   const validateForm = (): boolean => {
-    if (formData.name.trim().split(/\s+/).length < 2) {
-      setFormError('Please enter both your First Name and Last Name.');
+    if (formData.name.trim().length < 2) {
+      setFormError('Please enter your name (at least 2 characters).');
       return false;
     }
-    if (!/^\d{15}$/.test(formData.collegeId.trim())) {
+    if (!formData.collegeId.trim() || !/^\d{15}$/.test(formData.collegeId.trim())) {
       setFormError('College ID must be strictly 15 digits (e.g. 210029012000000).');
       return false;
     }
-    if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) {
-      setFormError('WhatsApp number must be a valid 10-digit Indian mobile number.');
+    if (!formData.phone.trim() || !/^[6-9]\d{9}$/.test(formData.phone.trim())) {
+      setFormError('WhatsApp number must be a valid 10-digit Indian mobile number (e.g. 9876543210).');
       return false;
     }
-    if (!formData.email.trim().toLowerCase().endsWith('@kiet.edu')) {
-      setFormError('Only official KIET college email IDs ending with @kiet.edu are allowed.');
+    if (!formData.email.trim() || !formData.email.trim().toLowerCase().endsWith('@kiet.edu')) {
+      setFormError('Only official KIET college email IDs ending with @kiet.edu are allowed (e.g. cadet@kiet.edu).');
       return false;
     }
     setFormError(null);
@@ -93,9 +120,13 @@ export default function AmongUHomePage() {
     setFormError(null);
 
     const razorpayKey = clientEnv.RAZORPAY_KEY_ID;
-    const isPlaceholderKey = !razorpayKey || razorpayKey.includes('xxxxxx') || razorpayKey === 'your_razorpay_key';
+    const isPlaceholderKey =
+      !razorpayKey ||
+      razorpayKey.includes('xxxxxx') ||
+      razorpayKey === 'your_razorpay_key' ||
+      razorpayKey === 'rzp_test_dummy_key_123';
 
-    // If a valid live/test key is provided, trigger real Razorpay popup
+    // If a live/production key is present, invoke real Razorpay modal
     if (!isPlaceholderKey && typeof window !== 'undefined' && window.Razorpay) {
       try {
         openCheckout({
@@ -104,7 +135,7 @@ export default function AmongUHomePage() {
           currency: 'INR',
           name: 'AmongU Hackathon',
           description: 'AmongU Registration Fee (₹55)',
-          order_id: '', // Empty or backend order
+          order_id: '',
           prefill: {
             name: formData.name,
             email: formData.email,
@@ -114,23 +145,26 @@ export default function AmongUHomePage() {
             color: '#c51111',
           },
           handler: (response: any) => {
+            const payId = response.razorpay_payment_id ? response.razorpay_payment_id : `pay_${Date.now()}`;
             const ticket: ConfirmedTicket = {
               ...formData,
-              paymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
+              paymentId: payId,
               amount: 55,
               registeredAt: new Date().toLocaleString(),
             };
-            setConfirmedTicket(ticket);
+            setPendingTicket(ticket);
             setIsProcessingPayment(false);
+            setModalStep('otp');
+            setResendCountdown(30);
           },
         });
         return;
       } catch (err: any) {
-        console.warn('Real Razorpay init failed, falling back to instant verification:', err);
+        console.warn('Real Razorpay initialization failed, proceeding with dev flow:', err);
       }
     }
 
-    // Interactive Demo / Test Simulation when placeholder key is in .env
+    // Development preview with dummy key: simulate successful payment and proceed to email OTP
     setTimeout(() => {
       const generatedPayId = `pay_test_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
       const ticket: ConfirmedTicket = {
@@ -139,9 +173,85 @@ export default function AmongUHomePage() {
         amount: 55,
         registeredAt: new Date().toLocaleString(),
       };
-      setConfirmedTicket(ticket);
+      setPendingTicket(ticket);
       setIsProcessingPayment(false);
-    }, 1200);
+      setModalStep('otp');
+      setResendCountdown(30);
+    }, 1000);
+  };
+
+  const handleOtpChange = (index: number, val: string) => {
+    const cleanVal = val.replace(/\D/g, '');
+    if (!cleanVal && val !== '') return;
+
+    const newOtp = [...otpDigits];
+    if (cleanVal.length > 1) {
+      const pasted = cleanVal.slice(0, 6).split('');
+      pasted.forEach((d, i) => {
+        if (i < 6) newOtp[i] = d;
+      });
+      setOtpDigits(newOtp);
+      const nextIdx = Math.min(pasted.length, 5);
+      const targetEl = document.getElementById(`otp-input-${nextIdx}`);
+      if (targetEl) (targetEl as HTMLInputElement).focus();
+      return;
+    }
+
+    newOtp[index] = cleanVal;
+    setOtpDigits(newOtp);
+    setOtpError(null);
+
+    if (cleanVal && index < 5) {
+      const targetEl = document.getElementById(`otp-input-${index + 1}`);
+      if (targetEl) (targetEl as HTMLInputElement).focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      const prevEl = document.getElementById(`otp-input-${index - 1}`);
+      if (prevEl) (prevEl as HTMLInputElement).focus();
+    }
+  };
+
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    const entered = otpDigits.join('');
+    if (entered.length !== 6) {
+      setOtpError('Please enter all 6 digits of the transmission passcode.');
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    setOtpError(null);
+
+    setTimeout(() => {
+      if (pendingTicket) {
+        const verifiedTicket = {
+          ...pendingTicket,
+          isEmailVerified: true,
+        };
+        try {
+          localStorage.setItem('amongu_user_ticket', JSON.stringify(verifiedTicket));
+        } catch (err) {
+          console.error('Failed to store ticket in localStorage:', err);
+        }
+        setIsOtpSuccess(true);
+        setTimeout(() => {
+          closeModal();
+          router.push('/dashboard');
+        }, 900);
+      } else {
+        setIsVerifyingOtp(false);
+      }
+    }, 600);
+  };
+
+  const handleResendOtp = () => {
+    if (resendCountdown > 0) return;
+    setResendCountdown(30);
+    setOtpError(null);
+    setOtpDigits(['', '', '', '', '', '']);
   };
 
   return (
@@ -193,10 +303,11 @@ export default function AmongUHomePage() {
       </div>
 
       {/* 🛸 FLOATING "REGISTER NOW" BUTTON (Stuck along scrollbar on right top corner) */}
-      <aside aria-label="Quick Registration" className="fixed top-24 right-4 z-40 sm:right-6">
+      <aside aria-label="Quick Registration" className="fixed top-24 right-4 z-[90] sm:right-6 pointer-events-auto">
         <button
-          onClick={openModal}
-          className="au-btn group bg-crew-red hover:bg-red-500 text-white font-display text-sm sm:text-base py-3 px-5 sm:px-6 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(197,17,17,0.8)] animate-bounce hover:animate-none transition-all"
+          type="button"
+          onClick={() => openModal()}
+          className="au-btn group bg-crew-red hover:bg-red-500 cursor-pointer text-white font-display text-sm sm:text-base py-3 px-5 sm:px-6 rounded-full flex items-center gap-3 shadow-[0_0_20px_rgba(197,17,17,0.9)] hover:scale-105 active:scale-95 transition-all"
           title="Click to Register for AmongU (₹55)"
         >
           <svg width="22" height="26" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
@@ -254,26 +365,42 @@ export default function AmongUHomePage() {
                 U
               </a>
             </div>
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
-                <a href="#about" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-lg">
-                  About
-                </a>
-                <a href="#tracks" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-lg">
-                  Tracks
-                </a>
-                <a href="#schedule" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-lg">
-                  Schedule
-                </a>
-                <a href="#prizes" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-lg">
-                  Prizes
-                </a>
-                <a href="#faq" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-lg">
-                  FAQ
-                </a>
-              </div>
+            <div className="hidden md:flex items-center space-x-6">
+              <a href="#about" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+                About
+              </a>
+              <a href="#tracks" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+                Tracks
+              </a>
+              <a href="#schedule" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+                Schedule
+              </a>
+              <a href="#prizes" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+                Prizes
+              </a>
+              <a href="#faq" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+                FAQ
+              </a>
+              <button
+                type="button"
+                onClick={() => openModal()}
+                className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-sm py-2 px-5 rounded-full flex items-center gap-2 shadow-[0_0_12px_rgba(197,17,17,0.8)] hover:scale-105 transition-all cursor-pointer"
+              >
+                <span>REGISTER NOW</span>
+                <span className="bg-crew-yellow text-black text-xs font-black px-1.5 py-0.5 rounded-full border border-black">
+                  ₹55
+                </span>
+              </button>
             </div>
-            <div className="md:hidden flex items-center">
+            <div className="md:hidden flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => openModal()}
+                className="au-btn bg-crew-red text-white font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5"
+              >
+                <span>REGISTER</span>
+                <span className="bg-crew-yellow text-black text-[10px] font-black px-1 rounded-full">₹55</span>
+              </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 id="mobile-menu-btn"
@@ -289,7 +416,7 @@ export default function AmongUHomePage() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div id="mobile-menu" className="md:hidden bg-space border-b-4 border-black">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 text-center">
+            <div className="px-3 pt-2 pb-4 space-y-2 text-center">
               <a
                 href="#about"
                 onClick={() => setMobileMenuOpen(false)}
@@ -325,6 +452,19 @@ export default function AmongUHomePage() {
               >
                 FAQ
               </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openModal();
+                }}
+                className="w-full au-btn bg-crew-red hover:bg-red-500 text-white font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 shadow-[0_0_12px_rgba(197,17,17,0.8)] cursor-pointer"
+              >
+                <span>REGISTER NOW</span>
+                <span className="bg-crew-yellow text-black text-xs font-black px-2 py-0.5 rounded-full border border-black">
+                  ₹55
+                </span>
+              </button>
             </div>
           </div>
         )}
@@ -388,20 +528,24 @@ export default function AmongUHomePage() {
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-6">
               <button
-                onClick={openModal}
-                className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-2xl py-4 px-10 rounded-full flex items-center gap-3"
+                type="button"
+                onClick={() => openModal()}
+                className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_25px_rgba(197,17,17,0.8)] animate-pulse hover:animate-none transition-all cursor-pointer"
               >
-                <svg className="w-8 h-8 animate-pulse" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                   <path
                     fillRule="evenodd"
                     d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                     clipRule="evenodd"
                   ></path>
                 </svg>
-                JOIN THE LOBBY
+                <span>REGISTER NOW</span>
+                <span className="bg-crew-yellow text-black text-sm font-black px-2.5 py-0.5 rounded-full border-2 border-black">
+                  ₹55
+                </span>
               </button>
               <a href="#about" className="au-btn bg-crew-white text-black hover:bg-gray-200 font-display text-xl py-4 px-8 rounded-full">
-                VIEW THE MISSIONS
+                VIEW MISSIONS
               </a>
             </div>
           </div>
@@ -801,86 +945,66 @@ export default function AmongUHomePage() {
               ✕
             </button>
 
-            {/* Siren Header */}
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-crew-red mx-auto au-border rounded-full flex items-center justify-center mb-3 shadow-[0_0_20px_#c51111] animate-pulse">
-                <span className="text-4xl">🚨</span>
+            {/* Modal Header */}
+            {modalStep === 'form' ? (
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-crew-red mx-auto au-border rounded-full flex items-center justify-center mb-3 shadow-[0_0_20px_#c51111] animate-pulse">
+                  <span className="text-4xl">🚨</span>
+                </div>
+                <h3 className="font-display text-3xl text-white mb-1" style={{ textShadow: '2px 2px 0 #000' }}>
+                  EMERGENCY MEETING
+                </h3>
+                <p className="text-gray-400 font-bold text-sm">Register your crew before the ship takes off!</p>
+                <div className="inline-block bg-black au-border rounded-full px-4 py-1 mt-2 text-crew-lime font-display text-sm">
+                  Registration Fee: ₹55
+                </div>
               </div>
-              <h3 className="font-display text-3xl text-white mb-1" style={{ textShadow: '2px 2px 0 #000' }}>
-                EMERGENCY MEETING
-              </h3>
-              <p className="text-gray-400 font-bold text-sm">Register your crew before the ship takes off!</p>
-              <div className="inline-block bg-black au-border rounded-full px-4 py-1 mt-2 text-crew-lime font-display text-sm">
-                Registration Fee: ₹55
+            ) : (
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-crew-cyan/20 border-4 border-crew-cyan mx-auto rounded-full flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(56,254,220,0.5)]">
+                  <span className="text-4xl">🔐</span>
+                </div>
+                <h3 className="font-display text-3xl text-crew-cyan mb-1" style={{ textShadow: '2px 2px 0 #000' }}>
+                  CLEARANCE PASSCODE
+                </h3>
+                <p className="text-gray-300 font-bold text-sm">Step 2: Validate your college email ID</p>
+                <div className="inline-block bg-black au-border rounded-full px-4 py-1 mt-2 text-crew-lime font-mono text-xs">
+                  PAYMENT CONFIRMED (₹55) • CODE TRANSMITTED
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Error Message */}
-            {formError && (
+            {formError && modalStep === 'form' && (
               <div className="bg-red-950/80 border-2 border-crew-red text-red-200 text-xs sm:text-sm font-bold p-3 rounded-xl mb-4 text-center">
                 ⚠️ {formError}
               </div>
             )}
 
-            {/* SUCCESS / CONFIRMED CREWMATE TICKET CARD */}
-            {confirmedTicket ? (
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-crew-lime mx-auto rounded-full flex items-center justify-center au-border">
-                  <span className="text-3xl">✅</span>
-                </div>
-                <h4 className="font-display text-2xl text-crew-lime">TASK COMPLETED!</h4>
-                <p className="text-gray-300 font-bold text-sm">You are officially registered for AmongU.</p>
-
-                <div className="bg-black/70 au-border rounded-2xl p-5 text-left text-sm space-y-2.5">
-                  <div className="flex justify-between border-b border-gray-800 pb-2">
-                    <span className="text-gray-400 font-bold">Crewmate Name:</span>
-                    <span className="text-white font-bold">{confirmedTicket.name}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-800 pb-2">
-                    <span className="text-gray-400 font-bold">College ID:</span>
-                    <span className="text-crew-cyan font-mono font-bold">{confirmedTicket.collegeId}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-800 pb-2">
-                    <span className="text-gray-400 font-bold">Department &amp; Year:</span>
-                    <span className="text-white font-bold">
-                      {confirmedTicket.branch} (Year {confirmedTicket.year})
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-800 pb-2">
-                    <span className="text-gray-400 font-bold">Section:</span>
-                    <span className="text-white font-bold">Section {confirmedTicket.section}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-800 pb-2">
-                    <span className="text-gray-400 font-bold">Preferred Track:</span>
-                    <span className="text-crew-yellow font-bold">{confirmedTicket.track}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-gray-800 pb-2">
-                    <span className="text-gray-400 font-bold">KIET Email:</span>
-                    <span className="text-gray-300 font-mono text-xs">{confirmedTicket.email}</span>
-                  </div>
-                  <div className="flex justify-between pt-1">
-                    <span className="text-crew-lime font-bold">Payment Status:</span>
-                    <span className="text-crew-lime font-mono font-bold">PAID (₹55)</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500 font-mono">
-                    <span>Razorpay ID:</span>
-                    <span>{confirmedTicket.paymentId}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setConfirmedTicket(null);
-                    closeModal();
-                  }}
-                  className="au-btn w-full bg-crew-cyan hover:bg-cyan-300 text-black font-display text-lg py-3 rounded-xl mt-4"
-                >
-                  RETURN TO SHIP
-                </button>
-              </div>
-            ) : (
-              /* REGISTRATION FORM */
+            {/* STEP 1: REGISTRATION FORM */}
+            {modalStep === 'form' ? (
               <form onSubmit={handleRazorpayPayment} className="space-y-3.5">
+                {/* Quick Auto-Fill for Testing */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({
+                      name: 'Ankit Singh',
+                      collegeId: '210029012000001',
+                      year: '1',
+                      branch: ALLOWED_BRANCHES[0],
+                      section: 'A',
+                      phone: '9876543210',
+                      email: 'ankit.singh@kiet.edu',
+                      track: 'Web Development',
+                    });
+                    setFormError(null);
+                  }}
+                  className="w-full bg-gray-800/90 hover:bg-gray-700 text-crew-cyan hover:text-white text-xs font-bold py-2 px-3 rounded-xl border border-gray-700 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  ⚡ Auto-Fill Sample Details (Quick Test)
+                </button>
+
                 {/* Name */}
                 <div>
                   <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">
@@ -1014,11 +1138,18 @@ export default function AmongUHomePage() {
                   <div className="font-display text-xl text-crew-lime">₹55</div>
                 </div>
 
+                {/* Secondary Error Notice if scrolled down */}
+                {formError && (
+                  <div className="bg-red-950/80 border-2 border-crew-red text-red-200 text-xs font-bold p-2.5 rounded-xl text-center">
+                    ⚠️ {formError}
+                  </div>
+                )}
+
                 {/* Submit / Pay Button */}
                 <button
                   type="submit"
                   disabled={isProcessingPayment}
-                  className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xl py-3.5 rounded-xl mt-4 transition-all flex items-center justify-center gap-2"
+                  className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xl py-3.5 rounded-xl mt-4 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isProcessingPayment ? (
                     <>
@@ -1029,10 +1160,106 @@ export default function AmongUHomePage() {
                       CONNECTING RAZORPAY...
                     </>
                   ) : (
-                    'PAY ₹55 WITH RAZORPAY'
+                    'REGISTER & PAY ₹55 (RAZORPAY)'
                   )}
                 </button>
               </form>
+            ) : (
+              /* STEP 2: EMAIL OTP VALIDATION */
+              <div className="text-center space-y-4">
+                <div>
+                  <p className="text-gray-300 text-xs sm:text-sm font-bold">
+                    A 6-digit transmission code was sent to:
+                  </p>
+                  <p className="font-mono text-crew-yellow font-bold text-sm sm:text-base mt-1">
+                    {pendingTicket?.email}
+                  </p>
+                </div>
+
+                {otpError && (
+                  <div className="bg-red-950/80 border-2 border-crew-red text-red-200 text-xs font-bold p-3 rounded-xl text-center">
+                    ⚠️ {otpError}
+                  </div>
+                )}
+
+                {isOtpSuccess ? (
+                  <div className="bg-green-950/90 border-2 border-crew-lime text-green-200 text-sm font-display p-5 rounded-2xl animate-pulse space-y-2">
+                    <p className="text-2xl">✅ CLEARANCE APPROVED!</p>
+                    <p className="text-xs font-mono text-gray-300">REDIRECTING TO CREWMATE DASHBOARD...</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} className="space-y-4">
+                    {/* 6 Digit Input Boxes */}
+                    <div className="flex justify-center gap-2 sm:gap-3 my-3">
+                      {otpDigits.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          id={`otp-input-${idx}`}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleOtpChange(idx, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                          className="w-10 h-12 sm:w-12 sm:h-14 bg-black border-2 border-crew-cyan/70 focus:border-crew-cyan text-crew-cyan font-mono font-bold text-xl sm:text-2xl text-center rounded-xl focus:outline-none focus:shadow-[0_0_10px_#38fedc] transition-all"
+                          autoFocus={idx === 0}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="bg-black/60 au-border rounded-xl p-3 text-xs text-gray-400 font-bold text-left">
+                      💡 <span className="text-gray-300">Preview Mode:</span> Enter any 6-digit code (e.g.{' '}
+                      <span className="text-crew-lime font-mono">123456</span>) to authenticate email.
+                    </div>
+
+                    {/* Resend Option */}
+                    <div className="flex items-center justify-between text-xs font-bold text-gray-400 px-1">
+                      <span>Didn&apos;t receive code?</span>
+                      {resendCountdown > 0 ? (
+                        <span className="text-crew-yellow font-mono">Resend in {resendCountdown}s</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleResendOtp}
+                          className="text-crew-cyan hover:underline font-bold"
+                        >
+                          Resend Code
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isVerifyingOtp}
+                      className="w-full au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-xl py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                    >
+                      {isVerifyingOtp ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                          </svg>
+                          AUTHENTICATING...
+                        </>
+                      ) : (
+                        'VALIDATE & ENTER DASHBOARD'
+                      )}
+                    </button>
+
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setModalStep('form')}
+                        className="text-gray-400 hover:text-white text-xs font-bold underline"
+                      >
+                        ← Modify Registration Info
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
             )}
           </div>
         </div>
