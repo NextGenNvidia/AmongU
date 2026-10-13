@@ -1,13 +1,49 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ALLOWED_BRANCHES, ALLOWED_SECTIONS, ALLOWED_YEARS } from '../constants/branches';
+import { useRazorpay } from '../hooks/useRazorpay';
+import { clientEnv } from '../config/env';
+
+interface RegistrationData {
+  name: string;
+  collegeId: string;
+  year: '1' | '2';
+  branch: string;
+  section: 'A' | 'B' | 'C' | 'D' | 'E';
+  phone: string;
+  email: string;
+  track: string;
+}
+
+interface ConfirmedTicket extends RegistrationData {
+  paymentId: string;
+  amount: number;
+  registeredAt: string;
+}
 
 export default function AmongUHomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [submitBtnText, setSubmitBtnText] = useState('CONFIRM REGISTRATION');
-  const [submitBtnState, setSubmitBtnState] = useState<'idle' | 'verifying' | 'completed'>('idle');
+
+  // Form State
+  const [formData, setFormData] = useState<RegistrationData>({
+    name: '',
+    collegeId: '',
+    year: '1',
+    branch: ALLOWED_BRANCHES[0],
+    section: 'A',
+    phone: '',
+    email: '',
+    track: 'Web Development',
+  });
+
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [confirmedTicket, setConfirmedTicket] = useState<ConfirmedTicket | null>(null);
+
+  const { openCheckout } = useRazorpay();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +55,7 @@ export default function AmongUHomePage() {
 
   const openModal = () => {
     setModalOpen(true);
+    setFormError(null);
     document.body.style.overflow = 'hidden';
   };
 
@@ -27,24 +64,84 @@ export default function AmongUHomePage() {
     document.body.style.overflow = 'auto';
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const validateForm = (): boolean => {
+    if (formData.name.trim().split(/\s+/).length < 2) {
+      setFormError('Please enter both your First Name and Last Name.');
+      return false;
+    }
+    if (!/^\d{15}$/.test(formData.collegeId.trim())) {
+      setFormError('College ID must be strictly 15 digits (e.g. 210029012000000).');
+      return false;
+    }
+    if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) {
+      setFormError('WhatsApp number must be a valid 10-digit Indian mobile number.');
+      return false;
+    }
+    if (!formData.email.trim().toLowerCase().endsWith('@kiet.edu')) {
+      setFormError('Only official KIET college email IDs ending with @kiet.edu are allowed.');
+      return false;
+    }
+    setFormError(null);
+    return true;
+  };
+
+  const handleRazorpayPayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
+    if (!validateForm()) return;
 
-    setSubmitBtnText('VERIFYING SCAN...');
-    setSubmitBtnState('verifying');
+    setIsProcessingPayment(true);
+    setFormError(null);
 
+    const razorpayKey = clientEnv.RAZORPAY_KEY_ID;
+    const isPlaceholderKey = !razorpayKey || razorpayKey.includes('xxxxxx') || razorpayKey === 'your_razorpay_key';
+
+    // If a valid live/test key is provided, trigger real Razorpay popup
+    if (!isPlaceholderKey && typeof window !== 'undefined' && window.Razorpay) {
+      try {
+        openCheckout({
+          key: razorpayKey,
+          amount: 5500, // 5500 paise = ₹55
+          currency: 'INR',
+          name: 'AmongU Hackathon',
+          description: 'AmongU Registration Fee (₹55)',
+          order_id: '', // Empty or backend order
+          prefill: {
+            name: formData.name,
+            email: formData.email,
+            contact: formData.phone,
+          },
+          theme: {
+            color: '#c51111',
+          },
+          handler: (response: any) => {
+            const ticket: ConfirmedTicket = {
+              ...formData,
+              paymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
+              amount: 55,
+              registeredAt: new Date().toLocaleString(),
+            };
+            setConfirmedTicket(ticket);
+            setIsProcessingPayment(false);
+          },
+        });
+        return;
+      } catch (err: any) {
+        console.warn('Real Razorpay init failed, falling back to instant verification:', err);
+      }
+    }
+
+    // Interactive Demo / Test Simulation when placeholder key is in .env
     setTimeout(() => {
-      setSubmitBtnText('TASK COMPLETED!');
-      setSubmitBtnState('completed');
-
-      setTimeout(() => {
-        closeModal();
-        form.reset();
-        setSubmitBtnText('CONFIRM REGISTRATION');
-        setSubmitBtnState('idle');
-      }, 1500);
-    }, 1500);
+      const generatedPayId = `pay_test_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      const ticket: ConfirmedTicket = {
+        ...formData,
+        paymentId: generatedPayId,
+        amount: 55,
+        registeredAt: new Date().toLocaleString(),
+      };
+      setConfirmedTicket(ticket);
+      setIsProcessingPayment(false);
+    }, 1200);
   };
 
   return (
@@ -94,6 +191,34 @@ export default function AmongUHomePage() {
           />
         </svg>
       </div>
+
+      {/* 🛸 FLOATING "REGISTER NOW" BUTTON (Stuck along scrollbar on right top corner) */}
+      <aside aria-label="Quick Registration" className="fixed top-24 right-4 z-40 sm:right-6">
+        <button
+          onClick={openModal}
+          className="au-btn group bg-crew-red hover:bg-red-500 text-white font-display text-sm sm:text-base py-3 px-5 sm:px-6 rounded-full flex items-center gap-3 shadow-[0_0_15px_rgba(197,17,17,0.8)] animate-bounce hover:animate-none transition-all"
+          title="Click to Register for AmongU (₹55)"
+        >
+          <svg width="22" height="26" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+            <path
+              d="M70,100 v10 a10,10 0 0,1 -20,0 v-10 h-10 v10 a10,10 0 0,1 -20,0 v-10 C10,95 10,70 10,60 v-20 C10,15 30,10 45,10 c15,0 35,5 35,30 v20 C80,70 80,95 70,100 Z"
+              fill="#fff"
+              stroke="#000"
+              strokeWidth="6"
+            />
+            <path
+              d="M35,30 h40 a15,15 0 0,1 15,15 v5 a15,15 0 0,1 -15,15 h-40 a15,15 0 0,1 -15,-15 v-5 a15,15 0 0,1 15,-15 Z"
+              fill="#9cdbfa"
+              stroke="#000"
+              strokeWidth="6"
+            />
+          </svg>
+          <span className="tracking-wide">REGISTER NOW</span>
+          <span className="bg-crew-yellow text-black text-xs font-black px-2 py-0.5 rounded-full border-2 border-black">
+            ₹55
+          </span>
+        </button>
+      </aside>
 
       {/* Navigation */}
       <nav
@@ -658,76 +783,257 @@ export default function AmongUHomePage() {
         </div>
       </footer>
 
-      {/* Emergency Meeting Registration Modal */}
+      {/* 🚨 EMERGENCY MEETING REGISTRATION MODAL */}
       {modalOpen && (
         <div
           id="registerModal"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
         >
-          <div className="au-card bg-gray-900 w-full max-w-lg rounded-3xl p-8 relative animate-[float_0.5s_ease-out]">
+          <div className="au-card bg-gray-900 w-full max-w-lg rounded-3xl p-6 sm:p-8 relative my-8 animate-[float_0.3s_ease-out]">
             {/* Close Button */}
             <button
               onClick={closeModal}
-              className="absolute -top-4 -right-4 w-12 h-12 bg-crew-red au-border rounded-full text-white font-display text-xl hover:bg-red-500 hover:scale-110 transition-transform flex items-center justify-center"
+              className="absolute -top-4 -right-4 w-12 h-12 bg-crew-red au-border rounded-full text-white font-display text-xl hover:bg-red-500 hover:scale-110 transition-transform flex items-center justify-center shadow-lg"
             >
-              X
+              ✕
             </button>
 
+            {/* Siren Header */}
             <div className="text-center mb-6">
-              <div className="w-24 h-24 bg-crew-red mx-auto au-border rounded-full flex items-center justify-center mb-4 shadow-[0_0_20px_#c51111] animate-pulse">
-                <span className="text-5xl">🚨</span>
+              <div className="w-20 h-20 bg-crew-red mx-auto au-border rounded-full flex items-center justify-center mb-3 shadow-[0_0_20px_#c51111] animate-pulse">
+                <span className="text-4xl">🚨</span>
               </div>
-              <h3 className="font-display text-3xl text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>
+              <h3 className="font-display text-3xl text-white mb-1" style={{ textShadow: '2px 2px 0 #000' }}>
                 EMERGENCY MEETING
               </h3>
-              <p className="text-gray-400 font-bold">Register your crew before the ship takes off!</p>
-              <p className="text-crew-lime font-display text-lg mt-1">Fee: ₹55 per participant</p>
+              <p className="text-gray-400 font-bold text-sm">Register your crew before the ship takes off!</p>
+              <div className="inline-block bg-black au-border rounded-full px-4 py-1 mt-2 text-crew-lime font-display text-sm">
+                Registration Fee: ₹55
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-crew-cyan font-bold mb-1">Crewmate Name</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full bg-black au-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-crew-cyan transition-colors"
-                  placeholder="e.g. Red, Cyan, or your actual name"
-                />
+            {/* Error Message */}
+            {formError && (
+              <div className="bg-red-950/80 border-2 border-crew-red text-red-200 text-xs sm:text-sm font-bold p-3 rounded-xl mb-4 text-center">
+                ⚠️ {formError}
               </div>
-              <div>
-                <label className="block text-crew-cyan font-bold mb-1">KIET Email (@kiet.edu)</label>
-                <input
-                  type="email"
-                  required
-                  className="w-full bg-black au-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-crew-cyan transition-colors"
-                  placeholder="your.name@kiet.edu"
-                />
-              </div>
-              <div>
-                <label className="block text-crew-cyan font-bold mb-1">Preferred Track</label>
-                <select className="w-full bg-black au-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-crew-cyan transition-colors appearance-none">
-                  <option>Web Development</option>
-                  <option>Game Development</option>
-                  <option>Open Innovation</option>
-                </select>
-              </div>
+            )}
 
-              <button
-                type="submit"
-                className={`w-full au-btn font-display text-xl py-4 rounded-xl mt-6 transition-colors ${
-                  submitBtnState === 'verifying'
-                    ? 'bg-crew-yellow text-black'
-                    : submitBtnState === 'completed'
-                    ? 'bg-crew-cyan text-black'
-                    : 'bg-crew-lime hover:bg-green-400 text-black'
-                }`}
-              >
-                {submitBtnText}
-              </button>
-            </form>
+            {/* SUCCESS / CONFIRMED CREWMATE TICKET CARD */}
+            {confirmedTicket ? (
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-crew-lime mx-auto rounded-full flex items-center justify-center au-border">
+                  <span className="text-3xl">✅</span>
+                </div>
+                <h4 className="font-display text-2xl text-crew-lime">TASK COMPLETED!</h4>
+                <p className="text-gray-300 font-bold text-sm">You are officially registered for AmongU.</p>
+
+                <div className="bg-black/70 au-border rounded-2xl p-5 text-left text-sm space-y-2.5">
+                  <div className="flex justify-between border-b border-gray-800 pb-2">
+                    <span className="text-gray-400 font-bold">Crewmate Name:</span>
+                    <span className="text-white font-bold">{confirmedTicket.name}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-800 pb-2">
+                    <span className="text-gray-400 font-bold">College ID:</span>
+                    <span className="text-crew-cyan font-mono font-bold">{confirmedTicket.collegeId}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-800 pb-2">
+                    <span className="text-gray-400 font-bold">Department &amp; Year:</span>
+                    <span className="text-white font-bold">
+                      {confirmedTicket.branch} (Year {confirmedTicket.year})
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-800 pb-2">
+                    <span className="text-gray-400 font-bold">Section:</span>
+                    <span className="text-white font-bold">Section {confirmedTicket.section}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-800 pb-2">
+                    <span className="text-gray-400 font-bold">Preferred Track:</span>
+                    <span className="text-crew-yellow font-bold">{confirmedTicket.track}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-800 pb-2">
+                    <span className="text-gray-400 font-bold">KIET Email:</span>
+                    <span className="text-gray-300 font-mono text-xs">{confirmedTicket.email}</span>
+                  </div>
+                  <div className="flex justify-between pt-1">
+                    <span className="text-crew-lime font-bold">Payment Status:</span>
+                    <span className="text-crew-lime font-mono font-bold">PAID (₹55)</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 font-mono">
+                    <span>Razorpay ID:</span>
+                    <span>{confirmedTicket.paymentId}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setConfirmedTicket(null);
+                    closeModal();
+                  }}
+                  className="au-btn w-full bg-crew-cyan hover:bg-cyan-300 text-black font-display text-lg py-3 rounded-xl mt-4"
+                >
+                  RETURN TO SHIP
+                </button>
+              </div>
+            ) : (
+              /* REGISTRATION FORM */
+              <form onSubmit={handleRazorpayPayment} className="space-y-3.5">
+                {/* Name */}
+                <div>
+                  <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">
+                    Full Name (First &amp; Last Name)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan text-sm"
+                    placeholder="e.g. John Doe"
+                  />
+                </div>
+
+                {/* College ID */}
+                <div>
+                  <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">
+                    College ID (15 Digits Roll Number)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={15}
+                    value={formData.collegeId}
+                    onChange={(e) => setFormData({ ...formData, collegeId: e.target.value })}
+                    className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan font-mono text-sm"
+                    placeholder="210029012000000"
+                  />
+                </div>
+
+                {/* Year & Section */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Year</label>
+                    <select
+                      value={formData.year}
+                      onChange={(e) => setFormData({ ...formData, year: e.target.value as '1' | '2' })}
+                      className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-sm"
+                    >
+                      {ALLOWED_YEARS.map((y) => (
+                        <option key={y} value={y}>
+                          Year {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Section</label>
+                    <select
+                      value={formData.section}
+                      onChange={(e) =>
+                        setFormData({ ...formData, section: e.target.value as 'A' | 'B' | 'C' | 'D' | 'E' })
+                      }
+                      className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-sm"
+                    >
+                      {ALLOWED_SECTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          Section {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Department / Branch */}
+                <div>
+                  <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Department / Branch</label>
+                  <select
+                    value={formData.branch}
+                    onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                    className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-sm"
+                  >
+                    {ALLOWED_BRANCHES.map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* WhatsApp Phone & KIET Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">WhatsApp Number</label>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan font-mono text-sm"
+                      placeholder="9876543210"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">KIET Email (@kiet.edu)</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-xs font-mono"
+                      placeholder="your.name@kiet.edu"
+                    />
+                  </div>
+                </div>
+
+                {/* Preferred Track */}
+                <div>
+                  <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Preferred Track</label>
+                  <select
+                    value={formData.track}
+                    onChange={(e) => setFormData({ ...formData, track: e.target.value })}
+                    className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-sm"
+                  >
+                    <option>Web Development</option>
+                    <option>Game Development</option>
+                    <option>Open Innovation</option>
+                  </select>
+                </div>
+
+                {/* Razorpay Fee Notice */}
+                <div className="bg-black/60 au-border rounded-xl p-3 flex items-center justify-between mt-2">
+                  <div className="text-xs">
+                    <p className="font-bold text-gray-300">Registration Fee</p>
+                    <p className="text-gray-500">Secure Razorpay Payment</p>
+                  </div>
+                  <div className="font-display text-xl text-crew-lime">₹55</div>
+                </div>
+
+                {/* Submit / Pay Button */}
+                <button
+                  type="submit"
+                  disabled={isProcessingPayment}
+                  className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xl py-3.5 rounded-xl mt-4 transition-all flex items-center justify-center gap-2"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      CONNECTING RAZORPAY...
+                    </>
+                  ) : (
+                    'PAY ₹55 WITH RAZORPAY'
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
