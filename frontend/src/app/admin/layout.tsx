@@ -1,42 +1,98 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { profile, loading, loginAdminWithGoogle, logout } = useAuth();
+  const pathname = usePathname();
+  const [organizerBypass, setOrganizerBypass] = useState<boolean>(false);
+  const [activeRoundName, setActiveRoundName] = useState<string>('Round 1: Infiltration');
 
-  if (loading) {
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('amongu_admin_bypass');
+      if (stored === 'true') {
+        setOrganizerBypass(true);
+      }
+      const roundStored = localStorage.getItem('amongu_active_round_name');
+      if (roundStored !== null && roundStored !== undefined && roundStored.length > 0) {
+        setActiveRoundName(roundStored);
+      }
+    } catch {
+      // Local storage may be restricted in some environments
+    }
+  }, []);
+
+  const handleBypassLogin = () => {
+    try {
+      sessionStorage.setItem('amongu_admin_bypass', 'true');
+    } catch {
+      // ignore
+    }
+    setOrganizerBypass(true);
+  };
+
+  const handleAdminLogout = () => {
+    try {
+      sessionStorage.removeItem('amongu_admin_bypass');
+    } catch {
+      // ignore
+    }
+    setOrganizerBypass(false);
+    logout();
+  };
+
+  const isAuthorized = organizerBypass || (profile !== null && profile.role === 'admin');
+
+  if (loading && !organizerBypass) {
     return (
-      <div className="min-h-screen bg-space flex items-center justify-center">
-        <div className="au-card bg-gray-900 p-8 rounded-2xl text-center">
-          <p className="font-display text-2xl text-crew-cyan animate-pulse">CONNECTING TO ADMIN COMMS...</p>
+      <div className="min-h-screen bg-[#070b14] flex items-center justify-center">
+        <div className="au-card bg-gray-900/90 border-2 border-crew-cyan/40 p-8 rounded-2xl text-center shadow-[0_0_30px_rgba(0,255,255,0.15)]">
+          <div className="w-12 h-12 border-4 border-crew-cyan border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="font-display text-xl text-crew-cyan tracking-wider animate-pulse">CONNECTING TO ADMIN COMMS...</p>
+          <p className="text-gray-400 text-xs mt-2 font-mono">Verifying organizer security clearance...</p>
         </div>
       </div>
     );
   }
 
-  // Not logged in or not admin
-  if (!profile || profile.role !== 'admin') {
+  // Not logged in and not bypassed
+  if (!isAuthorized) {
     return (
-      <div className="min-h-screen bg-space flex items-center justify-center p-4">
-        <div className="au-card bg-gray-900 max-w-md w-full p-8 rounded-3xl text-center border-crew-red">
-          <div className="w-20 h-20 bg-crew-red mx-auto au-border rounded-full flex items-center justify-center mb-4">
-            <span className="text-4xl">🔒</span>
+      <div className="min-h-screen bg-[#070b14] flex items-center justify-center p-4">
+        <div className="au-card bg-gray-900/95 max-w-md w-full p-8 rounded-3xl text-center border-2 border-crew-red shadow-[0_0_40px_rgba(255,59,48,0.25)]">
+          <div className="w-20 h-20 bg-crew-red/20 mx-auto border-2 border-crew-red rounded-full flex items-center justify-center mb-5 animate-pulse">
+            <span className="text-4xl">🚨</span>
           </div>
-          <h2 className="font-display text-3xl text-white mb-2">ADMIN ACCESS ONLY</h2>
-          <p className="text-gray-400 font-bold text-sm mb-6">
-            Only authorized organizers listed in the system can access the command center.
+          <div className="inline-block px-3 py-1 bg-red-950/60 border border-crew-red/40 rounded-full text-xs font-mono text-crew-red mb-3">
+            CLEARANCE LEVEL: ORGANIZER ONLY
+          </div>
+          <h2 className="font-display text-3xl text-white mb-2">ADMIN COMMAND CENTER</h2>
+          <p className="text-gray-400 font-bold text-sm mb-6 leading-relaxed">
+            Authorized portal for Hackathon Organizers to supervise candidate registrations, live rounds, fee verification, and evaluations.
           </p>
-          <button
-            onClick={loginAdminWithGoogle}
-            className="au-btn w-full bg-crew-red hover:bg-red-500 text-white font-display text-lg py-3 rounded-xl mb-4"
-          >
-            SIGN IN AS ADMIN
-          </button>
-          <Link href="/" className="text-sm text-gray-500 hover:text-white underline">
-            ← Return to Event Site
+
+          <div className="space-y-3 mb-6">
+            <button
+              onClick={handleBypassLogin}
+              className="au-btn w-full bg-crew-lime hover:bg-green-400 text-black font-display text-base py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
+            >
+              <span>⚡</span> ENTER COMMAND CENTER (ORGANIZER MODE)
+            </button>
+
+            <button
+              onClick={loginAdminWithGoogle}
+              className="au-btn w-full bg-gray-800 hover:bg-gray-700 text-white font-display text-sm py-3 rounded-xl border border-gray-700 flex items-center justify-center gap-2"
+            >
+              <span>🔑</span> SIGN IN WITH KIET GOOGLE ADMIN
+            </button>
+          </div>
+
+          <Link href="/" className="text-xs text-gray-400 hover:text-crew-cyan transition-colors font-mono">
+            ← Return to AmongU Public Lobby
           </Link>
         </div>
       </div>
@@ -44,53 +100,116 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-space text-white">
-      {/* Admin Navigation Bar */}
-      <header className="border-b-4 border-black bg-gray-900/90 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/admin" className="font-display text-2xl text-crew-red flex items-center gap-2">
-              <span>🚨</span>
-              <span>AMONG</span>U <span className="text-white text-sm bg-black px-2 py-0.5 rounded au-border">ADMIN</span>
+    <div className="min-h-screen bg-[#070b14] text-white flex flex-col font-sans">
+      {/* Top Admin Command Header */}
+      <header className="border-b-2 border-crew-red/30 bg-gray-900/95 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 h-18 py-3 flex items-center justify-between gap-4">
+          {/* Logo & Section Identity */}
+          <div className="flex items-center gap-4">
+            <Link href="/admin" className="flex items-center gap-2.5 group">
+              <span className="text-2xl animate-pulse">🚨</span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-2xl tracking-wider text-crew-red group-hover:text-red-400 transition-colors">
+                    AMONG<span className="text-white">U</span>
+                  </span>
+                  <span className="text-[10px] bg-red-950/80 text-crew-red border border-crew-red/60 px-2 py-0.5 rounded font-mono font-bold tracking-widest uppercase">
+                    ORGANIZER
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 font-mono tracking-tight hidden sm:block">
+                  CENTRAL MISSION CONTROL • KIET UNIVERSITY
+                </p>
+              </div>
             </Link>
 
-            <nav className="hidden md:flex items-center space-x-4">
-              <Link
-                href="/admin"
-                className="px-3 py-1.5 rounded-lg text-sm font-bold text-gray-300 hover:text-white hover:bg-black/40"
-              >
-                Overview
-              </Link>
-              <Link
-                href="/admin/participants"
-                className="px-3 py-1.5 rounded-lg text-sm font-bold text-gray-300 hover:text-white hover:bg-black/40"
-              >
-                Participants
-              </Link>
-              <Link
-                href="/admin/manual-entry"
-                className="px-3 py-1.5 rounded-lg text-sm font-bold text-gray-300 hover:text-white hover:bg-black/40"
-              >
-                Desk Cash Entry
-              </Link>
-            </nav>
+            {/* Live Round Ticker */}
+            <div className="hidden lg:flex items-center gap-2 bg-black/60 border border-gray-800 px-3 py-1.5 rounded-xl">
+              <span className="w-2 h-2 rounded-full bg-crew-lime animate-ping" />
+              <span className="text-xs font-mono text-gray-400 uppercase">STATUS:</span>
+              <span className="text-xs font-display text-crew-lime tracking-wide">{activeRoundName}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-crew-cyan font-bold bg-black px-3 py-1 rounded-full border border-gray-700">
-              {profile.email}
-            </span>
-            <button onClick={logout} className="text-xs text-crew-red hover:underline font-bold">
-              Logout
+          {/* Section Navigation Tabs (Requested: Monitoring vs Evaluation) */}
+          <nav className="flex items-center gap-1 sm:gap-2 bg-black/60 p-1 rounded-xl border border-gray-800">
+            <Link
+              href="/admin"
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-display tracking-wide transition-all flex items-center gap-1.5 ${
+                pathname === '/admin' || pathname === '/admin/participants'
+                  ? 'bg-crew-cyan text-black font-bold shadow-[0_0_15px_rgba(0,255,255,0.3)]'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+              }`}
+            >
+              <span>📡</span>
+              <span>MONITORING</span>
+            </Link>
+
+            <Link
+              href="/admin/evaluation"
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-display tracking-wide transition-all flex items-center gap-1.5 ${
+                pathname === '/admin/evaluation'
+                  ? 'bg-crew-yellow text-black font-bold shadow-[0_0_15px_rgba(255,204,0,0.3)]'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+              }`}
+            >
+              <span>⚖️</span>
+              <span>EVALUATION</span>
+              <span className="text-[9px] bg-yellow-950 text-yellow-300 px-1.5 py-0.2 rounded border border-yellow-600/60 hidden md:inline">
+                PHASE 2
+              </span>
+            </Link>
+
+            <Link
+              href="/admin/manual-entry"
+              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-display tracking-wide transition-all flex items-center gap-1.5 ${
+                pathname === '/admin/manual-entry'
+                  ? 'bg-crew-lime text-black font-bold shadow-[0_0_15px_rgba(50,205,50,0.3)]'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+              }`}
+            >
+              <span>+</span>
+              <span className="hidden sm:inline">CASH ENTRY</span>
+              <span className="sm:hidden">ENTRY</span>
+            </Link>
+          </nav>
+
+          {/* Organizer Session Bar */}
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex flex-col text-right">
+              <span className="text-xs font-mono text-crew-cyan font-bold">
+                {profile !== null && profile.email !== null && profile.email !== undefined
+                  ? profile.email
+                  : 'admin.lead@kiet.edu'}
+              </span>
+              <span className="text-[10px] text-gray-500 font-mono">CHIEF ORGANIZER</span>
+            </div>
+
+            <button
+              onClick={handleAdminLogout}
+              className="px-2.5 py-1.5 bg-red-950/40 hover:bg-crew-red/20 text-crew-red border border-crew-red/40 rounded-lg text-xs font-mono font-bold transition-colors"
+              title="End Organizer Session"
+            >
+              EXIT
             </button>
-            <Link href="/" className="text-xs text-gray-400 hover:text-white underline">
-              Home
+
+            <Link
+              href="/"
+              className="text-xs text-gray-400 hover:text-white font-mono underline hidden sm:inline"
+            >
+              Site
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">{children}</main>
+      {/* Main Command Center Screen */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">{children}</main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-800/80 bg-black/40 py-4 px-6 text-center text-xs text-gray-500 font-mono">
+        AmongU Hackathon Control Matrix • KIET Deemed to be University • All Organizer Rights Reserved
+      </footer>
     </div>
   );
 }
