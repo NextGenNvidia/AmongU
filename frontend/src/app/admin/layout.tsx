@@ -159,19 +159,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 PHASE 2
               </span>
             </Link>
-
-            <Link
-              href="/admin/manual-entry"
-              className={`px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-display tracking-wide transition-all flex items-center gap-1.5 ${
-                pathname === '/admin/manual-entry'
-                  ? 'bg-crew-lime text-black font-bold shadow-[0_0_15px_rgba(50,205,50,0.3)]'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
-              }`}
-            >
-              <span>+</span>
-              <span className="hidden sm:inline">CASH ENTRY</span>
-              <span className="sm:hidden">ENTRY</span>
-            </Link>
           </nav>
 
           {/* Organizer Session Bar */}

@@ -536,14 +536,6 @@ export default function AdminMonitoringPage() {
             <span>📥</span>
             <span>{isExporting ? 'GENERATING CSV...' : 'EXPORT MASTER CSV'}</span>
           </button>
-
-          <Link
-            href="/admin/manual-entry"
-            className="au-btn bg-gray-800 hover:bg-gray-700 text-white font-display text-xs sm:text-sm py-2.5 px-4 rounded-xl border border-gray-700 flex items-center gap-1.5"
-          >
-            <span>+</span>
-            <span>ON-SPOT CASH ENTRY</span>
-          </Link>
         </div>
       </div>
 
