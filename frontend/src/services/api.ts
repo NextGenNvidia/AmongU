@@ -9,11 +9,10 @@ export const apiClient = axios.create({
   },
 });
 
-// Automatically inject fresh Firebase ID Token into Authorization header
+// Automatically inject fresh Firebase ID Token into Authorization header if authenticated
 apiClient.interceptors.request.use(async (config) => {
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    const token = await currentUser.getIdToken();
+  if (auth && auth.currentUser) {
+    const token = await auth.currentUser.getIdToken();
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

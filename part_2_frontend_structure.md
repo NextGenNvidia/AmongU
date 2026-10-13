@@ -53,7 +53,7 @@ AmongU/
 │   │   │   │   ├── FaqSection.tsx      # Accordion FAQs
 │   │   │   │   └── Footer.tsx          # Footer with social links & copyright
 │   │   │   ├── registration/           # Registration & Payment components
-│   │   │   │   ├── EmergencyMeetingModal.tsx # 🚨 Emergency Meeting Modal (From provided HTML)
+│   │   │   │   ├── EmergencyMeetingModal.tsx #  Emergency Meeting Modal (From provided HTML)
 │   │   │   │   ├── RegistrationForm.tsx      # 15-digit ID, Branch, Section, Phone, KIET Email
 │   │   │   │   └── PaymentReceiptCard.tsx    # ₹55 Paid Confirmation Ticket
 │   │   │   ├── admin/                  # Admin Portal UI

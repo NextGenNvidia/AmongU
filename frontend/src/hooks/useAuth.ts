@@ -13,6 +13,11 @@ export const useAuth = () => {
   const [isRegistered, setIsRegistered] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user) {
@@ -36,9 +41,13 @@ export const useAuth = () => {
   }, []);
 
   const loginWithGoogle = async (): Promise<UserProfile | null> => {
+    if (!auth) {
+      alert('Firebase is not yet configured. Please supply NEXT_PUBLIC_FIREBASE_* keys in frontend/.env.local');
+      return null;
+    }
     try {
       setLoading(true);
-      const cred = await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
       const res = await authService.syncUser();
       if (res.user) {
         setProfile(res.user);
@@ -55,6 +64,10 @@ export const useAuth = () => {
   };
 
   const loginAdminWithGoogle = async (): Promise<UserProfile | null> => {
+    if (!auth) {
+      alert('Firebase is not yet configured. Please supply NEXT_PUBLIC_FIREBASE_* keys in frontend/.env.local');
+      return null;
+    }
     try {
       setLoading(true);
       await signInWithPopup(auth, googleProvider);
@@ -73,7 +86,9 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    await fbSignOut(auth);
+    if (auth) {
+      await fbSignOut(auth);
+    }
     setFirebaseUser(null);
     setProfile(null);
     setIsRegistered(false);
