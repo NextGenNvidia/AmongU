@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'ImposterHacks | The Ultimate Among Us Hackathon',
-  description: 'The Ultimate Among Us Hackathon',
+  title: 'AmongU | A Hackathon of Code, Creativity & Sabotage',
+  description: 'AmongU — A Hackathon of Code, Creativity & Sabotage at KIET Deemed to be University',
 };
 
 export default function RootLayout({

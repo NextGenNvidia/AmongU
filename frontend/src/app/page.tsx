@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-export default function ImposterHacksPage() {
+export default function AmongUHomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -49,7 +49,7 @@ export default function ImposterHacksPage() {
 
   return (
     <div className="relative min-h-screen font-body text-gray-100 antialiased selection:bg-crew-cyan selection:text-black">
-      {/* Moving Stars and Twinkling Starfield from 332-line HTML */}
+      {/* Moving Stars and Twinkling Starfield */}
       <div className="stars"></div>
       <div className="twinkling"></div>
 
@@ -124,9 +124,9 @@ export default function ImposterHacksPage() {
                   className="text-crew-red shadow-black font-black glitch-hover"
                   style={{ textShadow: '2px 2px 0 #000, -1px -1px 0 #fff' }}
                 >
-                  IMPOSTER
+                  AMONG
                 </span>
-                HACKS
+                U
               </a>
             </div>
             <div className="hidden md:block">
@@ -249,12 +249,16 @@ export default function ImposterHacksPage() {
               className="font-display text-5xl md:text-7xl lg:text-8xl text-white mb-4 tracking-wide"
               style={{ textShadow: '4px 4px 0 #000, 8px 8px 0px rgba(0,0,0,0.5)' }}
             >
-              <span className="text-crew-cyan">THERE IS 1</span> <span className="text-crew-red glitch-hover">HACKER</span> <br />{' '}
+              <span className="text-crew-cyan">THERE IS AN</span> <span className="text-crew-red glitch-hover">IMPOSTOR</span> <br />{' '}
               AMONG US
             </h1>
 
-            <p className="mt-4 text-xl md:text-3xl text-gray-300 max-w-3xl mx-auto font-bold mb-8 bg-black/50 p-4 rounded-xl au-border">
-              October 24 - 26, 2026 • Global Virtual Event
+            <p className="font-display text-2xl md:text-3xl text-crew-yellow mb-4" style={{ textShadow: '2px 2px 0 #000' }}>
+              A Hackathon of Code, Creativity &amp; Sabotage
+            </p>
+
+            <p className="text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto font-bold mb-8 bg-black/50 p-4 rounded-xl au-border">
+              November 2, 2026 • KIET Deemed to be University
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-6">
@@ -272,14 +276,14 @@ export default function ImposterHacksPage() {
                 JOIN THE LOBBY
               </button>
               <a href="#about" className="au-btn bg-crew-white text-black hover:bg-gray-200 font-display text-xl py-4 px-8 rounded-full">
-                VIEW TASKS
+                VIEW THE MISSIONS
               </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* About Section */}
+      {/* System Overview Section */}
       <section id="about" className="py-20 relative z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="au-card bg-gray-800 rounded-3xl p-8 md:p-12 relative overflow-hidden">
@@ -291,34 +295,35 @@ export default function ImposterHacksPage() {
               <h2 className="font-display text-4xl md:text-5xl text-crew-cyan mb-6" style={{ textShadow: '2px 2px 0 #000' }}>
                 &gt; SYSTEM OVERVIEW
               </h2>
-              <p className="text-lg md:text-2xl mb-6 font-bold text-gray-300 leading-relaxed">
-                Welcome to the Skeld, developers. We&apos;re on a critical mission to build the future, but{' '}
-                <span className="text-crew-red">imposters (bugs)</span> are sabotaging our systems.
+              <p className="text-lg md:text-2xl mb-4 font-bold text-gray-200 leading-relaxed">
+                Welcome to AmongU, where coding meets social deduction. Form a randomly assigned crew, choose a problem worth solving, and build a working solution before time runs out.
               </p>
-              <p className="text-lg md:text-xl text-gray-400 mb-6 leading-relaxed">
-                Form a crew of up to 4 members, complete your coding tasks, fix the sabotages, and present your project before the
-                final emergency meeting. Whether you&apos;re a seasoned engineer or a sus beginner, there&apos;s a task for you.
+              <p className="text-lg md:text-xl text-gray-300 mb-4 font-bold leading-relaxed">
+                But stay alert — one member of your team is secretly the <span className="text-crew-red">Impostor</span>, working to sabotage the project without getting caught. Collaborate, develop, debug, and identify the hidden threat before the final reveal.
+              </p>
+              <p className="text-base md:text-lg text-gray-400 mb-6 leading-relaxed">
+                Whether you&apos;re a developer, designer, or problem-solver, your mission is to turn random ideas into real solutions.
               </p>
               <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-8">
                 <div className="bg-black/50 rounded-xl p-4 au-border flex items-center gap-3">
                   <span className="text-3xl">👥</span>
                   <div>
                     <p className="text-sm text-gray-400 font-bold uppercase">Crew Size</p>
-                    <p className="text-xl font-display text-white">1 - 4 Members</p>
+                    <p className="text-xl font-display text-white">4 Participants per Team</p>
                   </div>
                 </div>
                 <div className="bg-black/50 rounded-xl p-4 au-border flex items-center gap-3">
                   <span className="text-3xl">⏳</span>
                   <div>
                     <p className="text-sm text-gray-400 font-bold uppercase">Duration</p>
-                    <p className="text-xl font-display text-white">48 Hours</p>
+                    <p className="text-xl font-display text-white">3 Hours 45 Minutes of Competition</p>
                   </div>
                 </div>
                 <div className="bg-black/50 rounded-xl p-4 au-border flex items-center gap-3">
                   <span className="text-3xl">💰</span>
                   <div>
                     <p className="text-sm text-gray-400 font-bold uppercase">Prize Pool</p>
-                    <p className="text-xl font-display text-crew-lime">$10,000+</p>
+                    <p className="text-xl font-display text-crew-lime">₹10,000</p>
                   </div>
                 </div>
               </div>
@@ -327,97 +332,66 @@ export default function ImposterHacksPage() {
         </div>
       </section>
 
-      {/* Tracks Section */}
+      {/* Available Tracks Section */}
       <section id="tracks" className="py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-5xl md:text-6xl text-center mb-16 text-white" style={{ textShadow: '4px 4px 0 #000' }}>
-            AVAILABLE <span className="text-crew-lime">TASKS</span>
+            AVAILABLE <span className="text-crew-lime">TRACKS</span>
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Track 1 */}
-            <div className="au-card bg-crew-purple rounded-2xl p-6 relative group overflow-hidden">
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-white opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Track 1: Web Development */}
+            <div className="au-card bg-crew-blue rounded-2xl p-8 relative group overflow-hidden">
+              <div className="absolute -right-4 -top-4 w-28 h-28 bg-white opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
               <div className="bg-black w-16 h-16 rounded-full flex items-center justify-center au-border mb-6">
-                <svg className="w-8 h-8 text-crew-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-crew-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                </svg>
+              </div>
+              <h3 className="font-display text-3xl text-white mb-3" style={{ textShadow: '2px 2px 0 #000' }}>
+                Web Development
+              </h3>
+              <p className="text-gray-100 font-bold text-lg leading-relaxed">
+                Build practical, engaging, and scalable web applications that solve real-world problems.
+              </p>
+            </div>
+
+            {/* Track 2: Game Development */}
+            <div className="au-card bg-crew-purple rounded-2xl p-8 relative group overflow-hidden">
+              <div className="absolute -right-4 -top-4 w-28 h-28 bg-white opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="bg-black w-16 h-16 rounded-full flex items-center justify-center au-border mb-6">
+                <svg className="w-8 h-8 text-crew-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                </svg>
+              </div>
+              <h3 className="font-display text-3xl text-white mb-3" style={{ textShadow: '2px 2px 0 #000' }}>
+                Game Development
+              </h3>
+              <p className="text-gray-100 font-bold text-lg leading-relaxed">
+                Design interactive experiences, develop game mechanics, and turn creative concepts into playable prototypes.
+              </p>
+            </div>
+
+            {/* Track 3: Open Innovation */}
+            <div className="au-card bg-crew-orange rounded-2xl p-8 relative group overflow-hidden">
+              <div className="absolute -right-4 -top-4 w-28 h-28 bg-white opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+              <div className="bg-black w-16 h-16 rounded-full flex items-center justify-center au-border mb-6">
+                <svg className="w-8 h-8 text-crew-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
               </div>
-              <h3 className="font-display text-2xl text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>
-                Electrical / AI
+              <h3 className="font-display text-3xl text-white mb-3" style={{ textShadow: '2px 2px 0 #000' }}>
+                Open Innovation
               </h3>
-              <p className="text-gray-200 font-bold">
-                Rewire the ship&apos;s intelligence. Build AI models, automation tools, or machine learning solutions.
-              </p>
-            </div>
-
-            {/* Track 2 */}
-            <div className="au-card bg-crew-orange rounded-2xl p-6 relative group overflow-hidden">
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-white opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-              <div className="bg-black w-16 h-16 rounded-full flex items-center justify-center au-border mb-6">
-                <svg className="w-8 h-8 text-crew-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="3"
-                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                  ></path>
-                </svg>
-              </div>
-              <h3 className="font-display text-2xl text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>
-                Navigation / Web3
-              </h3>
-              <p className="text-gray-200 font-bold">
-                Chart a new course. Develop decentralized apps, smart contracts, or blockchain innovations.
-              </p>
-            </div>
-
-            {/* Track 3 */}
-            <div className="au-card bg-crew-red rounded-2xl p-6 relative group overflow-hidden">
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-white opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-              <div className="bg-black w-16 h-16 rounded-full flex items-center justify-center au-border mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="3"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  ></path>
-                </svg>
-              </div>
-              <h3 className="font-display text-2xl text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>
-                Security / Sabotage
-              </h3>
-              <p className="text-gray-200 font-bold">
-                Protect the crew or exploit the system. Focus on cybersecurity, privacy, or ethical hacking.
-              </p>
-            </div>
-
-            {/* Track 4 */}
-            <div className="au-card bg-crew-blue rounded-2xl p-6 relative group overflow-hidden">
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-white opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-              <div className="bg-black w-16 h-16 rounded-full flex items-center justify-center au-border mb-6">
-                <svg className="w-8 h-8 text-crew-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="3"
-                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  ></path>
-                </svg>
-              </div>
-              <h3 className="font-display text-2xl text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>
-                Comms / Mobile
-              </h3>
-              <p className="text-gray-200 font-bold">
-                Keep the crew connected. Build intuitive mobile apps, social platforms, or communication tools.
+              <p className="text-gray-100 font-bold text-lg leading-relaxed">
+                Explore any problem worth solving and build an original solution using your creativity and technical skills.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Schedule Section */}
+      {/* Mission Timeline Section */}
       <section id="schedule" className="py-20 relative z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-5xl md:text-6xl text-center mb-16 text-white" style={{ textShadow: '4px 4px 0 #000' }}>
@@ -427,7 +401,7 @@ export default function ImposterHacksPage() {
           <div className="relative">
             {/* Task Progress Bar (Vertical Line) */}
             <div className="absolute left-8 md:left-1/2 transform md:-translate-x-1/2 h-full w-4 bg-gray-800 au-border rounded-full">
-              <div className="w-full bg-crew-lime h-1/2 rounded-t-full relative">
+              <div className="w-full bg-crew-lime h-3/4 rounded-t-full relative">
                 {/* Glow effect */}
                 <div className="absolute inset-0 bg-crew-lime blur-sm opacity-50"></div>
               </div>
@@ -439,9 +413,11 @@ export default function ImposterHacksPage() {
               <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
                 <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-lime au-border rounded-full z-10 shadow-[0_0_15px_#50ef39]"></div>
                 <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl">
-                  <span className="text-crew-lime font-bold mb-1 block">Oct 24, 5:00 PM EST</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Registration Closes</h3>
-                  <p className="text-gray-400 font-bold">The dropship doors are locked. Make sure your crew is finalized.</p>
+                  <span className="text-crew-lime font-bold mb-1 block">Duration: 45 Minutes</span>
+                  <h3 className="font-display text-2xl text-white mb-2">Round 1 — Random Ideas, Real Solutions</h3>
+                  <p className="text-gray-300 font-bold">
+                    Form a randomly assigned team, identify an interesting problem, choose a track, and submit your proposed solution as a presentation.
+                  </p>
                 </div>
               </div>
 
@@ -449,39 +425,35 @@ export default function ImposterHacksPage() {
               <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
                 <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-lime au-border rounded-full z-10 shadow-[0_0_15px_#50ef39]"></div>
                 <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl">
-                  <span className="text-crew-lime font-bold mb-1 block">Oct 24, 6:00 PM EST</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Opening Ceremony</h3>
-                  <p className="text-gray-400 font-bold">Briefing in the Cafeteria. We&apos;ll go over the rules, tracks, and start the timer.</p>
+                  <span className="text-crew-lime font-bold mb-1 block">Duration: 1 Hour 30 Minutes</span>
+                  <h3 className="font-display text-2xl text-white mb-2">Round 2 — Development Round I</h3>
+                  <p className="text-gray-300 font-bold">
+                    Turn your proposal into a working prototype. Collaborate with your team and bring your idea to life.
+                  </p>
                 </div>
               </div>
 
               {/* Item 3 */}
               <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-yellow au-border rounded-full z-10"></div>
+                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-yellow au-border rounded-full z-10 shadow-[0_0_15px_#f5f557]"></div>
                 <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl">
-                  <span className="text-crew-yellow font-bold mb-1 block">Oct 25, All Day</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Hacking Phase</h3>
-                  <p className="text-gray-400 font-bold">Complete your tasks! Mentors will be available in the comms channel to assist.</p>
+                  <span className="text-crew-yellow font-bold mb-1 block">Duration: 1 Hour 30 Minutes</span>
+                  <h3 className="font-display text-2xl text-white mb-2">Round 3 — Development Round II: Impostor Challenge</h3>
+                  <p className="text-gray-300 font-bold">
+                    Continue developing your prototype while navigating the hidden Impostor Challenge. Build, debug, and protect your project from sabotage.
+                  </p>
                 </div>
               </div>
 
               {/* Item 4 */}
               <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gray-600 au-border rounded-full z-10"></div>
-                <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl">
-                  <span className="text-gray-400 font-bold mb-1 block">Oct 26, 12:00 PM EST</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Project Submission</h3>
-                  <p className="text-gray-400 font-bold">Upload data to Devpost. Late submissions will be ejected into space.</p>
-                </div>
-              </div>
-
-              {/* Item 5 */}
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-red au-border rounded-full z-10"></div>
+                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-red au-border rounded-full z-10 shadow-[0_0_15px_#c51111]"></div>
                 <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl border-crew-red">
-                  <span className="text-crew-red font-bold mb-1 block">Oct 26, 4:00 PM EST</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Closing &amp; Voting</h3>
-                  <p className="text-gray-400 font-bold">Final Emergency Meeting! Winners are announced and prizes are distributed.</p>
+                  <span className="text-crew-red font-bold mb-1 block">Final Phase</span>
+                  <h3 className="font-display text-2xl text-white mb-2">Final Emergency Meeting</h3>
+                  <p className="text-gray-300 font-bold">
+                    After the final round, teams will be asked to identify the Impostor within their team. Correct identifications earn points.
+                  </p>
                 </div>
               </div>
             </div>
@@ -489,136 +461,138 @@ export default function ImposterHacksPage() {
         </div>
       </section>
 
-      {/* Prizes Section */}
+      {/* Bounty Rewards Section */}
       <section id="prizes" className="py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-5xl md:text-6xl text-center mb-16 text-white" style={{ textShadow: '4px 4px 0 #000' }}>
+          <h2 className="font-display text-5xl md:text-6xl text-center mb-4 text-white" style={{ textShadow: '4px 4px 0 #000' }}>
             BOUNTY <span className="text-crew-yellow">REWARDS</span>
           </h2>
+          <p className="text-center font-display text-2xl text-crew-lime mb-16" style={{ textShadow: '2px 2px 0 #000' }}>
+            Total Prize Pool: ₹10,000
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
-            {/* 2nd Place */}
-            <div className="au-card bg-gray-800 rounded-t-3xl p-6 text-center order-2 md:order-1 relative pb-12">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gray-400 rounded-t-3xl"></div>
-              <div className="w-20 h-20 mx-auto bg-gray-400 au-border rounded-full flex items-center justify-center mb-4 -mt-12">
-                <span className="text-3xl">🥈</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Prize 1 */}
+            <div className="au-card bg-crew-yellow text-black rounded-3xl p-6 text-center relative">
+              <div className="w-20 h-20 mx-auto bg-white au-border rounded-full flex items-center justify-center mb-4 shadow-lg">
+                <span className="text-4xl">👑</span>
               </div>
-              <h3 className="font-display text-2xl text-gray-300 mb-2">Expert Crewmate</h3>
-              <p className="text-3xl font-display text-white mb-4">$3,000</p>
-              <ul className="text-gray-400 font-bold space-y-2 mb-6 text-sm">
-                <li>+ Mechanical Keyboards</li>
-                <li>+ 1 Year NordVPN</li>
-                <li>+ Discord Nitro</li>
-              </ul>
+              <h3 className="font-display text-xl text-black mb-1">Best Development Team</h3>
+              <p className="text-4xl font-display text-black mt-2 drop-shadow-md">₹4,000</p>
             </div>
 
-            {/* 1st Place */}
-            <div className="au-card bg-crew-yellow text-black rounded-t-3xl p-8 text-center order-1 md:order-2 relative z-10 transform md:scale-110 pb-16">
-              <div className="absolute top-0 left-0 w-full h-2 bg-white rounded-t-3xl"></div>
-              <div className="w-24 h-24 mx-auto bg-white au-border rounded-full flex items-center justify-center mb-4 -mt-14 shadow-lg">
-                <span className="text-5xl">👑</span>
+            {/* Prize 2 */}
+            <div className="au-card bg-crew-red text-white rounded-3xl p-6 text-center relative">
+              <div className="w-20 h-20 mx-auto bg-black au-border rounded-full flex items-center justify-center mb-4 shadow-lg">
+                <span className="text-4xl">🔪</span>
               </div>
-              <h3 className="font-display text-3xl text-black mb-2">Ultimate Survivor</h3>
-              <p className="text-5xl font-display text-black mb-6 drop-shadow-md">$5,000</p>
-              <ul className="text-gray-800 font-bold space-y-2 mb-6 text-base">
-                <li>+ Quest 3 VR Headsets</li>
-                <li>+ Lifetime Pro Memberships</li>
-                <li>+ Exclusive Merch Box</li>
-                <li>+ Mentorship Session</li>
-              </ul>
+              <h3 className="font-display text-xl text-white mb-1">Best Impostor</h3>
+              <p className="text-4xl font-display text-white mt-2 drop-shadow-md">₹3,000</p>
             </div>
 
-            {/* 3rd Place */}
-            <div className="au-card bg-gray-800 rounded-t-3xl p-6 text-center order-3 md:order-3 relative pb-12">
-              <div className="absolute top-0 left-0 w-full h-2 bg-amber-700 rounded-t-3xl"></div>
-              <div className="w-20 h-20 mx-auto bg-amber-700 au-border rounded-full flex items-center justify-center mb-4 -mt-12">
-                <span className="text-3xl">🥉</span>
+            {/* Prize 3 */}
+            <div className="au-card bg-gray-800 text-white rounded-3xl p-6 text-center relative">
+              <div className="w-20 h-20 mx-auto bg-gray-400 au-border rounded-full flex items-center justify-center mb-4 shadow-lg">
+                <span className="text-4xl">🥈</span>
               </div>
-              <h3 className="font-display text-2xl text-amber-600 mb-2">Solid Tasker</h3>
-              <p className="text-3xl font-display text-white mb-4">$1,500</p>
-              <ul className="text-gray-400 font-bold space-y-2 mb-6 text-sm">
-                <li>+ Arduino Starter Kits</li>
-                <li>+ 6 Months NordVPN</li>
-                <li>+ Stickers Pack</li>
-              </ul>
+              <h3 className="font-display text-xl text-gray-200 mb-1">Second-Best Development Team</h3>
+              <p className="text-4xl font-display text-crew-lime mt-2">₹2,000</p>
             </div>
-          </div>
 
-          {/* Best Sabotage Special Prize */}
-          <div className="mt-12 max-w-3xl mx-auto au-card bg-crew-red rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-black au-border rounded-full flex items-center justify-center shrink-0">
-                <span className="text-3xl">🔪</span>
+            {/* Prize 4 */}
+            <div className="au-card bg-gray-800 text-white rounded-3xl p-6 text-center relative">
+              <div className="w-20 h-20 mx-auto bg-amber-700 au-border rounded-full flex items-center justify-center mb-4 shadow-lg">
+                <span className="text-4xl">🎭</span>
               </div>
-              <div>
-                <h3 className="font-display text-2xl text-white" style={{ textShadow: '2px 2px 0 #000' }}>
-                  Best Sabotage (Innovation)
-                </h3>
-                <p className="text-gray-200 font-bold">For the most out-of-the-box, crazy idea that actually works.</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-3xl font-display text-white" style={{ textShadow: '2px 2px 0 #000' }}>
-                $500 + Swag
-              </p>
+              <h3 className="font-display text-xl text-gray-200 mb-1">Second-Best Impostor</h3>
+              <p className="text-4xl font-display text-crew-yellow mt-2">₹1,000</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* Communications (FAQ) Section */}
       <section id="faq" className="py-20 relative z-10">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-4xl md:text-5xl text-center mb-12 text-white" style={{ textShadow: '4px 4px 0 #000' }}>
             COMMUNICATIONS (FAQ)
           </h2>
 
           <div className="space-y-4">
-            {/* FAQ Item 1 */}
+            {/* FAQ 1 */}
             <details className="au-card bg-gray-900 rounded-xl group cursor-pointer">
               <summary className="font-display text-xl text-white p-6 flex justify-between items-center">
-                Who can join the lobby?
+                Who can participate?
                 <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
               </summary>
-              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4">
-                Anyone! Whether you&apos;re a high school student, college student, or early professional. As long as you love
-                building and coding, you&apos;re welcome aboard the Skeld.
+              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4 text-lg">
+                First- and second-year students of KIET Deemed to be University.
               </div>
             </details>
 
-            {/* FAQ Item 2 */}
+            {/* FAQ 2 */}
             <details className="au-card bg-gray-900 rounded-xl group cursor-pointer">
               <summary className="font-display text-xl text-white p-6 flex justify-between items-center">
-                How big can my crew be?
+                How are teams formed?
                 <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
               </summary>
-              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4">
-                Teams can consist of 1 to 4 members. You can find a crew on our Discord server before the hacking phase begins if
-                you don&apos;t have one!
+              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4 text-lg">
+                Participants register individually and are assigned to teams randomly. Each team consists of 4 participants.
               </div>
             </details>
 
-            {/* FAQ Item 3 */}
+            {/* FAQ 3 */}
             <details className="au-card bg-gray-900 rounded-xl group cursor-pointer">
               <summary className="font-display text-xl text-white p-6 flex justify-between items-center">
-                Is this event free?
+                What are the available tracks?
                 <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
               </summary>
-              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4">
-                100% Free! We provide the platform, the prizes, and the mentors. You just bring your brain power and a working
-                computer.
+              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4 text-lg">
+                Web Development, Game Development, and Open Innovation.
               </div>
             </details>
 
-            {/* FAQ Item 4 */}
+            {/* FAQ 4 */}
             <details className="au-card bg-gray-900 rounded-xl group cursor-pointer">
               <summary className="font-display text-xl text-white p-6 flex justify-between items-center">
-                What if I don&apos;t know how to code?
+                Can I use the internet and AI tools?
                 <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
               </summary>
-              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4">
-                Not a problem! Hackathons are the best place to learn. We have beginner-friendly workshops, and teams always need
-                designers, idea generators, and presenters. No one gets ejected for learning.
+              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4 text-lg">
+                Yes. Internet access and AI tools are allowed unless restricted during a particular round.
+              </div>
+            </details>
+
+            {/* FAQ 5 */}
+            <details className="au-card bg-gray-900 rounded-xl group cursor-pointer">
+              <summary className="font-display text-xl text-white p-6 flex justify-between items-center">
+                What is the Impostor Challenge?
+                <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
+              </summary>
+              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4 text-lg">
+                One team member secretly attempts to sabotage their own team’s project. After the final round, teams must identify the Impostor.
+              </div>
+            </details>
+
+            {/* FAQ 6 */}
+            <details className="au-card bg-gray-900 rounded-xl group cursor-pointer">
+              <summary className="font-display text-xl text-white p-6 flex justify-between items-center">
+                What kind of sabotage is allowed?
+                <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
+              </summary>
+              <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4 text-lg">
+                Sabotage must remain within the designated project environment. Deleting entire projects or accessing other teams’ projects is strictly prohibited.
+              </div>
+            </details>
+
+            {/* FAQ 7 */}
+            <details className="au-card bg-gray-900 rounded-xl group cursor-pointer">
+              <summary className="font-display text-xl text-white p-6 flex justify-between items-center">
+                How much is the registration fee?
+                <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
+              </summary>
+              <div className="px-6 pb-6 text-crew-lime font-bold border-t-2 border-gray-800 pt-4 text-xl font-display">
+                ₹55 per participant.
               </div>
             </details>
           </div>
@@ -626,23 +600,26 @@ export default function ImposterHacksPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black border-t-4 border-gray-800 pt-12 pb-8 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
-          <div className="mb-6 md:mb-0 text-center md:text-left">
+      <footer className="bg-black border-t-4 border-gray-800 pt-12 pb-8 relative z-10 text-center md:text-left">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div>
             <a
               href="#"
-              className="font-display text-2xl text-white tracking-wider flex items-center justify-center md:justify-start gap-2 mb-2"
+              className="font-display text-3xl text-white tracking-wider flex items-center justify-center md:justify-start gap-2 mb-2"
             >
-              <span className="text-crew-red">IMPOSTER</span>HACKS
+              <span className="text-crew-red">AMONG</span>U
             </a>
-            <p className="text-gray-500 font-bold text-sm">© 2026 ImposterHacks. All tasks completed.</p>
+            <p className="text-crew-cyan font-bold text-sm">A NextGen Supercomputing Initiative</p>
+            <p className="text-gray-400 text-xs font-bold">Under the Centre of Excellence (CoE), Center for Supercomputing</p>
+            <p className="text-gray-400 text-xs font-bold">KIET Deemed to be University</p>
+            <p className="text-gray-500 font-bold text-xs mt-3">© 2026 AmongU. All missions reserved.</p>
           </div>
 
           <div className="flex space-x-6">
             {/* Twitter */}
             <a
               href="#"
-              className="text-gray-400 hover:text-crew-cyan transition-colors au-border rounded-full p-2 hover:bg-gray-800"
+              className="text-gray-400 hover:text-crew-cyan transition-colors au-border rounded-full p-2.5 hover:bg-gray-800"
             >
               <span className="sr-only">Twitter</span>
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -652,7 +629,7 @@ export default function ImposterHacksPage() {
             {/* Discord */}
             <a
               href="#"
-              className="text-gray-400 hover:text-crew-purple transition-colors au-border rounded-full p-2 hover:bg-gray-800"
+              className="text-gray-400 hover:text-crew-purple transition-colors au-border rounded-full p-2.5 hover:bg-gray-800"
             >
               <span className="sr-only">Discord</span>
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -666,7 +643,7 @@ export default function ImposterHacksPage() {
             {/* GitHub */}
             <a
               href="#"
-              className="text-gray-400 hover:text-white transition-colors au-border rounded-full p-2 hover:bg-gray-800"
+              className="text-gray-400 hover:text-white transition-colors au-border rounded-full p-2.5 hover:bg-gray-800"
             >
               <span className="sr-only">GitHub</span>
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -707,6 +684,7 @@ export default function ImposterHacksPage() {
                 EMERGENCY MEETING
               </h3>
               <p className="text-gray-400 font-bold">Register your crew before the ship takes off!</p>
+              <p className="text-crew-lime font-display text-lg mt-1">Fee: ₹55 per participant</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -720,21 +698,20 @@ export default function ImposterHacksPage() {
                 />
               </div>
               <div>
-                <label className="block text-crew-cyan font-bold mb-1">Comms (Email)</label>
+                <label className="block text-crew-cyan font-bold mb-1">KIET Email (@kiet.edu)</label>
                 <input
                   type="email"
                   required
                   className="w-full bg-black au-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-crew-cyan transition-colors"
-                  placeholder="you@spaceship.com"
+                  placeholder="your.name@kiet.edu"
                 />
               </div>
               <div>
-                <label className="block text-crew-cyan font-bold mb-1">Role</label>
+                <label className="block text-crew-cyan font-bold mb-1">Preferred Track</label>
                 <select className="w-full bg-black au-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-crew-cyan transition-colors appearance-none">
-                  <option>Front-End Engineer (Electrical)</option>
-                  <option>Back-End Engineer (Engine Room)</option>
-                  <option>Designer (Admin)</option>
-                  <option>Imposter (Looking for team)</option>
+                  <option>Web Development</option>
+                  <option>Game Development</option>
+                  <option>Open Innovation</option>
                 </select>
               </div>
 
