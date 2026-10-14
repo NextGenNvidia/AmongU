@@ -160,9 +160,9 @@ export default function AdminEvaluationPage() {
   // Handle Round Change
   const handleChangeRound = (round: 'round1' | 'round2' | 'round3') => {
     setActiveRound(round);
-    let roundLabel = 'Round 1: Infiltration & Architecture';
-    if (round === 'round2') roundLabel = 'Round 2: Rapid Prototyping & Sabotage';
-    if (round === 'round3') roundLabel = 'Round 3: The Final Reveal & Judging';
+    let roundLabel = 'Round 1: Random Ideas, Real Solutions';
+    if (round === 'round2') roundLabel = 'Round 2: Development Sprint';
+    if (round === 'round3') roundLabel = 'Round 3: Impostor Challenge';
 
     try {
       localStorage.setItem('amongu_active_round_key', round);
@@ -223,8 +223,8 @@ export default function AdminEvaluationPage() {
             </span>
           </div>
           <h1 className="font-display text-3xl sm:text-4xl text-white">EVALUATION &amp; JUDGING MATRIX</h1>
-          <p className="text-gray-400 text-sm font-bold mt-1">
-            Round control, 4-member squad randomizer, PPT submissions, development phase scoring, and Round 3 secret Impostor infiltration.
+          <p className="text-gray-400 text-sm font-bold mt-1 max-w-4xl">
+            Manage round timers, randomly assign participants to four-member teams, review PPT submissions, evaluate development progress, and conduct the secret Impostor assignment for the final round.
           </p>
         </div>
 
@@ -233,43 +233,127 @@ export default function AdminEvaluationPage() {
             href="/admin"
             className="au-btn bg-crew-cyan hover:bg-cyan-400 text-black font-display text-xs sm:text-sm py-2.5 px-5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(0,255,255,0.25)]"
           >
-            <span>📡</span> RETURN TO MONITORING PANEL
+            <span>RETURN TO MONITORING PANEL →</span>
           </Link>
         </div>
       </div>
 
-      {/* 1. ROUND CONTROL & TIMER (Time / Start / Stop) */}
+      {/* 1. ROUND CONTROL & TIMER */}
       <RoundControl
         activeRound={activeRound}
         onChangeRound={handleChangeRound}
         onBroadcastTimerState={(msg) => showToast(msg)}
       />
 
-      {/* 2. BEFORE ROUND 1 (Make random team of 4 from present candidates) */}
+      {/* 2. BEFORE ROUND 1 — SQUAD RANDOMIZER */}
       <TeamGenerator
         candidates={candidates}
         teams={teams}
         onTeamsGenerated={handleTeamsGenerated}
       />
 
-      {/* 3. AFTER ROUND 1 (Take submission of PPT and other relevant info) */}
+      {/* 3. AFTER ROUND 1 — PPT & ARCHITECTURE SUBMISSION */}
       <Round1Evaluation
         teams={teams}
         onUpdateTeamSubmission={handleUpdateTeamSubmission}
       />
 
-      {/* 4. ROUND 2 (Development phase evaluation) */}
+      {/* 4. ROUND 2 — DEVELOPMENT PHASE EVALUATION */}
       <Round2Evaluation
         teams={teams}
         onUpdateTeamSubmission={handleUpdateTeamSubmission}
       />
 
-      {/* 5. ROUND 3 (Make a random person from each team an Impostor and inform him on website) */}
+      {/* 5. ROUND 3 — SECRET IMPOSTOR INFILTRATION ENGINE */}
       <ImpostorAssigner
         teams={teams}
         candidates={candidates}
         onImpostorsAssigned={handleImpostorsAssigned}
       />
+
+      {/* 6. FINAL REVEAL & JUDGING */}
+      <div className="au-card bg-gray-900/90 border-2 border-crew-purple/40 p-5 rounded-2xl space-y-5 shadow-[0_0_20px_rgba(168,85,247,0.08)]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-2xl">⚖️</span>
+            <div>
+              <h3 className="font-display text-lg text-white">FINAL REVEAL &amp; JUDGING</h3>
+              <p className="text-xs text-gray-400 font-mono">
+                Evaluate the final prototypes, review the Impostor Challenge, and determine the winning teams and individual Impostors.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-crew-purple font-bold px-3 py-1 rounded bg-black/60 border border-gray-800">
+              Total Prize Pool: ₹10,000
+            </span>
+          </div>
+        </div>
+
+        {/* Judging Categories Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-black/60 border border-gray-800 p-4 rounded-xl space-y-2 hover:border-gray-700 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-crew-yellow font-bold uppercase tracking-wider">CATEGORY 1</span>
+              <span className="font-display text-sm text-crew-lime font-bold">₹4,000</span>
+            </div>
+            <h4 className="font-display text-sm text-white">Best Development Team</h4>
+            <p className="text-xs text-gray-400 font-mono leading-relaxed">
+              Evaluate the overall quality, functionality, creativity, and execution of the final prototype.
+            </p>
+          </div>
+
+          <div className="bg-black/60 border border-gray-800 p-4 rounded-xl space-y-2 hover:border-gray-700 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-crew-red font-bold uppercase tracking-wider">CATEGORY 2</span>
+              <span className="font-display text-sm text-crew-lime font-bold">₹3,000</span>
+            </div>
+            <h4 className="font-display text-sm text-white">Best Impostor</h4>
+            <p className="text-xs text-gray-400 font-mono leading-relaxed">
+              Evaluate the creativity and effectiveness of the permitted in-project sabotage.
+            </p>
+          </div>
+
+          <div className="bg-black/60 border border-gray-800 p-4 rounded-xl space-y-2 hover:border-gray-700 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-crew-cyan font-bold uppercase tracking-wider">CATEGORY 3</span>
+              <span className="font-display text-sm text-crew-lime font-bold">₹2,000</span>
+            </div>
+            <h4 className="font-display text-sm text-white">Second-Best Development Team</h4>
+            <p className="text-xs text-gray-400 font-mono leading-relaxed">
+              Recognize the second-highest-performing development team.
+            </p>
+          </div>
+
+          <div className="bg-black/60 border border-gray-800 p-4 rounded-xl space-y-2 hover:border-gray-700 transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono text-crew-orange font-bold uppercase tracking-wider">CATEGORY 4</span>
+              <span className="font-display text-sm text-crew-lime font-bold">₹1,000</span>
+            </div>
+            <h4 className="font-display text-sm text-white">Second-Best Impostor</h4>
+            <p className="text-xs text-gray-400 font-mono leading-relaxed">
+              Recognize the second-best Impostor based on the challenge evaluation.
+            </p>
+          </div>
+        </div>
+
+        {/* Final Reveal Process Card */}
+        <div className="bg-black/60 border border-gray-800 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="text-xs font-mono text-crew-yellow font-bold uppercase tracking-wider block">
+              Final Reveal Process:
+            </span>
+            <p className="text-xs text-gray-300 font-mono leading-relaxed max-w-3xl">
+              After the final development round, teams will be asked to identify the Impostor in their team. Teams that correctly identify their Impostor will receive points.
+            </p>
+          </div>
+          <div className="text-right shrink-0 bg-yellow-950/40 border border-crew-yellow/40 px-3.5 py-2 rounded-xl">
+            <span className="text-[10px] font-mono text-gray-400 uppercase block">TOTAL PRIZE POOL</span>
+            <span className="font-display text-lg text-crew-yellow font-bold">₹10,000</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

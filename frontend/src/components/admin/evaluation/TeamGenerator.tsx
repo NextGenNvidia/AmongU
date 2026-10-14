@@ -113,14 +113,14 @@ export default function TeamGenerator({
           <div>
             <h3 className="font-display text-lg text-white">BEFORE ROUND 1: SQUAD RANDOMIZER</h3>
             <p className="text-xs text-gray-400 font-mono">
-              Group present candidates into randomized 4-person hackathon teams before round start
+              Randomly assign present and verified participants to four-member teams before the competition begins.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-crew-lime px-2.5 py-1 rounded bg-black/60 border border-gray-800">
-            {presentCandidates.length} Present Checked In
+          <span className="text-xs font-mono text-crew-lime px-2.5 py-1 rounded bg-black/60 border border-gray-800 font-bold">
+            {presentCandidates.length} Present Participants Checked In
           </span>
           <button
             onClick={handleGenerateTeams}
@@ -141,10 +141,10 @@ export default function TeamGenerator({
 
       {/* Generated Teams Grid */}
       {teams.length === 0 ? (
-        <div className="py-8 text-center bg-black/40 border border-gray-800/80 rounded-xl space-y-2">
-          <p className="text-sm font-display text-gray-400">NO TEAMS CREATED YET</p>
-          <p className="text-xs text-gray-500 font-mono">
-            Click &ldquo;GENERATE RANDOM TEAMS (4)&rdquo; to automatically assemble 4-member squads from present verified candidates.
+        <div className="py-8 text-center bg-black/40 border border-gray-800/80 rounded-xl space-y-2 p-6">
+          <p className="text-sm font-display text-gray-400 tracking-wide">NO TEAMS CREATED YET</p>
+          <p className="text-xs text-gray-400 font-mono max-w-xl mx-auto leading-relaxed">
+            Generate random teams to automatically group eligible, present participants into four-member squads. Team assignments will be displayed here once generated.
           </p>
         </div>
       ) : (
@@ -161,31 +161,41 @@ export default function TeamGenerator({
                   </span>
                   <h4 className="font-display text-sm text-white">{team.name}</h4>
                 </div>
-                <span className="text-[11px] font-mono text-gray-400">Track: {team.track}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-crew-lime bg-lime-950/60 border border-lime-800/60 px-2 py-0.5 rounded">
+                    Team Assignment Status: Assigned ({team.members.length} Members)
+                  </span>
+                </div>
               </div>
 
-              {/* 4 Team Members */}
+              {/* Team Members List */}
               <div className="space-y-1.5">
-                {team.members.map((member, idx) => (
+                {team.members.map((member) => (
                   <div
                     key={member.collegeId}
-                    className="flex items-center justify-between text-xs font-mono p-1.5 bg-gray-900/60 rounded-lg"
+                    className="flex items-center justify-between text-xs font-mono p-2 bg-gray-900/60 rounded-lg border border-gray-800/40"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 truncate">
                       <div
                         className="w-5 h-5 rounded-full border border-black flex items-center justify-center text-[10px] shrink-0"
                         style={{ backgroundColor: member.suitColor }}
                       >
                         🚀
                       </div>
-                      <span className="text-white font-bold">{member.name}</span>
-                      <span className="text-gray-500 text-[10px]">({member.branch} Yr{member.year})</span>
+                      <div className="flex flex-col truncate">
+                        <span className="text-white font-bold truncate">{member.name}</span>
+                        <span className="text-gray-400 text-[10px]">
+                          Department: {member.branch} • Year: {member.year}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-[10px]">{member.collegeId}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-gray-300 text-[11px] font-mono bg-black/50 px-1.5 py-0.5 rounded border border-gray-800">
+                        {member.collegeId}
+                      </span>
                       {member.role === 'impostor' && (
-                        <span className="text-[9px] bg-crew-red text-white font-bold px-1 py-0.2 rounded">
+                        <span className="text-[9px] bg-crew-red text-white font-bold px-1.5 py-0.5 rounded animate-pulse">
                           IMPOSTOR
                         </span>
                       )}

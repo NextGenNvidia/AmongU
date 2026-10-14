@@ -55,13 +55,13 @@ export default function Round1Evaluation({
           <div>
             <h3 className="font-display text-lg text-white">AFTER ROUND 1: PPT &amp; ARCHITECTURE SUBMISSION</h3>
             <p className="text-xs text-gray-400 font-mono">
-              Collect and grade team presentation slides (PPT) and architectural problem breakdowns
+              Collect and evaluate team presentations, problem statements, and proposed solution architectures.
             </p>
           </div>
         </div>
 
-        <span className="text-xs font-mono text-crew-yellow px-2.5 py-1 rounded bg-black/60 border border-gray-800">
-          Phase 1 Evaluation Active
+        <span className="text-xs font-mono text-crew-yellow px-2.5 py-1 rounded bg-black/60 border border-gray-800 font-bold">
+          Round 1 Evaluation
         </span>
       </div>
 
@@ -72,15 +72,15 @@ export default function Round1Evaluation({
       )}
 
       {teams.length === 0 ? (
-        <div className="py-8 text-center text-gray-500 font-mono text-xs">
-          Generate squads in the &ldquo;Before Round 1&rdquo; section above to begin collecting submissions.
+        <div className="py-8 text-center text-gray-400 font-mono text-xs max-w-xl mx-auto leading-relaxed">
+          Generate teams in the Squad Randomizer section above to enable team-wise presentation submissions and evaluation.
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Squad Submissions List */}
-          <div className="space-y-2">
-            <span className="text-[11px] font-mono text-gray-400 uppercase tracking-wider block">
-              Squad Presentation Portfolios
+          <div className="space-y-4">
+            <span className="text-[11px] font-mono text-gray-400 uppercase tracking-wider block font-bold">
+              Team Presentation Submissions
             </span>
             <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
               {teams.map((t) => {
@@ -100,7 +100,7 @@ export default function Round1Evaluation({
                       }
                     }}
                     className={`w-full p-3 rounded-xl border text-left transition-all ${
-                      (selectedTeam?.id === t.id)
+                      selectedTeam?.id === t.id
                         ? 'bg-crew-yellow/15 border-crew-yellow shadow-[0_0_15px_rgba(255,204,0,0.15)]'
                         : 'bg-black/50 border-gray-800 hover:border-gray-700'
                     }`}
@@ -118,11 +118,24 @@ export default function Round1Evaluation({
                       )}
                     </div>
                     <p className="text-[11px] text-gray-400 font-mono truncate">
-                      {t.round1Submission?.projectTitle || 'PPT Submission Ready'}
+                      {t.round1Submission?.problemStatement || 'PPT Submission Ready'}
                     </p>
                   </button>
                 );
               })}
+            </div>
+
+            {/* Evaluation Criteria Callout */}
+            <div className="bg-black/60 border border-gray-800 p-3 rounded-xl space-y-1.5">
+              <span className="text-[10px] font-mono text-crew-yellow font-bold uppercase tracking-wider block">
+                Evaluation Criteria:
+              </span>
+              <ul className="text-[11px] text-gray-400 font-mono space-y-1 list-disc list-inside">
+                <li>Problem relevance and originality</li>
+                <li>Creativity of the proposed solution</li>
+                <li>Quality of the presentation</li>
+                <li>Clarity and feasibility of the solution</li>
+              </ul>
             </div>
           </div>
 
@@ -130,63 +143,59 @@ export default function Round1Evaluation({
           {selectedTeam && (
             <form onSubmit={handleSaveEvaluation} className="lg:col-span-2 space-y-3 bg-black/60 p-4 rounded-xl border border-gray-800">
               <div className="flex items-center justify-between border-b border-gray-800 pb-2">
-                <h4 className="font-display text-sm text-white">
-                  REVIEWING: <span className="text-crew-yellow">{selectedTeam.name}</span> ({selectedTeam.id})
-                </h4>
-                <span className="text-[11px] font-mono text-gray-400">Track: {selectedTeam.track}</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div>
-                  <label className="block text-[11px] font-mono text-gray-400 mb-1">PRESENTATION (PPT / DRIVE) URL</label>
-                  <input
-                    type="url"
-                    value={pptUrl}
-                    onChange={(e) => setPptUrl(e.target.value)}
-                    placeholder="https://docs.google.com/presentation/d/..."
-                    className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-crew-yellow"
-                  />
+                  <span className="text-[10px] text-gray-500 font-mono uppercase block">Team Name</span>
+                  <h4 className="font-display text-base text-white">
+                    <span className="text-crew-yellow">{selectedTeam.name}</span>{' '}
+                    <span className="text-gray-400 text-xs font-mono">({selectedTeam.id})</span>
+                  </h4>
                 </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono text-gray-400 mb-1">PROJECT TITLE</label>
-                  <input
-                    type="text"
-                    value={projectTitle}
-                    onChange={(e) => setProjectTitle(e.target.value)}
-                    placeholder="e.g. Distributed Consensus Engine"
-                    className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-white font-sans focus:outline-none focus:border-crew-yellow font-bold"
-                  />
+                <div className="text-right">
+                  <span className="text-[10px] text-gray-500 font-mono uppercase block">Selected Track</span>
+                  <span className="text-xs font-mono text-crew-cyan font-bold bg-cyan-950/60 border border-cyan-800/60 px-2.5 py-1 rounded">
+                    {selectedTeam.track}
+                  </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-gray-400 mb-1">SELECTED PROBLEM STATEMENT</label>
+                <label className="block text-[11px] font-mono text-gray-400 mb-1">PROBLEM STATEMENT</label>
                 <textarea
                   rows={2}
                   value={problemStatement}
                   onChange={(e) => setProblemStatement(e.target.value)}
                   placeholder="Outline the domain problem addressed in Round 1..."
-                  className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-crew-yellow"
+                  className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-crew-yellow font-sans"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-gray-400 mb-1">SYSTEM ARCHITECTURE BREAKDOWN</label>
+                <label className="block text-[11px] font-mono text-gray-400 mb-1">PROPOSED SOLUTION</label>
                 <textarea
                   rows={2}
                   value={architectureSummary}
                   onChange={(e) => setArchitectureSummary(e.target.value)}
-                  placeholder="Summarize tech stack, data pipeline, and modular design..."
-                  className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-crew-yellow"
+                  placeholder="Detail the proposed solution, system architecture, and tech implementation..."
+                  className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-crew-yellow font-sans"
                 />
               </div>
 
-              {/* Score & Jury Feedback */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-gray-800">
+              <div>
+                <label className="block text-[11px] font-mono text-gray-400 mb-1">PPT / PRESENTATION LINK</label>
+                <input
+                  type="url"
+                  value={pptUrl}
+                  onChange={(e) => setPptUrl(e.target.value)}
+                  placeholder="https://docs.google.com/presentation/d/... or Figma / Drive URL"
+                  className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-white font-mono text-xs focus:outline-none focus:border-crew-yellow"
+                />
+              </div>
+
+              {/* Evaluation Score & Evaluator Feedback */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-gray-800">
                 <div>
                   <label className="block text-[11px] font-mono text-crew-yellow font-bold mb-1">
-                    JURY SCORE (0 - 100)
+                    EVALUATION SCORE (0 - 100)
                   </label>
                   <input
                     type="number"
@@ -199,13 +208,13 @@ export default function Round1Evaluation({
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-mono text-gray-400 mb-1">JURY FEEDBACK NOTES</label>
+                  <label className="block text-[11px] font-mono text-gray-400 mb-1">EVALUATOR FEEDBACK</label>
                   <input
                     type="text"
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
-                    placeholder="Critique on feasibility, architecture diagrams, clarity..."
-                    className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-crew-yellow"
+                    placeholder="Feedback on relevance, originality, presentation clarity, and feasibility..."
+                    className="w-full bg-black border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-crew-yellow font-sans"
                   />
                 </div>
               </div>

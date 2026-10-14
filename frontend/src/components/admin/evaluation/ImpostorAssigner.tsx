@@ -110,7 +110,7 @@ export default function ImpostorAssigner({
           <div>
             <h3 className="font-display text-lg text-white">ROUND 3: SECRET IMPOSTOR INFILTRATION ENGINE</h3>
             <p className="text-xs text-gray-400 font-mono">
-              Make a random person from each team an Impostor and secretly inform them on their website dashboard
+              Randomly assign one Impostor within each eligible team and privately notify the selected participant through their individual dashboard.
             </p>
           </div>
         </div>
@@ -132,9 +132,23 @@ export default function ImpostorAssigner({
             className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 shadow-[0_0_20px_rgba(255,59,48,0.3)] disabled:opacity-50"
           >
             <span>🚨</span>
-            <span>{isAssigning ? 'INFILTRATING SQUADS...' : 'TRIGGER ROUND 3 IMPOSTORS'}</span>
+            <span>{isAssigning ? 'ASSIGNING IMPOSTORS...' : 'ASSIGN ROUND 3 IMPOSTORS'}</span>
           </button>
         </div>
+      </div>
+
+      {/* Impostor Assignment Rules Callout */}
+      <div className="bg-black/60 border border-gray-800 p-4 rounded-xl space-y-2">
+        <span className="text-xs font-mono text-crew-red font-bold uppercase tracking-wider block">
+          Impostor Assignment Rules:
+        </span>
+        <ul className="text-xs text-gray-400 font-mono space-y-1 list-disc list-inside">
+          <li>Assign one Impostor per eligible team.</li>
+          <li>Keep each assignment confidential from other team members.</li>
+          <li>Notify the selected Impostor privately.</li>
+          <li>Restrict access to confidential assignments to authorized organizers.</li>
+          <li>Allow organizers to review assignments through the protected admin panel.</li>
+        </ul>
       </div>
 
       {successBanner !== null && (
@@ -146,8 +160,8 @@ export default function ImpostorAssigner({
 
       {/* Squad Overview with Classified Role Markers */}
       {teams.length === 0 ? (
-        <div className="py-6 text-center text-gray-500 font-mono text-xs">
-          Teams must be created in &ldquo;Before Round 1&rdquo; prior to triggering Round 3 Impostor assignment.
+        <div className="py-8 text-center text-gray-400 font-mono text-xs max-w-xl mx-auto leading-relaxed">
+          Teams must be generated in the Squad Randomizer section before Impostor assignments can be created.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

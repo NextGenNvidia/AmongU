@@ -38,6 +38,8 @@ export interface Team {
     score?: number;
     sabotageDetected?: boolean;
     juryFeedback?: string;
+    implementationStatus?: string;
+    technicalComplexity?: string;
   };
   createdAt: string;
 }

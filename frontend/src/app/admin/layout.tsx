@@ -154,7 +154,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
                 }`}
               >
-                <span>Evaluation</span>
+                <span>Evaluation — Phase 2</span>
               </Link>
             </nav>
 
@@ -192,7 +192,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Footer */}
         <footer className="border-t border-gray-800/80 bg-black/60 py-5 px-6 text-center text-xs text-gray-400 font-mono space-y-1">
-          <p className="font-bold text-gray-300 text-sm">AmongU Hackathon Control Center</p>
+          <p className="font-bold text-gray-300 text-sm">AmongU Hackathon Control Matrix</p>
           <p className="text-gray-400">NextGen Supercomputing • Centre of Excellence (CoE) • KIET Deemed to be University</p>
           <p className="text-[11px] text-gray-500">© 2026 AmongU. All rights reserved.</p>
         </footer>
