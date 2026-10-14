@@ -3,7 +3,7 @@
 
 ---
 
-## 🚀 Overview
+##  Overview
 **AmongU** is an immersive social deduction hackathon platform where participants form randomly assigned 4-person crewmate squads, choose a problem domain, and build a solution while one covert member acts as the Impostor attempting subtle sabotage.
 
 The platform consists of two decoupled services:
@@ -12,12 +12,12 @@ The platform consists of two decoupled services:
 
 ---
 
-## ⚡ Zero-Fallback Rule
+## Zero-Fallback Rule
 This repository strictly enforces **zero fallback values (`||`)** across both backend and frontend configuration and runtime parameters. All required configuration (ports, URLs, secrets, fees) must be explicitly supplied via `.env` / `.env.local` and are strictly validated using **Zod**.
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```text
 AmongU/
@@ -61,7 +61,7 @@ AmongU/
 
 ---
 
-## 🛠️ Quickstart Guide
+## Quickstart Guide
 
 ### 1. Backend Setup
 ```bash
@@ -83,7 +83,7 @@ npm run dev          # Runs on http://localhost:3000
 
 ---
 
-## 📋 Features Checklist
+##  Features Checklist
 
 ### Public Landing & Registration (`/`)
 - [x] Full event lore, mission timeline, prizes, and FAQs.
