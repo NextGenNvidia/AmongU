@@ -10,6 +10,7 @@ interface MonitoringStatsProps {
   totalPaymentINR: number;
   firstYearCount: number;
   secondYearCount: number;
+  onOpenQR?: () => void;
 }
 
 export default function MonitoringStats({
@@ -20,6 +21,7 @@ export default function MonitoringStats({
   totalPaymentINR,
   firstYearCount,
   secondYearCount,
+  onOpenQR,
 }: MonitoringStatsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -54,8 +56,16 @@ export default function MonitoringStats({
             {presentCount}
           </p>
         </div>
-        <div className="mt-3 pt-2 border-t border-gray-800/80 text-[11px] font-mono text-gray-400">
+        <div className="mt-3 pt-2 border-t border-gray-800/80 text-[11px] font-mono text-gray-400 flex flex-col gap-2">
           <span>Status: Venue attendance check-ins</span>
+          {onOpenQR && (
+            <button
+              onClick={onOpenQR}
+              className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-crew-lime/15 hover:bg-crew-lime text-crew-lime hover:text-black border border-crew-lime/40 text-[11px] font-mono font-bold transition-all shadow-[0_0_10px_rgba(50,205,50,0.15)]"
+            >
+              <span>📱 VENUE QR CODE</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -4,8 +4,9 @@ import {
   verifyPayment,
   getMyStatus,
   handleWebhook,
+  venueCheckIn,
 } from '../controllers/registration.controller';
-import { verifyAuth } from '../middlewares/auth';
+import { verifyAuth, optionalAuth } from '../middlewares/auth';
 import { validateRequest, studentRegistrationSchema, paymentVerificationSchema } from '../middlewares/validate';
 
 const router = Router();
@@ -18,6 +19,9 @@ router.post('/create-order', verifyAuth, validateRequest(studentRegistrationSche
 
 // Verify payment cryptographic HMAC SHA256 signature
 router.post('/verify-payment', verifyAuth, validateRequest(paymentVerificationSchema), verifyPayment);
+
+// Venue QR code attendance check-in (supports both auth token and direct ID scan)
+router.post('/venue-checkin', optionalAuth, venueCheckIn);
 
 // Razorpay asynchronous webhook listener
 router.post('/webhook', handleWebhook);

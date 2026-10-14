@@ -4,6 +4,8 @@ import {
   RazorpayOrderResponse,
   PaymentVerificationPayload,
   RegistrationRecord,
+  VenueCheckInPayload,
+  VenueCheckInResponse,
 } from '../types/registration';
 
 export const registrationService = {
@@ -30,6 +32,12 @@ export const registrationService = {
     registration: RegistrationRecord;
   }> => {
     const res = await apiClient.post('/registrations/verify-payment', payload);
+    return res.data;
+  },
+
+  // Mark venue attendance via QR scan or College ID
+  venueCheckIn: async (payload: VenueCheckInPayload): Promise<VenueCheckInResponse> => {
+    const res = await apiClient.post<VenueCheckInResponse>('/registrations/venue-checkin', payload);
     return res.data;
   },
 };

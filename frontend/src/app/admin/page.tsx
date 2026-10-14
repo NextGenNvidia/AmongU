@@ -8,6 +8,7 @@ import MonitoringStats from '../../components/admin/monitoring/MonitoringStats';
 import AnnouncementSection from '../../components/admin/monitoring/AnnouncementSection';
 import CandidateTable from '../../components/admin/monitoring/CandidateTable';
 import CandidateDossierModal from '../../components/admin/monitoring/CandidateDossierModal';
+import VenueCheckInQRModal from '../../components/admin/monitoring/VenueCheckInQRModal';
 
 const DEFAULT_SEED_CANDIDATES: CandidateRecord[] = [
   {
@@ -170,11 +171,57 @@ export default function AdminMonitoringPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateRecord | null>(null);
   const [activeRoundKey, setActiveRoundKey] = useState<'round1' | 'round2' | 'round3'>('round1');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [isQRModalOpen, setIsQRModalOpen] = useState<boolean>(false);
 
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
   }, []);
+
+  // Fetch backend data
+  const fetchBackendData = useCallback(async () => {
+    try {
+      const res = await adminService.getRegistrations({ limit: 100 });
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const mapped: CandidateRecord[] = res.data.map((r) => ({
+          id: r._id,
+          name: r.name,
+          collegeId: r.collegeId,
+          year: r.year,
+          branch: r.branch,
+          section: r.section,
+          phone: r.phone,
+          email: r.email,
+          track: 'Web Development',
+          suitColor: '#06B6D4',
+          paymentStatus: r.paymentStatus === 'success' ? 'success' : r.paymentStatus === 'failed' ? 'failed' : 'pending',
+          amount: r.amount || 55,
+          paymentId: r.razorpayPaymentId || 'N/A',
+          registeredAt: r.createdAt ? new Date(r.createdAt).toLocaleString() : 'Recent',
+          isPresent: Boolean(r.isPresent),
+          assignedRole: (r.assignedRole as any) || 'unassigned',
+          assignedTeamId: r.assignedTeamId,
+          assignedTeamName: r.assignedTeamName,
+          eligibleRound: 'round1',
+        }));
+
+        setCandidates((prev) => {
+          const map = new Map<string, CandidateRecord>();
+          mapped.forEach((c) => map.set(c.collegeId, c));
+          prev.forEach((c) => {
+            if (!map.has(c.collegeId)) map.set(c.collegeId, c);
+          });
+          return Array.from(map.values());
+        });
+      }
+    } catch {
+      // standalone mode
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBackendData();
+  }, [fetchBackendData]);
 
   // Sync real candidate registration and teams from localStorage
   useEffect(() => {
@@ -250,54 +297,14 @@ export default function AdminMonitoringPage() {
     }
   }, []);
 
-  // Fetch backend data if connected
-  useEffect(() => {
-    const fetchBackend = async () => {
-      try {
-        const res = await adminService.getRegistrations({ limit: 100 });
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          const mapped: CandidateRecord[] = res.data.map((r) => ({
-            id: r._id,
-            name: r.name,
-            collegeId: r.collegeId,
-            year: r.year,
-            branch: r.branch,
-            section: r.section,
-            phone: r.phone,
-            email: r.email,
-            track: 'Web Development',
-            suitColor: '#06B6D4',
-            paymentStatus: r.paymentStatus === 'success' ? 'success' : r.paymentStatus === 'failed' ? 'failed' : 'pending',
-            amount: r.amount || 55,
-            paymentId: r.razorpayPaymentId || 'N/A',
-            registeredAt: r.createdAt ? new Date(r.createdAt).toLocaleString() : 'Recent',
-            isPresent: false,
-            assignedRole: 'unassigned',
-            eligibleRound: 'round1',
-          }));
-
-          setCandidates((prev) => {
-            const map = new Map<string, CandidateRecord>();
-            mapped.forEach((c) => map.set(c.collegeId, c));
-            prev.forEach((c) => {
-              if (!map.has(c.collegeId)) map.set(c.collegeId, c);
-            });
-            return Array.from(map.values());
-          });
-        }
-      } catch {
-        // standalone mode
-      }
-    };
-    fetchBackend();
-  }, []);
-
   // Attendance Toggle
-  const handleToggleAttendance = (candidateId: string) => {
+  const handleToggleAttendance = async (candidateId: string) => {
+    const candidate = candidates.find((c) => c.id === candidateId || c.collegeId === candidateId);
+    const nextState = candidate ? !candidate.isPresent : true;
+
     setCandidates((prev) =>
       prev.map((c) => {
         if (c.id === candidateId || c.collegeId === candidateId) {
-          const nextState = !c.isPresent;
           showToast(`${c.name} marked as ${nextState ? 'PRESENT (Checked In)' : 'ABSENT'}`);
           // Sync with local user ticket if matching
           try {
@@ -317,6 +324,15 @@ export default function AdminMonitoringPage() {
         return c;
       })
     );
+
+    // Persist to backend database if candidate exists in DB
+    try {
+      if (candidate?.id && candidate.id.length === 24) {
+        await adminService.updateParticipant(candidate.id, { isPresent: nextState });
+      }
+    } catch {
+      // ignore
+    }
   };
 
   // Role Override
@@ -447,7 +463,13 @@ export default function AdminMonitoringPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setIsQRModalOpen(true)}
+            className="au-btn bg-crew-lime hover:bg-lime-400 text-black font-display text-xs sm:text-sm py-2.5 px-4 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(50,205,50,0.3)] font-bold transition-all"
+          >
+            <span>📱 VENUE CHECK-IN QR</span>
+          </button>
           <Link
             href="/admin/evaluation"
             className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs sm:text-sm py-2.5 px-5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(255,204,0,0.25)] font-bold"
@@ -466,6 +488,7 @@ export default function AdminMonitoringPage() {
         totalPaymentINR={totalPaymentINR}
         firstYearCount={firstYearCount}
         secondYearCount={secondYearCount}
+        onOpenQR={() => setIsQRModalOpen(true)}
       />
 
       {/* B. ANNOUNCEMENT SECTION (To convey relevant info & results) */}
@@ -488,6 +511,15 @@ export default function AdminMonitoringPage() {
         onClose={() => setSelectedCandidate(null)}
         onToggleAttendance={handleToggleAttendance}
         onUpdateRole={handleUpdateRole}
+      />
+
+      {/* Venue Attendance QR Modal */}
+      <VenueCheckInQRModal
+        isOpen={isQRModalOpen}
+        onClose={() => setIsQRModalOpen(false)}
+        presentCount={presentCount}
+        totalRegistered={totalRegistered}
+        onCandidateCheckInSuccess={fetchBackendData}
       />
     </div>
   );

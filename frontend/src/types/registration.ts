@@ -21,9 +21,26 @@ export interface RegistrationRecord extends RegistrationFormData {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   verifiedAt?: string;
+  isPresent?: boolean;
+  assignedRole?: 'unassigned' | 'crewmate' | 'impostor';
+  assignedTeamId?: string;
+  assignedTeamName?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface VenueCheckInPayload {
+  collegeId?: string;
+  email?: string;
+  uid?: string;
+}
+
+export interface VenueCheckInResponse {
+  success: boolean;
+  alreadyCheckedIn?: boolean;
+  message: string;
+  registration?: RegistrationRecord;
 }
 
 export interface RazorpayOrderResponse {

@@ -246,3 +246,72 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ success: false, message: 'Webhook processing error' });
   }
 };
+
+export const venueCheckIn = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { collegeId, email, uid } = req.body;
+    const targetUid = req.user?.uid || uid;
+
+    const queries: any[] = [];
+    if (collegeId && typeof collegeId === 'string' && collegeId.trim()) {
+      queries.push({ collegeId: new RegExp(`^${collegeId.trim()}$`, 'i') });
+    }
+    if (email && typeof email === 'string' && email.trim()) {
+      queries.push({ email: email.trim().toLowerCase() });
+    }
+    if (targetUid && typeof targetUid === 'string' && targetUid.trim()) {
+      queries.push({ firebaseUid: targetUid.trim() });
+    }
+
+    if (queries.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: 'Please provide your College ID or registered Email address to check in.',
+      });
+      return;
+    }
+
+    // Find registration matching any of the identifiers
+    const registration = await Registration.findOne({ $or: queries });
+
+    if (!registration) {
+      res.status(404).json({
+        success: false,
+        message: 'No registration found matching the provided details. Please check your College ID or visit the registration desk.',
+      });
+      return;
+    }
+
+    if (registration.paymentStatus !== 'success') {
+      res.status(400).json({
+        success: false,
+        message: `Registration found for ${registration.name}, but payment status is "${registration.paymentStatus}". Please complete fee payment to check in.`,
+        registration,
+      });
+      return;
+    }
+
+    const wasAlreadyPresent = Boolean(registration.isPresent);
+
+    if (!wasAlreadyPresent) {
+      registration.isPresent = true;
+      registration.verifiedAt = registration.verifiedAt || new Date();
+      await registration.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      alreadyCheckedIn: wasAlreadyPresent,
+      message: wasAlreadyPresent
+        ? `Participant ${registration.name} is already checked in.`
+        : `Check-in verified! Welcome to AmongU venue, ${registration.name}.`,
+      registration,
+    });
+  } catch (error: any) {
+    console.error('Venue Check-in Error:', error);
+    res.status(500).json({
+      success: false,
+      message: error?.message || 'Server error occurred during venue check-in',
+    });
+  }
+};
