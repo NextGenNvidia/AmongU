@@ -17,6 +17,9 @@ export interface IRegistration extends Document {
   amount: number;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
+  isPresent: boolean;
+  assignedTeamName?: string;
+  assignedRole: 'unassigned' | 'crewmate' | 'impostor';
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
@@ -94,6 +97,22 @@ const registrationSchema = new Schema<IRegistration>(
       type: String,
       enum: ['razorpay', 'manual_cash'],
       default: 'razorpay',
+    },
+    isPresent: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    assignedTeamName: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    assignedRole: {
+      type: String,
+      enum: ['unassigned', 'crewmate', 'impostor'],
+      default: 'unassigned',
+      index: true,
     },
     razorpayOrderId: {
       type: String,

@@ -25,6 +25,21 @@ export const adminService = {
     return res.data;
   },
 
+  // Update participant attendance, role, and details
+  updateParticipant: async (
+    id: string,
+    data: {
+      paymentStatus?: string;
+      isPresent?: boolean;
+      assignedRole?: string;
+      assignedTeamName?: string;
+      notes?: string;
+    }
+  ): Promise<{ success: boolean; registration: RegistrationRecord }> => {
+    const res = await apiClient.patch(`/admin/registrations/${id}/status`, data);
+    return res.data;
+  },
+
   // Manual cash desk registration
   manualRegister: async (data: any): Promise<{ success: boolean; registration: RegistrationRecord }> => {
     const res = await apiClient.post('/admin/registrations/manual', data);

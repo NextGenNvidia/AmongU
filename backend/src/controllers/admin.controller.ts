@@ -80,14 +80,26 @@ export const getRegistrationById = async (req: Request, res: Response): Promise<
 export const updateRegistrationStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { paymentStatus, notes } = req.body;
+    const { paymentStatus, notes, isPresent, assignedRole, assignedTeamName } = req.body;
 
-    const updateFields: any = { paymentStatus };
+    const updateFields: any = {};
+    if (paymentStatus !== undefined) {
+      updateFields.paymentStatus = paymentStatus;
+      if (paymentStatus === 'success') {
+        updateFields.verifiedAt = new Date();
+      }
+    }
     if (notes !== undefined) {
       updateFields.notes = notes;
     }
-    if (paymentStatus === 'success') {
-      updateFields.verifiedAt = new Date();
+    if (isPresent !== undefined) {
+      updateFields.isPresent = isPresent;
+    }
+    if (assignedRole !== undefined) {
+      updateFields.assignedRole = assignedRole;
+    }
+    if (assignedTeamName !== undefined) {
+      updateFields.assignedTeamName = assignedTeamName;
     }
 
     const registration = await Registration.findByIdAndUpdate(id, updateFields, { new: true });
@@ -170,11 +182,12 @@ export const manualRegister = async (req: Request, res: Response): Promise<void>
 
 export const getStats = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const [total, paid, pending, failed, branchStats, yearStats] = await Promise.all([
+    const [total, paid, pending, failed, present, branchStats, yearStats] = await Promise.all([
       Registration.countDocuments(),
       Registration.countDocuments({ paymentStatus: 'success' }),
       Registration.countDocuments({ paymentStatus: 'pending' }),
       Registration.countDocuments({ paymentStatus: 'failed' }),
+      Registration.countDocuments({ isPresent: true }),
       Registration.aggregate([
         { $match: { paymentStatus: 'success' } },
         { $group: { _id: '$branch', count: { $sum: 1 } } },
@@ -193,6 +206,7 @@ export const getStats = async (_req: Request, res: Response): Promise<void> => {
       success: true,
       stats: {
         totalRegistrations: total,
+        presentCount: present,
         paidCount: paid,
         pendingCount: pending,
         failedCount: failed,

@@ -9,7 +9,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { profile, loading, loginAdminWithGoogle, logout } = useAuth();
   const pathname = usePathname();
   const [organizerBypass, setOrganizerBypass] = useState<boolean>(false);
-  const [activeRoundName, setActiveRoundName] = useState<string>('Round 1: Infiltration');
+  const [activeRoundName, setActiveRoundName] = useState<string>('Round 3: Impostor Reveal & Judging');
 
   useEffect(() => {
     try {
@@ -20,6 +20,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const roundStored = localStorage.getItem('amongu_active_round_name');
       if (roundStored !== null && roundStored !== undefined && roundStored.length > 0) {
         setActiveRoundName(roundStored);
+      } else {
+        setActiveRoundName('Round 3: Impostor Reveal & Judging');
       }
     } catch {
       // Local storage may be restricted in some environments
@@ -131,72 +133,69 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          {/* Section Navigation Tabs (Requested: Monitoring vs Evaluation) */}
-          <nav className="flex items-center gap-1 sm:gap-2 bg-black/60 p-1 rounded-xl border border-gray-800">
-            <Link
-              href="/admin"
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-display tracking-wide transition-all flex items-center gap-1.5 ${
-                pathname === '/admin' || pathname === '/admin/participants'
-                  ? 'bg-crew-cyan text-black font-bold shadow-[0_0_15px_rgba(0,255,255,0.3)]'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
-              }`}
-            >
-              <span>📡</span>
-              <span>MONITORING</span>
-            </Link>
+            {/* Section Navigation Tabs (Monitoring | Evaluation) */}
+            <nav className="flex items-center gap-1 sm:gap-2 bg-black/60 p-1 rounded-xl border border-gray-800">
+              <Link
+                href="/admin"
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-display tracking-wide transition-all flex items-center gap-1.5 ${
+                  pathname === '/admin' || pathname === '/admin/participants'
+                    ? 'bg-crew-cyan text-black font-bold shadow-[0_0_15px_rgba(0,255,255,0.3)]'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+                }`}
+              >
+                <span>Monitoring</span>
+              </Link>
 
-            <Link
-              href="/admin/evaluation"
-              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-display tracking-wide transition-all flex items-center gap-1.5 ${
-                pathname === '/admin/evaluation'
-                  ? 'bg-crew-yellow text-black font-bold shadow-[0_0_15px_rgba(255,204,0,0.3)]'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
-              }`}
-            >
-              <span>⚖️</span>
-              <span>EVALUATION</span>
-              <span className="text-[9px] bg-yellow-950 text-yellow-300 px-1.5 py-0.2 rounded border border-yellow-600/60 hidden md:inline">
-                PHASE 2
-              </span>
-            </Link>
-          </nav>
+              <Link
+                href="/admin/evaluation"
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-display tracking-wide transition-all flex items-center gap-1.5 ${
+                  pathname === '/admin/evaluation'
+                    ? 'bg-crew-yellow text-black font-bold shadow-[0_0_15px_rgba(255,204,0,0.3)]'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+                }`}
+              >
+                <span>Evaluation</span>
+              </Link>
+            </nav>
 
-          {/* Organizer Session Bar */}
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex flex-col text-right">
-              <span className="text-xs font-mono text-crew-cyan font-bold">
-                {profile !== null && profile.email !== null && profile.email !== undefined
-                  ? profile.email
-                  : 'admin.lead@kiet.edu'}
-              </span>
-              <span className="text-[10px] text-gray-500 font-mono">CHIEF ORGANIZER</span>
+            {/* Organizer Session Bar */}
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex flex-col text-right">
+                <span className="text-xs font-mono text-crew-cyan font-bold">
+                  {profile !== null && profile.email !== null && profile.email !== undefined
+                    ? profile.email
+                    : 'admin.lead@kiet.edu'}
+                </span>
+                <span className="text-[10px] text-gray-400 font-mono font-bold">Account Role: Chief Organizer</span>
+              </div>
+
+              <button
+                onClick={handleAdminLogout}
+                className="px-2.5 py-1.5 bg-red-950/40 hover:bg-crew-red/20 text-crew-red border border-crew-red/40 rounded-lg text-xs font-mono font-bold transition-colors"
+                title="End Organizer Session"
+              >
+                EXIT
+              </button>
+
+              <Link
+                href="/"
+                className="text-xs text-gray-400 hover:text-white font-mono underline hidden sm:inline"
+              >
+                Site
+              </Link>
             </div>
-
-            <button
-              onClick={handleAdminLogout}
-              className="px-2.5 py-1.5 bg-red-950/40 hover:bg-crew-red/20 text-crew-red border border-crew-red/40 rounded-lg text-xs font-mono font-bold transition-colors"
-              title="End Organizer Session"
-            >
-              EXIT
-            </button>
-
-            <Link
-              href="/"
-              className="text-xs text-gray-400 hover:text-white font-mono underline hidden sm:inline"
-            >
-              Site
-            </Link>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Command Center Screen */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">{children}</main>
+        {/* Main Command Center Screen */}
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">{children}</main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-800/80 bg-black/40 py-4 px-6 text-center text-xs text-gray-500 font-mono">
-        AmongU Hackathon Control Matrix • KIET Deemed to be University • All Organizer Rights Reserved
-      </footer>
-    </div>
+        {/* Footer */}
+        <footer className="border-t border-gray-800/80 bg-black/60 py-5 px-6 text-center text-xs text-gray-400 font-mono space-y-1">
+          <p className="font-bold text-gray-300 text-sm">AmongU Hackathon Control Center</p>
+          <p className="text-gray-400">NextGen Supercomputing • Centre of Excellence (CoE) • KIET Deemed to be University</p>
+          <p className="text-[11px] text-gray-500">© 2026 AmongU. All rights reserved.</p>
+        </footer>
+      </div>
   );
 }

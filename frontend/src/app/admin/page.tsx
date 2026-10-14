@@ -438,21 +438,21 @@ export default function AdminMonitoringPage() {
               SECTION 1: MONITORING PANEL
             </span>
             <span className="text-xs font-mono text-crew-lime bg-green-950/60 border border-crew-lime/40 px-2.5 py-0.5 rounded-full">
-              ROUND ONGOING: {ongoingRoundLabel}
+              ROUND ONGOING: Round 3 — Impostor Reveal &amp; Judging
             </span>
           </div>
-          <h1 className="font-display text-3xl sm:text-4xl text-white">LIVE MONITORING COMMAND MATRIX</h1>
-          <p className="text-gray-400 text-sm font-bold mt-1">
-            Real-time candidate registrations, venue attendance check-ins, fee collections, announcements, and roles.
+          <h1 className="font-display text-3xl sm:text-4xl text-white">LIVE EVENT CONTROL CENTER</h1>
+          <p className="text-gray-400 text-sm font-bold mt-1 max-w-4xl">
+            Monitor participant registrations, venue attendance, registration fee payments, team assignments, role allocation, and event announcements from one central dashboard.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Link
             href="/admin/evaluation"
-            className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs sm:text-sm py-2.5 px-5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(255,204,0,0.25)]"
+            className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs sm:text-sm py-2.5 px-5 rounded-xl flex items-center gap-2 shadow-[0_0_15px_rgba(255,204,0,0.25)] font-bold"
           >
-            <span>⚖️</span> SWITCH TO EVALUATION PANEL →
+            <span>SWITCH TO EVALUATION PANEL →</span>
           </Link>
         </div>
       </div>
@@ -466,7 +466,6 @@ export default function AdminMonitoringPage() {
         totalPaymentINR={totalPaymentINR}
         firstYearCount={firstYearCount}
         secondYearCount={secondYearCount}
-        ongoingRoundKey={activeRoundKey.toUpperCase()}
       />
 
       {/* B. ANNOUNCEMENT SECTION (To convey relevant info & results) */}

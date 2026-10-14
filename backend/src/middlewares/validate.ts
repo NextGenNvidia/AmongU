@@ -92,8 +92,9 @@ export const adminManualRegistrationSchema = studentRegistrationSchema.extend({
 });
 
 export const adminUpdateStatusSchema = z.object({
-  paymentStatus: z.enum(['pending', 'success', 'failed'], {
-    errorMap: () => ({ message: 'paymentStatus must be pending, success, or failed' }),
-  }),
+  paymentStatus: z.enum(['pending', 'success', 'failed']).optional(),
   notes: z.string().optional(),
+  isPresent: z.boolean().optional(),
+  assignedRole: z.enum(['unassigned', 'crewmate', 'impostor']).optional(),
+  assignedTeamName: z.string().optional(),
 });
