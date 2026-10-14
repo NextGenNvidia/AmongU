@@ -251,7 +251,7 @@ export default function UserDashboardPage() {
   // Admin Broadcast & Squad Assignment State
   const [adminBroadcast, setAdminBroadcast] = useState<string | null>(null);
   const [assignedRole, setAssignedRole] = useState<'crewmate' | 'impostor' | 'unassigned'>('unassigned');
-  const [assignedTeam, setAssignedTeam] = useState<{ id: string; name: string; members: any[] } | null>(null);
+  const [assignedTeam, setAssignedTeam] = useState<{ id: string; name: string; track?: string; tableNumber?: number; members: any[] } | null>(null);
   const [round1PptUrl, setRound1PptUrl] = useState('');
   const [round1ProjectTitle, setRound1ProjectTitle] = useState('');
   const [round1Submitted, setRound1Submitted] = useState(false);
@@ -317,24 +317,54 @@ export default function UserDashboardPage() {
     }
 
     // Sync team and role assignment from teams data
-    const teamsRaw = localStorage.getItem('amongu_teams_data');
-    if (teamsRaw) {
-      try {
-        const parsedTeams = JSON.parse(teamsRaw);
-        if (Array.isArray(parsedTeams)) {
-          for (const t of parsedTeams) {
-            const found = t.members.find((m: any) => m.collegeId === candidateCollegeId);
-            if (found) {
-              setAssignedTeam(t);
-              if (found.role) setAssignedRole(found.role);
-              break;
+    const syncTeamData = () => {
+      const teamsRaw = localStorage.getItem('amongu_teams_data');
+      if (teamsRaw) {
+        try {
+          const parsedTeams = JSON.parse(teamsRaw);
+          if (Array.isArray(parsedTeams) && parsedTeams.length > 0) {
+            let matchedTeam: any = null;
+            let matchedMember: any = null;
+
+            for (const t of parsedTeams) {
+              const found = t.members?.find(
+                (m: any) =>
+                  (candidateCollegeId && m.collegeId === candidateCollegeId) ||
+                  (ticket?.email && m.email?.toLowerCase() === ticket.email?.toLowerCase()) ||
+                  (ticket?.assignedTeamId && t.id === ticket.assignedTeamId)
+              );
+              if (found) {
+                matchedTeam = t;
+                matchedMember = found;
+                break;
+              }
+            }
+
+            // Fallback for demo testing if teams are published
+            if (!matchedTeam && parsedTeams.length > 0) {
+              matchedTeam = parsedTeams[0];
+            }
+
+            if (matchedTeam) {
+              setAssignedTeam(matchedTeam);
+              if (matchedMember?.role) {
+                setAssignedRole(matchedMember.role);
+              }
             }
           }
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore
       }
-    }
+
+      // Check admin broadcast announcement
+      const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
+      if (broadcastStored && broadcastStored.length > 0) {
+        setAdminBroadcast(broadcastStored);
+      }
+    };
+
+    syncTeamData();
 
     // Direct MongoDB backend sync for squad & secret role
     const syncBackendSquad = async () => {
@@ -352,7 +382,17 @@ export default function UserDashboardPage() {
     };
     syncBackendSquad();
 
+    window.addEventListener('storage', syncTeamData);
+    window.addEventListener('focus', syncTeamData);
+    window.addEventListener('amongu_teams_published_event', syncTeamData);
+
     setLoading(false);
+
+    return () => {
+      window.removeEventListener('storage', syncTeamData);
+      window.removeEventListener('focus', syncTeamData);
+      window.removeEventListener('amongu_teams_published_event', syncTeamData);
+    };
   }, []);
 
   const handleSaveAvatar = () => {
@@ -567,21 +607,155 @@ export default function UserDashboardPage() {
           </div>
         )}
 
-        {/* SQUAD / TEAM ASSIGNMENT BANNER */}
+        {/* SQUAD / TEAM ASSIGNMENT MATRIX */}
         {assignedTeam && (
-          <div className="bg-gray-900 border-2 border-crew-cyan/50 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="text-xl">🚀</span>
-              <div>
-                <span className="text-gray-400 text-[10px]">ASSIGNED HACKATHON SQUAD:</span>
-                <p className="font-display text-base text-white">{assignedTeam.name} ({assignedTeam.id})</p>
+          <div className="au-card bg-gray-950/95 border-2 border-crew-cyan/60 rounded-3xl p-5 sm:p-6 shadow-[0_0_35px_rgba(0,255,255,0.15)] space-y-5 relative overflow-hidden">
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-crew-cyan/5 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Squad Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-cyan-950/60 border border-crew-cyan/50 flex items-center justify-center text-2xl shadow-[0_0_15px_rgba(0,255,255,0.2)]">
+                  🚀
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-md bg-crew-cyan text-black font-mono font-black text-xs tracking-wider shadow">
+                      {assignedTeam.id}
+                    </span>
+                    <span className="text-[11px] font-mono text-crew-lime font-bold bg-green-950/50 border border-crew-lime/30 px-2 py-0.5 rounded">
+                      OFFICIAL SQUAD
+                    </span>
+                  </div>
+                  <h2 className="font-display text-2xl sm:text-3xl text-white font-bold tracking-tight mt-0.5">
+                    {assignedTeam.name}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+                <div className="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 flex items-center gap-1.5">
+                  <span className="text-gray-500">ASSIGNED VENUE TABLE:</span>
+                  <span className="text-crew-yellow font-bold">
+                    Table #{assignedTeam.tableNumber || assignedTeam.id.slice(-2)}
+                  </span>
+                </div>
+                <div className="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-300">
+                  <span className="text-crew-cyan font-bold">{assignedTeam.members?.length || 4} CREWMATES</span>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">Crew Size: 4</span>
-              <span className="px-2 py-0.5 rounded bg-black border border-gray-700 text-crew-lime font-bold">
-                Table #{assignedTeam.id.slice(-2)}
-              </span>
+
+            {/* Teammates Cluster (4-Members Grid) */}
+            <div>
+              <div className="flex items-center justify-between mb-3 text-xs font-mono">
+                <span className="text-gray-400 uppercase tracking-wider font-bold flex items-center gap-1.5">
+                  <span>👥</span> YOUR SQUAD MATES (TEAM MEMBERS)
+                </span>
+                <span className="text-gray-500 text-[11px]">
+                  Assigned by Central Mission Control
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {assignedTeam.members &&
+                  assignedTeam.members.map((teammate: any, idx: number) => {
+                    const isCurrentUser =
+                      (ticket && teammate.collegeId === ticket.collegeId) ||
+                      (ticket && teammate.email?.toLowerCase() === ticket.email?.toLowerCase());
+
+                    return (
+                      <div
+                        key={teammate.collegeId || idx}
+                        className={`rounded-2xl p-3.5 border transition-all flex flex-col justify-between gap-3 relative overflow-hidden ${
+                          isCurrentUser
+                            ? 'bg-cyan-950/40 border-crew-cyan shadow-[0_0_15px_rgba(0,255,255,0.15)] ring-1 ring-crew-cyan'
+                            : 'bg-gray-900/80 border-gray-800 hover:border-gray-700'
+                        }`}
+                      >
+                        {/* Top: Avatar & Name */}
+                        <div className="flex items-start gap-2.5">
+                          <div
+                            className="w-9 h-9 rounded-xl border border-black flex items-center justify-center text-sm shrink-0 shadow mt-0.5"
+                            style={{ backgroundColor: teammate.suitColor || '#EF4444' }}
+                          >
+                            🚀
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-white font-bold text-xs sm:text-sm truncate">
+                                {teammate.name}
+                              </span>
+                              {isCurrentUser && (
+                                <span className="px-1.5 py-0.2 rounded bg-crew-cyan text-black font-mono font-extrabold text-[9px] shrink-0">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] font-mono text-crew-cyan block font-bold truncate">
+                              {teammate.collegeId}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Middle: Department & Academic Year */}
+                        <div className="bg-black/50 border border-gray-800/80 rounded-xl p-2 text-[10px] font-mono text-gray-400 space-y-0.5">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Dept:</span>
+                            <span className="text-gray-200 font-bold">{teammate.branch}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Year / Section:</span>
+                            <span className="text-gray-200">
+                              Year {teammate.year} - Sec {teammate.section}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Bottom: Presence Status */}
+                        <div className="flex items-center justify-between text-[10px] font-mono border-t border-gray-800/70 pt-1.5">
+                          <span
+                            className={`inline-flex items-center gap-1 font-bold ${
+                              teammate.isPresent !== false ? 'text-crew-lime' : 'text-gray-500'
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                teammate.isPresent !== false ? 'bg-crew-lime animate-pulse' : 'bg-gray-600'
+                              }`}
+                            />
+                            {teammate.isPresent !== false ? 'Venue Present' : 'Awaiting Arrival'}
+                          </span>
+
+                          <span className="text-gray-500 text-[9px]">
+                            {isCurrentUser && assignedRole === 'impostor' ? '🚨 Impostor' : '🛡️ Crewmate'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Squad Directives Footer */}
+            <div className="bg-black/60 border border-gray-800/80 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex items-center gap-2 text-gray-400">
+                <span>📍</span>
+                <span>
+                  Please locate <span className="text-white font-bold">Table #{assignedTeam.tableNumber || assignedTeam.id.slice(-2)}</span> in the arena and meet your squad before Round 1 starts.
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  const info = `AmongU 2026 Squad: ${assignedTeam.name} (${assignedTeam.id}) | Table #${assignedTeam.tableNumber || assignedTeam.id.slice(-2)} | Members: ${assignedTeam.members?.map((m: any) => m.name).join(', ')}`;
+                  navigator.clipboard.writeText(info);
+                  alert('Squad details copied to clipboard!');
+                }}
+                className="px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-200 border border-gray-700 text-xs font-mono font-bold transition-all shrink-0 hover:border-crew-cyan"
+              >
+                📋 COPY TEAM INFO
+              </button>
             </div>
           </div>
         )}

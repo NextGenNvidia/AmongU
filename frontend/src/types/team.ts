@@ -19,6 +19,7 @@ export interface Team {
   members: TeamMember[];
   impostorId?: string; // Secretly assigned member ID
   impostorRevealed: boolean;
+  isPublished?: boolean;
   tableNumber?: number;
   round1Submission?: {
     pptUrl: string;

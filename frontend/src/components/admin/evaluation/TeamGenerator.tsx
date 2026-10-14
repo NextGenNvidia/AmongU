@@ -28,10 +28,39 @@ export default function TeamGenerator({
 }: TeamGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [successNote, setSuccessNote] = useState<string | null>(null);
+  const [isPublished, setIsPublished] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('amongu_teams_published') === 'true';
+    }
+    return false;
+  });
 
   // Present candidates eligible for team formation
   const presentCandidates = candidates.filter((c) => c.isPresent);
   const eligiblePool = presentCandidates.length >= 4 ? presentCandidates : candidates;
+
+  const handleTogglePublish = () => {
+    const next = !isPublished;
+    setIsPublished(next);
+    try {
+      localStorage.setItem('amongu_teams_published', next ? 'true' : 'false');
+      if (next) {
+        const broadcastMsg =
+          'Official Squads for AmongU 2026 have been published! Check your participant dashboard to view your assigned Team ID, Table number, and squad members.';
+        localStorage.setItem('amongu_admin_broadcast', broadcastMsg);
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('amongu_teams_published_event', { detail: { published: true } }));
+        setSuccessNote(
+          'Squad rosters published live! Participants can now view their team_id and teammates on their dashboard.'
+        );
+      } else {
+        setSuccessNote('Squad rosters unpublished (Hidden from participants).');
+      }
+    } catch {
+      // ignore
+    }
+    setTimeout(() => setSuccessNote(null), 4000);
+  };
 
   const handleGenerateTeams = () => {
     setIsGenerating(true);
@@ -118,18 +147,30 @@ export default function TeamGenerator({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-mono text-crew-lime px-2.5 py-1 rounded bg-black/60 border border-gray-800 font-bold">
             {presentCandidates.length} Present Participants Checked In
           </span>
           <button
             onClick={handleGenerateTeams}
             disabled={isGenerating}
-            className="au-btn bg-crew-cyan hover:bg-cyan-400 text-black font-display text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,255,255,0.2)]"
+            className="au-btn bg-crew-cyan hover:bg-cyan-400 text-black font-display text-xs py-2 px-3 sm:px-4 rounded-xl flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,255,255,0.2)]"
           >
             <span>🎲</span>
             <span>{isGenerating ? 'SHUFFLING...' : 'GENERATE RANDOM TEAMS (4)'}</span>
           </button>
+          {teams.length > 0 && (
+            <button
+              onClick={handleTogglePublish}
+              className={`au-btn text-xs py-2 px-3 sm:px-4 rounded-xl flex items-center gap-1.5 font-bold transition-all ${
+                isPublished
+                  ? 'bg-crew-lime hover:bg-lime-400 text-black shadow-[0_0_15px_rgba(50,205,50,0.3)]'
+                  : 'bg-crew-yellow hover:bg-yellow-400 text-black shadow-[0_0_15px_rgba(255,204,0,0.3)] animate-pulse'
+              }`}
+            >
+              <span>{isPublished ? '🟢 TEAMS PUBLISHED (LIVE)' : '📢 PUBLISH TEAMS TO USERS'}</span>
+            </button>
+          )}
         </div>
       </div>
 

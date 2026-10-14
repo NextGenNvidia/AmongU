@@ -9,6 +9,8 @@ import AnnouncementSection from '../../components/admin/monitoring/AnnouncementS
 import CandidateTable from '../../components/admin/monitoring/CandidateTable';
 import CandidateDossierModal from '../../components/admin/monitoring/CandidateDossierModal';
 import VenueCheckInQRModal from '../../components/admin/monitoring/VenueCheckInQRModal';
+import { Team } from '../../types/team';
+import { teamService } from '../../services/team.service';
 
 const DEFAULT_SEED_CANDIDATES: CandidateRecord[] = [
   {
@@ -168,6 +170,7 @@ const DEFAULT_SEED_CANDIDATES: CandidateRecord[] = [
 
 export default function AdminMonitoringPage() {
   const [candidates, setCandidates] = useState<CandidateRecord[]>(DEFAULT_SEED_CANDIDATES);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateRecord | null>(null);
   const [activeRoundKey, setActiveRoundKey] = useState<'round1' | 'round2' | 'round3'>('round1');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -266,11 +269,12 @@ export default function AdminMonitoringPage() {
       // 2. Check saved teams data to sync assigned teams & roles
       const teamsRaw = localStorage.getItem('amongu_teams_data');
       if (teamsRaw) {
-        const teams = JSON.parse(teamsRaw);
-        if (Array.isArray(teams)) {
+        const parsedTeams = JSON.parse(teamsRaw);
+        if (Array.isArray(parsedTeams)) {
+          setTeams(parsedTeams);
           setCandidates((prev) =>
             prev.map((c) => {
-              for (const team of teams) {
+              for (const team of parsedTeams) {
                 const found = team.members.find((m: any) => m.collegeId === c.collegeId);
                 if (found) {
                   return {
@@ -314,14 +318,40 @@ export default function AdminMonitoringPage() {
             prev.map((c) => (c.collegeId in attMap ? { ...c, isPresent: Boolean(attMap[c.collegeId]) } : c))
           );
         }
+
+        const teamsStored = localStorage.getItem('amongu_teams_data');
+        if (teamsStored) {
+          const parsedTeams = JSON.parse(teamsStored);
+          if (Array.isArray(parsedTeams)) {
+            setTeams(parsedTeams);
+            setCandidates((prev) =>
+              prev.map((c) => {
+                for (const team of parsedTeams) {
+                  const found = team.members.find((m: any) => m.collegeId === c.collegeId);
+                  if (found) {
+                    return {
+                      ...c,
+                      assignedTeamId: team.id,
+                      assignedTeamName: team.name,
+                      assignedRole: found.role || c.assignedRole,
+                    };
+                  }
+                }
+                return c;
+              })
+            );
+          }
+        }
       } catch {}
     };
 
     window.addEventListener('storage', syncAttendanceFromStorage);
     window.addEventListener('focus', syncAttendanceFromStorage);
+    window.addEventListener('amongu_teams_published_event', syncAttendanceFromStorage);
     return () => {
       window.removeEventListener('storage', syncAttendanceFromStorage);
       window.removeEventListener('focus', syncAttendanceFromStorage);
+      window.removeEventListener('amongu_teams_published_event', syncAttendanceFromStorage);
     };
   }, []);
 
@@ -533,6 +563,7 @@ export default function AdminMonitoringPage() {
       {/* C. DISPLAY ALL REGISTERED USERS WITH INDIVIDUAL DETAILS & FILTERS */}
       <CandidateTable
         candidates={candidates}
+        teams={teams}
         onToggleAttendance={handleToggleAttendance}
         onSelectCandidate={(c) => setSelectedCandidate(c)}
         onUpdateRole={handleUpdateRole}
