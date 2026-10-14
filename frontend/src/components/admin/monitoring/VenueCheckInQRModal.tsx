@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import QRCode from 'qrcode';
+import { registrationService } from '../../../services/registration.service';
 
 interface VenueCheckInQRModalProps {
   isOpen: boolean;
@@ -78,34 +79,66 @@ export default function VenueCheckInQRModal({
     setManualSubmitting(true);
     setManualMessage(null);
 
-    try {
-      const res = await fetch('/api/registrations/venue-checkin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ collegeId: manualIdInput.trim() }),
-      });
-      const data = await res.json();
+    const inputVal = manualIdInput.trim();
+    const payload = inputVal.includes('@') ? { email: inputVal } : { collegeId: inputVal };
 
-      if (res.ok && data.success) {
+    try {
+      const res = await registrationService.venueCheckIn(payload);
+
+      if (res.success) {
         setManualMessage({
-          text: data.alreadyCheckedIn
-            ? `⚠️ ${data.registration?.name || manualIdInput} is already marked present!`
-            : `✅ Marked present: ${data.registration?.name || manualIdInput}!`,
+          text: res.alreadyCheckedIn
+            ? `⚠️ ${res.registration?.name || inputVal} is already marked present!`
+            : `✅ Marked present: ${res.registration?.name || inputVal}!`,
           error: false,
         });
         setManualIdInput('');
         if (onCandidateCheckInSuccess) onCandidateCheckInSuccess();
       } else {
         setManualMessage({
-          text: data.message || 'Check-in failed. Please verify student ID.',
+          text: res.message || 'Check-in failed. Please verify student ID.',
           error: true,
         });
       }
     } catch (err: any) {
-      setManualMessage({
-        text: err?.message || 'Network error connecting to backend.',
-        error: true,
-      });
+      if (err?.response?.data?.message) {
+        setManualMessage({
+          text: err.response.data.message,
+          error: true,
+        });
+      } else {
+        // Fallback for standalone / local dev mode
+        let attMap: Record<string, boolean> = {};
+        try {
+          const mapRaw = localStorage.getItem('amongu_attendance_map');
+          if (mapRaw) attMap = JSON.parse(mapRaw);
+        } catch {}
+
+        const wasPresent = Boolean(attMap[inputVal]);
+        attMap[inputVal] = true;
+        localStorage.setItem('amongu_attendance_map', JSON.stringify(attMap));
+
+        // Sync with local user ticket if matching
+        try {
+          const ticketRaw = localStorage.getItem('amongu_user_ticket');
+          if (ticketRaw) {
+            const ticket = JSON.parse(ticketRaw);
+            if (ticket.collegeId === inputVal || ticket.email === inputVal) {
+              ticket.isPresent = true;
+              localStorage.setItem('amongu_user_ticket', JSON.stringify(ticket));
+            }
+          }
+        } catch {}
+
+        setManualMessage({
+          text: wasPresent
+            ? `⚠️ ID ${inputVal} is already marked present!`
+            : `✅ Marked present: Student ID ${inputVal}!`,
+          error: false,
+        });
+        setManualIdInput('');
+        if (onCandidateCheckInSuccess) onCandidateCheckInSuccess();
+      }
     } finally {
       setManualSubmitting(false);
     }

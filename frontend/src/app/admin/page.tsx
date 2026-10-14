@@ -287,7 +287,16 @@ export default function AdminMonitoringPage() {
         }
       }
 
-      // 3. Check active round key
+      // 3. Sync attendance map overrides
+      const attendanceMapRaw = localStorage.getItem('amongu_attendance_map');
+      if (attendanceMapRaw) {
+        const attMap = JSON.parse(attendanceMapRaw);
+        setCandidates((prev) =>
+          prev.map((c) => (c.collegeId in attMap ? { ...c, isPresent: Boolean(attMap[c.collegeId]) } : c))
+        );
+      }
+
+      // 4. Check active round key
       const savedRound = localStorage.getItem('amongu_active_round_key');
       if (savedRound === 'round1' || savedRound === 'round2' || savedRound === 'round3') {
         setActiveRoundKey(savedRound);
@@ -295,6 +304,25 @@ export default function AdminMonitoringPage() {
     } catch (e) {
       console.warn('Storage sync error:', e);
     }
+
+    const syncAttendanceFromStorage = () => {
+      try {
+        const attendanceMapRaw = localStorage.getItem('amongu_attendance_map');
+        if (attendanceMapRaw) {
+          const attMap = JSON.parse(attendanceMapRaw);
+          setCandidates((prev) =>
+            prev.map((c) => (c.collegeId in attMap ? { ...c, isPresent: Boolean(attMap[c.collegeId]) } : c))
+          );
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', syncAttendanceFromStorage);
+    window.addEventListener('focus', syncAttendanceFromStorage);
+    return () => {
+      window.removeEventListener('storage', syncAttendanceFromStorage);
+      window.removeEventListener('focus', syncAttendanceFromStorage);
+    };
   }, []);
 
   // Attendance Toggle
@@ -306,8 +334,14 @@ export default function AdminMonitoringPage() {
       prev.map((c) => {
         if (c.id === candidateId || c.collegeId === candidateId) {
           showToast(`${c.name} marked as ${nextState ? 'PRESENT (Checked In)' : 'ABSENT'}`);
-          // Sync with local user ticket if matching
+          // Sync with local user ticket and attendance map
           try {
+            let attMap: Record<string, boolean> = {};
+            const attRaw = localStorage.getItem('amongu_attendance_map');
+            if (attRaw) attMap = JSON.parse(attRaw);
+            attMap[c.collegeId] = nextState;
+            localStorage.setItem('amongu_attendance_map', JSON.stringify(attMap));
+
             const ticketRaw = localStorage.getItem('amongu_user_ticket');
             if (ticketRaw) {
               const ticket = JSON.parse(ticketRaw);
