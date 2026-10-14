@@ -18,7 +18,12 @@ export const useAuth = () => {
       return;
     }
 
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+    }, 1200);
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      clearTimeout(safetyTimer);
       setFirebaseUser(user);
       if (user) {
         try {
@@ -37,7 +42,10 @@ export const useAuth = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, []);
 
   const loginWithGoogle = async (): Promise<UserProfile | null> => {
