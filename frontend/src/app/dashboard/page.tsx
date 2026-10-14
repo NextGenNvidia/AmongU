@@ -260,135 +260,147 @@ export default function UserDashboardPage() {
   const [liveTimerSeconds, setLiveTimerSeconds] = useState<number>(4472);
 
   useEffect(() => {
-    // Read saved registration ticket from localStorage
-    const saved = localStorage.getItem('amongu_user_ticket');
-    let candidateCollegeId = '210029012000001';
+    // Fail-safe timer ensures the dashboard never gets stuck on the loading buffer screen
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+    }, 300);
 
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setTicket(parsed);
-        candidateCollegeId = parsed.collegeId;
-        setSelectedColor(parsed.avatarColor ? parsed.avatarColor : '#c51111');
-        setSelectedHat(parsed.avatarHat ? parsed.avatarHat : 'none');
-        setSelectedMuffler(parsed.avatarMuffler ? parsed.avatarMuffler : 'none');
-        if (parsed.assignedRole) setAssignedRole(parsed.assignedRole);
-      } catch (e) {
-        console.error('Error reading ticket:', e);
-      }
-    } else {
-      // Default demo participant if accessed directly
-      const defaultTicket: UserTicket = {
-        name: 'Cadet Explorer',
-        collegeId: '210029012000001',
-        year: '1',
-        branch: 'CSE',
-        section: 'A',
-        phone: '9876543210',
-        email: 'cadet.explorer@kiet.edu',
-        track: 'Web Development',
-        paymentId: 'pay_demo_test123',
-        amount: 55,
-        registeredAt: new Date().toLocaleString(),
-        isEmailVerified: true,
-        avatarColor: '#c51111',
-        avatarHat: 'none',
-        avatarMuffler: 'none',
-        withdrawalStatus: 'none',
-        assignedRole: 'unassigned',
-      };
-      setTicket(defaultTicket);
-      setSelectedColor(defaultTicket.avatarColor as string);
-    }
+    let syncTeamData = () => {};
 
-    // Sync admin broadcast
-    const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
-    if (broadcastStored && broadcastStored.length > 0) {
-      setAdminBroadcast(broadcastStored);
-    }
+    try {
+      // Read saved registration ticket from localStorage
+      const saved = localStorage.getItem('amongu_user_ticket');
+      let candidateCollegeId = '210029012000001';
 
-    // Sync countdown timer
-    const timerStored = localStorage.getItem('amongu_timer_remaining_seconds');
-    if (timerStored) {
-      const parsedTimer = parseInt(timerStored, 10);
-      if (!isNaN(parsedTimer) && parsedTimer > 0) {
-        setLiveTimerSeconds(parsedTimer);
-      }
-    }
-
-    // Sync team and role assignment from teams data
-    const syncTeamData = () => {
-      const teamsRaw = localStorage.getItem('amongu_teams_data');
-      if (teamsRaw) {
+      if (saved) {
         try {
-          const parsedTeams = JSON.parse(teamsRaw);
-          if (Array.isArray(parsedTeams) && parsedTeams.length > 0) {
-            let matchedTeam: any = null;
-            let matchedMember: any = null;
-
-            for (const t of parsedTeams) {
-              const found = t.members?.find(
-                (m: any) =>
-                  (candidateCollegeId && m.collegeId === candidateCollegeId) ||
-                  (ticket?.email && m.email?.toLowerCase() === ticket.email?.toLowerCase()) ||
-                  (ticket?.assignedTeamId && t.id === ticket.assignedTeamId)
-              );
-              if (found) {
-                matchedTeam = t;
-                matchedMember = found;
-                break;
-              }
-            }
-
-            // Fallback for demo testing if teams are published
-            if (!matchedTeam && parsedTeams.length > 0) {
-              matchedTeam = parsedTeams[0];
-            }
-
-            if (matchedTeam) {
-              setAssignedTeam(matchedTeam);
-              if (matchedMember?.role) {
-                setAssignedRole(matchedMember.role);
-              }
-            }
-          }
-        } catch {
-          // ignore
+          const parsed = JSON.parse(saved);
+          setTicket(parsed);
+          candidateCollegeId = parsed.collegeId;
+          setSelectedColor(parsed.avatarColor ? parsed.avatarColor : '#c51111');
+          setSelectedHat(parsed.avatarHat ? parsed.avatarHat : 'none');
+          setSelectedMuffler(parsed.avatarMuffler ? parsed.avatarMuffler : 'none');
+          if (parsed.assignedRole) setAssignedRole(parsed.assignedRole);
+        } catch (e) {
+          console.error('Error reading ticket:', e);
         }
+      } else {
+        // Default demo participant if accessed directly
+        const defaultTicket: UserTicket = {
+          name: 'Cadet Explorer',
+          collegeId: '210029012000001',
+          year: '1',
+          branch: 'CSE',
+          section: 'A',
+          phone: '9876543210',
+          email: 'cadet.explorer@kiet.edu',
+          track: 'Web Development',
+          paymentId: 'pay_demo_test123',
+          amount: 55,
+          registeredAt: new Date().toLocaleString(),
+          isEmailVerified: true,
+          avatarColor: '#c51111',
+          avatarHat: 'none',
+          avatarMuffler: 'none',
+          withdrawalStatus: 'none',
+          assignedRole: 'unassigned',
+        };
+        setTicket(defaultTicket);
+        setSelectedColor(defaultTicket.avatarColor as string);
       }
 
-      // Check admin broadcast announcement
+      // Sync admin broadcast
       const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
       if (broadcastStored && broadcastStored.length > 0) {
         setAdminBroadcast(broadcastStored);
       }
-    };
 
-    syncTeamData();
+      // Sync countdown timer
+      const timerStored = localStorage.getItem('amongu_timer_remaining_seconds');
+      if (timerStored) {
+        const parsedTimer = parseInt(timerStored, 10);
+        if (!isNaN(parsedTimer) && parsedTimer > 0) {
+          setLiveTimerSeconds(parsedTimer);
+        }
+      }
 
-    // Direct MongoDB backend sync for squad & secret role
-    const syncBackendSquad = async () => {
-      try {
-        const res = await teamService.getMyTeam();
-        if (res.success && res.team) {
-          setAssignedTeam(res.team as any);
-          if (res.myRole) {
-            setAssignedRole(res.myRole);
+      // Sync team and role assignment from teams data
+      syncTeamData = () => {
+        const teamsRaw = localStorage.getItem('amongu_teams_data');
+        if (teamsRaw) {
+          try {
+            const parsedTeams = JSON.parse(teamsRaw);
+            if (Array.isArray(parsedTeams) && parsedTeams.length > 0) {
+              let matchedTeam: any = null;
+              let matchedMember: any = null;
+
+              for (const t of parsedTeams) {
+                const found = t.members?.find(
+                  (m: any) =>
+                    (candidateCollegeId && m.collegeId === candidateCollegeId) ||
+                    (ticket?.email && m.email?.toLowerCase() === ticket.email?.toLowerCase()) ||
+                    (ticket?.assignedTeamId && t.id === ticket.assignedTeamId)
+                );
+                if (found) {
+                  matchedTeam = t;
+                  matchedMember = found;
+                  break;
+                }
+              }
+
+              // Fallback for demo testing if teams are published
+              if (!matchedTeam && parsedTeams.length > 0) {
+                matchedTeam = parsedTeams[0];
+              }
+
+              if (matchedTeam) {
+                setAssignedTeam(matchedTeam);
+                if (matchedMember?.role) {
+                  setAssignedRole(matchedMember.role);
+                }
+              }
+            }
+          } catch {
+            // ignore
           }
         }
-      } catch {
-        // Fallback keeps local storage squad
-      }
-    };
-    syncBackendSquad();
 
-    window.addEventListener('storage', syncTeamData);
-    window.addEventListener('focus', syncTeamData);
-    window.addEventListener('amongu_teams_published_event', syncTeamData);
+        // Check admin broadcast announcement
+        const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
+        if (broadcastStored && broadcastStored.length > 0) {
+          setAdminBroadcast(broadcastStored);
+        }
+      };
 
-    setLoading(false);
+      syncTeamData();
+
+      // Direct MongoDB backend sync for squad & secret role (non-blocking)
+      const syncBackendSquad = async () => {
+        try {
+          const res = await teamService.getMyTeam();
+          if (res.success && res.team) {
+            setAssignedTeam(res.team as any);
+            if (res.myRole) {
+              setAssignedRole(res.myRole);
+            }
+          }
+        } catch {
+          // Fallback keeps local storage squad
+        }
+      };
+      syncBackendSquad();
+
+      window.addEventListener('storage', syncTeamData);
+      window.addEventListener('focus', syncTeamData);
+      window.addEventListener('amongu_teams_published_event', syncTeamData);
+    } catch (err) {
+      console.warn('Dashboard sync warning:', err);
+    } finally {
+      setLoading(false);
+    }
 
     return () => {
+      clearTimeout(safetyTimer);
       window.removeEventListener('storage', syncTeamData);
       window.removeEventListener('focus', syncTeamData);
       window.removeEventListener('amongu_teams_published_event', syncTeamData);

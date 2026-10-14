@@ -1,6 +1,14 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { Team, ITeamMember } from '../models/Team';
 import { Registration } from '../models/Registration';
+
+const findTeamByIdOrTeamId = (id: string) => {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    return Team.findOne({ $or: [{ teamId: id }, { _id: id }] });
+  }
+  return Team.findOne({ teamId: id });
+};
 
 const SQUAD_NAMES = [
   'Red Saboteurs',
@@ -165,9 +173,7 @@ export const getTeams = async (_req: Request, res: Response): Promise<void> => {
 export const getTeamById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const team = await Team.findOne({
-      $or: [{ teamId: id }, { _id: id }],
-    });
+    const team = await findTeamByIdOrTeamId(id);
 
     if (!team) {
       res.status(404).json({ success: false, message: 'Team not found' });
@@ -188,9 +194,7 @@ export const updateRound1Submission = async (req: Request, res: Response): Promi
     const { id } = req.params;
     const { pptUrl, projectTitle, problemStatement, proposedSolution, score, juryFeedback } = req.body;
 
-    const team = await Team.findOne({
-      $or: [{ teamId: id }, { _id: id }],
-    });
+    const team = await findTeamByIdOrTeamId(id);
 
     if (!team) {
       res.status(404).json({ success: false, message: 'Team not found' });
@@ -238,9 +242,7 @@ export const updateRound2Submission = async (req: Request, res: Response): Promi
       juryFeedback,
     } = req.body;
 
-    const team = await Team.findOne({
-      $or: [{ teamId: id }, { _id: id }],
-    });
+    const team = await findTeamByIdOrTeamId(id);
 
     if (!team) {
       res.status(404).json({ success: false, message: 'Team not found' });

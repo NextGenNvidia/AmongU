@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { Registration } from '../models/Registration';
 import { env } from '../config/env';
 import { convertRegistrationsToCsv } from '../utils/csvExporter';
@@ -64,7 +65,10 @@ export const getRegistrations = async (req: Request, res: Response): Promise<voi
 export const getRegistrationById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const registration = await Registration.findById(id).populate('userId', 'email name role');
+    const filter = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ _id: id }, { collegeId: id }] }
+      : { collegeId: id };
+    const registration = await Registration.findOne(filter).populate('userId', 'email name role');
 
     if (!registration) {
       res.status(404).json({ success: false, message: 'Registration not found' });
@@ -102,7 +106,10 @@ export const updateRegistrationStatus = async (req: Request, res: Response): Pro
       updateFields.assignedTeamName = assignedTeamName;
     }
 
-    const registration = await Registration.findByIdAndUpdate(id, updateFields, { new: true });
+    const filter = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ _id: id }, { collegeId: id }] }
+      : { collegeId: id };
+    const registration = await Registration.findOneAndUpdate(filter, updateFields, { new: true });
 
     if (!registration) {
       res.status(404).json({ success: false, message: 'Registration not found' });

@@ -20,6 +20,7 @@ export default function VenueCheckInQRModal({
   onCandidateCheckInSuccess,
 }: VenueCheckInQRModalProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [qrSvg, setQrSvg] = useState<string>('');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [checkInUrl, setCheckInUrl] = useState<string>('');
@@ -28,29 +29,67 @@ export default function VenueCheckInQRModal({
   const [manualMessage, setManualMessage] = useState<{ text: string; error: boolean } | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const url = `${window.location.origin}/checkin`;
-      setCheckInUrl(url);
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    const targetUrl = `${origin}/checkin`;
+    setCheckInUrl(targetUrl);
 
-      QRCode.toDataURL(url, {
+    if (!isOpen) return;
+
+    // Fail-safe 1: Generate via QRCode.toDataURL
+    try {
+      QRCode.toDataURL(targetUrl, {
         width: 480,
         margin: 2,
         color: {
-          dark: '#05070f',
+          dark: '#000000',
           light: '#ffffff',
         },
-        errorCorrectionLevel: 'H',
+        errorCorrectionLevel: 'M',
       })
         .then((urlData) => {
-          setQrDataUrl(urlData);
+          if (urlData) setQrDataUrl(urlData);
         })
-        .catch((err) => {
-          console.error('Failed to generate check-in QR code:', err);
+        .catch(() => {
+          // Fallback to QRServer public image
+          setQrDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=8&data=${encodeURIComponent(targetUrl)}`);
         });
+    } catch {
+      setQrDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=8&data=${encodeURIComponent(targetUrl)}`);
     }
-  }, []);
+
+    // Fail-safe 2: Generate pure SVG vector string
+    try {
+      QRCode.toString(targetUrl, {
+        type: 'svg',
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+      })
+        .then((svg) => {
+          if (svg) setQrSvg(svg);
+        })
+        .catch(() => {});
+    } catch {}
+
+    // Fail-safe 3: Draw directly to canvas
+    if (canvasRef.current) {
+      try {
+        QRCode.toCanvas(canvasRef.current, targetUrl, {
+          width: 480,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff',
+          },
+        }).catch(() => {});
+      } catch {}
+    }
+  }, [isOpen]);
 
   const handleCopyLink = async () => {
     try {
@@ -63,9 +102,17 @@ export default function VenueCheckInQRModal({
   };
 
   const handleDownloadQr = () => {
-    if (!qrDataUrl) return;
+    let dlUrl = qrDataUrl;
+    if (canvasRef.current) {
+      try {
+        dlUrl = canvasRef.current.toDataURL('image/png');
+      } catch {}
+    }
+    if (!dlUrl) {
+      dlUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=8&data=${encodeURIComponent(checkInUrl || 'http://localhost:3000/checkin')}`;
+    }
     const a = document.createElement('a');
-    a.href = qrDataUrl;
+    a.href = dlUrl;
     a.download = 'amongu-venue-checkin-qr.png';
     document.body.appendChild(a);
     a.click();
@@ -225,11 +272,20 @@ export default function VenueCheckInQRModal({
                 alt="AmongU Venue Attendance QR Code"
                 className={`${isFullscreen ? 'w-80 h-80 sm:w-96 sm:h-96' : 'w-64 h-64 sm:w-72 sm:h-72'} rounded-xl object-contain`}
               />
+            ) : qrSvg ? (
+              <div
+                className={`${isFullscreen ? 'w-80 h-80 sm:w-96 sm:h-96' : 'w-64 h-64 sm:w-72 sm:h-72'} rounded-xl overflow-hidden flex items-center justify-center`}
+                dangerouslySetInnerHTML={{ __html: qrSvg }}
+              />
             ) : (
-              <div className="w-64 h-64 flex items-center justify-center text-gray-400 font-mono text-sm">
-                Generating QR...
-              </div>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=8&data=${encodeURIComponent(checkInUrl || 'http://localhost:3000/checkin')}`}
+                alt="AmongU Venue Attendance QR Code"
+                className={`${isFullscreen ? 'w-80 h-80 sm:w-96 sm:h-96' : 'w-64 h-64 sm:w-72 sm:h-72'} rounded-xl object-contain`}
+              />
             )}
+
+            <canvas ref={canvasRef} style={{ display: 'none' }} width={480} height={480} />
             <div className="mt-2 text-center">
               <p className="text-black font-mono font-extrabold text-sm sm:text-base tracking-wider uppercase">
                 SCAN TO MARK ATTENDANCE
