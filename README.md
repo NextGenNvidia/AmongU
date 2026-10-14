@@ -1,6 +1,4 @@
 # AmongU — A Hackathon of Code, Creativity & Sabotage
-> **Venue:** KIET Deemed to be University • **Event Date:** November 2, 2026 • **Prize Pool:** ₹10,000
-
 ---
 
 ##  Overview

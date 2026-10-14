@@ -23,6 +23,10 @@ interface UserTicket {
   withdrawalStatus?: 'none' | 'pending' | 'approved';
   withdrawalReason?: string;
   withdrawalDate?: string;
+  assignedRole?: 'crewmate' | 'impostor' | 'unassigned';
+  assignedTeamId?: string;
+  assignedTeamName?: string;
+  isPresent?: boolean;
 }
 
 // 12 Authentic Among Us Colors
@@ -243,16 +247,31 @@ export default function UserDashboardPage() {
   const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
   const [withdrawFeedback, setWithdrawFeedback] = useState<string | null>(null);
 
+  // Admin Broadcast & Squad Assignment State
+  const [adminBroadcast, setAdminBroadcast] = useState<string | null>(null);
+  const [assignedRole, setAssignedRole] = useState<'crewmate' | 'impostor' | 'unassigned'>('unassigned');
+  const [assignedTeam, setAssignedTeam] = useState<{ id: string; name: string; members: any[] } | null>(null);
+  const [round1PptUrl, setRound1PptUrl] = useState('');
+  const [round1ProjectTitle, setRound1ProjectTitle] = useState('');
+  const [round1Submitted, setRound1Submitted] = useState(false);
+  const [round2RepoUrl, setRound2RepoUrl] = useState('');
+  const [round2Submitted, setRound2Submitted] = useState(false);
+  const [liveTimerSeconds, setLiveTimerSeconds] = useState<number>(4472);
+
   useEffect(() => {
     // Read saved registration ticket from localStorage
     const saved = localStorage.getItem('amongu_user_ticket');
+    let candidateCollegeId = '210029012000001';
+
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         setTicket(parsed);
+        candidateCollegeId = parsed.collegeId;
         setSelectedColor(parsed.avatarColor ? parsed.avatarColor : '#c51111');
         setSelectedHat(parsed.avatarHat ? parsed.avatarHat : 'none');
         setSelectedMuffler(parsed.avatarMuffler ? parsed.avatarMuffler : 'none');
+        if (parsed.assignedRole) setAssignedRole(parsed.assignedRole);
       } catch (e) {
         console.error('Error reading ticket:', e);
       }
@@ -275,10 +294,47 @@ export default function UserDashboardPage() {
         avatarHat: 'none',
         avatarMuffler: 'none',
         withdrawalStatus: 'none',
+        assignedRole: 'unassigned',
       };
       setTicket(defaultTicket);
       setSelectedColor(defaultTicket.avatarColor as string);
     }
+
+    // Sync admin broadcast
+    const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
+    if (broadcastStored && broadcastStored.length > 0) {
+      setAdminBroadcast(broadcastStored);
+    }
+
+    // Sync countdown timer
+    const timerStored = localStorage.getItem('amongu_timer_remaining_seconds');
+    if (timerStored) {
+      const parsedTimer = parseInt(timerStored, 10);
+      if (!isNaN(parsedTimer) && parsedTimer > 0) {
+        setLiveTimerSeconds(parsedTimer);
+      }
+    }
+
+    // Sync team and role assignment from teams data
+    const teamsRaw = localStorage.getItem('amongu_teams_data');
+    if (teamsRaw) {
+      try {
+        const parsedTeams = JSON.parse(teamsRaw);
+        if (Array.isArray(parsedTeams)) {
+          for (const t of parsedTeams) {
+            const found = t.members.find((m: any) => m.collegeId === candidateCollegeId);
+            if (found) {
+              setAssignedTeam(t);
+              if (found.role) setAssignedRole(found.role);
+              break;
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     setLoading(false);
   }, []);
 
@@ -437,6 +493,82 @@ export default function UserDashboardPage() {
           </div>
         )}
 
+        {/* LIVE ADMIN ANNOUNCEMENT BROADCAST */}
+        {adminBroadcast && (
+          <div className="bg-gradient-to-r from-red-950/80 via-black to-yellow-950/80 border-2 border-crew-yellow rounded-2xl p-4 flex items-center gap-3 shadow-[0_0_20px_rgba(255,204,0,0.15)] animate-pulse">
+            <span className="text-2xl">📢</span>
+            <div className="flex-1">
+              <span className="text-[10px] font-mono text-crew-yellow font-bold uppercase tracking-wider block">
+                ORGANIZER TRANSMISSION / EVENT ANNOUNCEMENT
+              </span>
+              <p className="text-white text-xs sm:text-sm font-mono font-bold">{adminBroadcast}</p>
+            </div>
+          </div>
+        )}
+
+        {/* ROUND 3: SECRET IMPOSTOR / CREWMATE CLASSIFIED DIRECTIVE */}
+        {assignedRole === 'impostor' && (
+          <div className="au-card bg-red-950/95 border-4 border-crew-red rounded-3xl p-6 shadow-[0_0_40px_rgba(255,59,48,0.35)] space-y-3 relative overflow-hidden animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🚨</span>
+                <div>
+                  <span className="bg-crew-red text-white text-[10px] font-mono font-black px-2 py-0.5 rounded tracking-widest">
+                    TOP SECRET DIRECTIVE • ROUND 3
+                  </span>
+                  <h2 className="font-display text-2xl text-white mt-0.5">YOU ARE THE IMPOSTOR!</h2>
+                </div>
+              </div>
+              <span className="text-xs font-mono text-red-300 font-bold hidden sm:inline">
+                SABOTAGE PROTOCOL ACTIVE
+              </span>
+            </div>
+            <p className="text-red-100 text-xs sm:text-sm font-mono font-bold leading-relaxed">
+              You have been covertly assigned as your team&rsquo;s Impostor. Your mission is to introduce subtle defects, misdirect architecture choices, and survive the Emergency Meeting deduction without revealing your identity.
+            </p>
+            <div className="bg-black/60 p-3 rounded-xl border border-crew-red/60 text-xs font-mono text-gray-300 flex items-center justify-between">
+              <span>🎯 Secret Task: Introduce edge-case latency or bug into project commits</span>
+              <span className="text-crew-red font-bold">CLASSIFIED</span>
+            </div>
+          </div>
+        )}
+
+        {assignedRole === 'crewmate' && (
+          <div className="au-card bg-cyan-950/90 border-4 border-crew-cyan rounded-3xl p-5 shadow-[0_0_30px_rgba(0,255,255,0.2)] space-y-2">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🛡️</span>
+              <div>
+                <span className="bg-crew-cyan text-black text-[10px] font-mono font-black px-2 py-0.5 rounded tracking-widest">
+                  CREWMATE PROTOCOL • ROUND 3
+                </span>
+                <h3 className="font-display text-lg text-white">PROTECT THE SHIP &amp; DEDUCE THE THREAT</h3>
+              </div>
+            </div>
+            <p className="text-cyan-100 text-xs font-mono">
+              One member of your squad is secretly the Impostor. Build your solution, audit PR diffs, and identify the hidden threat before the final jury reveal!
+            </p>
+          </div>
+        )}
+
+        {/* SQUAD / TEAM ASSIGNMENT BANNER */}
+        {assignedTeam && (
+          <div className="bg-gray-900 border-2 border-crew-cyan/50 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">🚀</span>
+              <div>
+                <span className="text-gray-400 text-[10px]">ASSIGNED HACKATHON SQUAD:</span>
+                <p className="font-display text-base text-white">{assignedTeam.name} ({assignedTeam.id})</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">Crew Size: 4</span>
+              <span className="px-2 py-0.5 rounded bg-black border border-gray-700 text-crew-lime font-bold">
+                Table #{assignedTeam.id.slice(-2)}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Welcome Banner + Live Avatar Preview */}
         <div className="au-card bg-gray-900 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden border-4 border-black">
           <div className="flex items-center gap-6">
@@ -538,9 +670,13 @@ export default function UserDashboardPage() {
             </div>
 
             <div className="bg-gray-900 au-border p-4 rounded-xl text-center shrink-0">
-              <span className="text-[11px] text-gray-400 font-bold uppercase block">Round 1 Remaining</span>
-              <span className="font-mono font-bold text-2xl text-crew-yellow">01:14:32</span>
-              <span className="text-[10px] text-gray-500 block mt-0.5">Auto-advances to Round 2</span>
+              <span className="text-[11px] text-gray-400 font-bold uppercase block">Chrono Remaining</span>
+              <span className="font-mono font-bold text-2xl text-crew-yellow">
+                {Math.floor(liveTimerSeconds / 3600) > 0
+                  ? `${Math.floor(liveTimerSeconds / 3600).toString().padStart(2, '0')}:${Math.floor((liveTimerSeconds % 3600) / 60).toString().padStart(2, '0')}:${(liveTimerSeconds % 60).toString().padStart(2, '0')}`
+                  : `${Math.floor((liveTimerSeconds % 3600) / 60).toString().padStart(2, '0')}:${(liveTimerSeconds % 60).toString().padStart(2, '0')}`}
+              </span>
+              <span className="text-[10px] text-gray-500 block mt-0.5">Admin Central Time Sync</span>
             </div>
           </div>
 
@@ -554,38 +690,117 @@ export default function UserDashboardPage() {
                   NOW ACTIVE
                 </span>
               </div>
-              <h4 className="font-display text-white text-base">Ideation &amp; System Setup</h4>
+              <h4 className="font-display text-white text-base">Ideation &amp; Architecture</h4>
               <p className="text-gray-400 text-xs mt-1.5 font-bold">
-                Formation of 4-member crew, problem selection, and initial commit sprint.
+                Formation of 4-member crew, problem selection, and PPT deck submission.
               </p>
             </div>
 
             {/* Round 2 Card */}
-            <div className="bg-black/50 au-border rounded-xl p-4 opacity-75 border-gray-700">
+            <div className="bg-black/50 au-border rounded-xl p-4 border-2 border-crew-yellow/50 relative">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-display text-gray-400 text-sm">ROUND 2 (UPCOMING)</span>
-                <span className="bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  LOCKED
+                <span className="font-display text-crew-yellow text-sm">ROUND 2</span>
+                <span className="bg-crew-yellow/20 text-crew-yellow text-[10px] font-bold px-2 py-0.5 rounded-full border border-crew-yellow">
+                  DEV SPRINT
                 </span>
               </div>
               <h4 className="font-display text-gray-200 text-base">Core Development &amp; Sabotage</h4>
               <p className="text-gray-400 text-xs mt-1.5 font-bold">
-                1h 30m intense coding sprint. Impostors attempt discreet repo and logic sabotage.
+                GitHub code sprint. Impostors execute subtle sabotage.
               </p>
             </div>
 
             {/* Round 3 Card */}
-            <div className="bg-black/50 au-border rounded-xl p-4 opacity-75 border-gray-700">
+            <div className="bg-black/50 au-border rounded-xl p-4 border-2 border-crew-red/50 relative">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-display text-gray-400 text-sm">ROUND 3 (FINAL)</span>
-                <span className="bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  FINALE
+                <span className="font-display text-crew-red text-sm">ROUND 3 (FINALE)</span>
+                <span className="bg-crew-red/20 text-crew-red text-[10px] font-bold px-2 py-0.5 rounded-full border border-crew-red">
+                  IMPOSTOR REVEAL
                 </span>
               </div>
-              <h4 className="font-display text-gray-200 text-base">Demo &amp; Impostor Reveal</h4>
+              <h4 className="font-display text-gray-200 text-base">Emergency Meeting &amp; Demo</h4>
               <p className="text-gray-400 text-xs mt-1.5 font-bold">
-                Live demo to jury, team emergency meeting, and casting votes to identify the Impostor.
+                Live demo to jury, voting deduction, and final prize awards.
               </p>
+            </div>
+          </div>
+
+          {/* SQUAD SUBMISSIONS PORTAL (PPT & CODE REPO) */}
+          <div className="pt-4 border-t border-gray-800 space-y-4">
+            <h3 className="font-display text-lg text-white flex items-center gap-2">
+              <span>📤</span> SQUAD SUBMISSION TERMINAL
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Round 1 PPT Submission Box */}
+              <div className="bg-black/70 au-border p-4 rounded-xl space-y-3 border-crew-yellow/40">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-crew-yellow">ROUND 1: PPT SUBMISSION</span>
+                  {round1Submitted && (
+                    <span className="text-[10px] font-mono text-crew-lime font-bold">✓ SUBMITTED</span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Project Architecture Title..."
+                  value={round1ProjectTitle}
+                  onChange={(e) => setRound1ProjectTitle(e.target.value)}
+                  className="w-full bg-black border border-gray-800 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-crew-yellow"
+                />
+                <input
+                  type="url"
+                  placeholder="Paste Google Slides / PPT link..."
+                  value={round1PptUrl}
+                  onChange={(e) => setRound1PptUrl(e.target.value)}
+                  className="w-full bg-black border border-gray-800 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-crew-yellow font-mono"
+                />
+                <button
+                  onClick={() => {
+                    if (round1PptUrl.length === 0) return;
+                    setRound1Submitted(true);
+                    try {
+                      localStorage.setItem('amongu_user_round1_ppt', round1PptUrl);
+                      localStorage.setItem('amongu_user_round1_title', round1ProjectTitle);
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                  className="au-btn w-full bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs py-2 rounded-lg"
+                >
+                  {round1Submitted ? 'UPDATE PPT SUBMISSION' : 'SUBMIT ROUND 1 DECK'}
+                </button>
+              </div>
+
+              {/* Round 2 GitHub Repo Submission Box */}
+              <div className="bg-black/70 au-border p-4 rounded-xl space-y-3 border-crew-lime/40">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold text-crew-lime">ROUND 2: CODE REPO SUBMISSION</span>
+                  {round2Submitted && (
+                    <span className="text-[10px] font-mono text-crew-lime font-bold">✓ REPO LINKED</span>
+                  )}
+                </div>
+                <input
+                  type="url"
+                  placeholder="https://github.com/team/amongu-repo..."
+                  value={round2RepoUrl}
+                  onChange={(e) => setRound2RepoUrl(e.target.value)}
+                  className="w-full bg-black border border-gray-800 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-crew-lime font-mono"
+                />
+                <button
+                  onClick={() => {
+                    if (round2RepoUrl.length === 0) return;
+                    setRound2Submitted(true);
+                    try {
+                      localStorage.setItem('amongu_user_round2_repo', round2RepoUrl);
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                  className="au-btn w-full bg-crew-lime hover:bg-green-400 text-black font-display text-xs py-2 rounded-lg"
+                >
+                  {round2Submitted ? 'UPDATE GITHUB REPOSITORY' : 'LINK GITHUB REPO'}
+                </button>
+              </div>
             </div>
           </div>
         </section>
