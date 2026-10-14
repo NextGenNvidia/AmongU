@@ -18,6 +18,7 @@ export interface IRegistration extends Document {
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
   isPresent: boolean;
+  assignedTeamId?: string;
   assignedTeamName?: string;
   assignedRole: 'unassigned' | 'crewmate' | 'impostor';
   razorpayOrderId?: string;
@@ -101,6 +102,12 @@ const registrationSchema = new Schema<IRegistration>(
     isPresent: {
       type: Boolean,
       default: false,
+      index: true,
+    },
+    assignedTeamId: {
+      type: String,
+      default: '',
+      trim: true,
       index: true,
     },
     assignedTeamName: {

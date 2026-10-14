@@ -9,6 +9,7 @@ import TeamGenerator from '../../../components/admin/evaluation/TeamGenerator';
 import Round1Evaluation from '../../../components/admin/evaluation/Round1Evaluation';
 import Round2Evaluation from '../../../components/admin/evaluation/Round2Evaluation';
 import ImpostorAssigner from '../../../components/admin/evaluation/ImpostorAssigner';
+import { teamService } from '../../../services/team.service';
 
 const DEFAULT_CANDIDATES: CandidateRecord[] = [
   {
@@ -138,16 +139,15 @@ export default function AdminEvaluationPage() {
     setTimeout(() => setToastMsg(null), 3000);
   }, []);
 
-  // Load candidates and saved teams from storage
+  // Load candidates and saved teams from backend / storage
   useEffect(() => {
+    // 1. Initial sync from local storage for fast render
     try {
-      // 1. Sync teams
       const teamsRaw = localStorage.getItem('amongu_teams_data');
       if (teamsRaw) {
         setTeams(JSON.parse(teamsRaw));
       }
 
-      // 2. Sync round
       const roundRaw = localStorage.getItem('amongu_active_round_key');
       if (roundRaw === 'round1' || roundRaw === 'round2' || roundRaw === 'round3') {
         setActiveRound(roundRaw);
@@ -155,6 +155,21 @@ export default function AdminEvaluationPage() {
     } catch {
       // ignore
     }
+
+    // 2. Fetch fresh teams directly from MongoDB backend
+    const loadTeamsFromBackend = async () => {
+      try {
+        const res = await teamService.getTeams();
+        if (res.success && res.teams && res.teams.length > 0) {
+          setTeams(res.teams);
+          localStorage.setItem('amongu_teams_data', JSON.stringify(res.teams));
+        }
+      } catch {
+        // Fallback gracefully to offline/local data
+      }
+    };
+
+    loadTeamsFromBackend();
   }, []);
 
   // Handle Round Change
@@ -174,7 +189,7 @@ export default function AdminEvaluationPage() {
   };
 
   // Handle Teams Generated (Before Round 1)
-  const handleTeamsGenerated = (newTeams: Team[], updatedCandidates: CandidateRecord[]) => {
+  const handleTeamsGenerated = async (newTeams: Team[], updatedCandidates: CandidateRecord[]) => {
     setTeams(newTeams);
     setCandidates(updatedCandidates);
     try {
@@ -182,11 +197,23 @@ export default function AdminEvaluationPage() {
     } catch {
       // ignore
     }
+
+    // Persist to MongoDB backend
+    try {
+      const res = await teamService.generateTeams();
+      if (res.success && res.teams && res.teams.length > 0) {
+        setTeams(res.teams);
+        localStorage.setItem('amongu_teams_data', JSON.stringify(res.teams));
+      }
+    } catch {
+      // Fallback preserves generated client squads
+    }
+
     showToast(`Created ${newTeams.length} randomized 4-person squads!`);
   };
 
   // Handle Round 1 or 2 Submission Update
-  const handleUpdateTeamSubmission = (teamId: string, updatedTeamData: Team) => {
+  const handleUpdateTeamSubmission = async (teamId: string, updatedTeamData: Team) => {
     const updated = teams.map((t) => (t.id === teamId ? updatedTeamData : t));
     setTeams(updated);
     try {
@@ -194,12 +221,51 @@ export default function AdminEvaluationPage() {
     } catch {
       // ignore
     }
+
+    // Persist to backend
+    try {
+      if (updatedTeamData.round1Submission) {
+        await teamService.updateRound1Submission(teamId, {
+          pptUrl: updatedTeamData.round1Submission.pptUrl,
+          projectTitle: updatedTeamData.round1Submission.projectTitle,
+          problemStatement: updatedTeamData.round1Submission.problemStatement,
+          proposedSolution: updatedTeamData.round1Submission.architectureSummary,
+          score: updatedTeamData.round1Submission.score,
+          juryFeedback: updatedTeamData.round1Submission.juryFeedback,
+        });
+      }
+      if (updatedTeamData.round2Submission) {
+        await teamService.updateRound2Submission(teamId, {
+          repoUrl: updatedTeamData.round2Submission.repoUrl,
+          liveDemoUrl: updatedTeamData.round2Submission.liveDemoUrl,
+          techStack: updatedTeamData.round2Submission.techStack,
+          implementationStatus: updatedTeamData.round2Submission.implementationStatus,
+          technicalComplexity: updatedTeamData.round2Submission.technicalComplexity,
+          score: updatedTeamData.round2Submission.score,
+          juryFeedback: updatedTeamData.round2Submission.juryFeedback,
+        });
+      }
+    } catch {
+      // UI already updated optimistically
+    }
   };
 
   // Handle Impostors Assigned (Round 3)
-  const handleImpostorsAssigned = (updatedTeams: Team[], updatedCandidates: CandidateRecord[]) => {
+  const handleImpostorsAssigned = async (updatedTeams: Team[], updatedCandidates: CandidateRecord[]) => {
     setTeams(updatedTeams);
     setCandidates(updatedCandidates);
+
+    // Persist to MongoDB backend
+    try {
+      const res = await teamService.assignImpostors();
+      if (res.success && res.teams) {
+        setTeams(res.teams);
+        localStorage.setItem('amongu_teams_data', JSON.stringify(res.teams));
+      }
+    } catch {
+      // UI already updated optimistically
+    }
+
     showToast('Round 3 Impostors assigned and transmission sent to website!');
   };
 

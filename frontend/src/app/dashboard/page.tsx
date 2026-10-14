@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { teamService } from '../../services/team.service';
 
 interface UserTicket {
   name: string;
@@ -334,6 +335,22 @@ export default function UserDashboardPage() {
         // ignore
       }
     }
+
+    // Direct MongoDB backend sync for squad & secret role
+    const syncBackendSquad = async () => {
+      try {
+        const res = await teamService.getMyTeam();
+        if (res.success && res.team) {
+          setAssignedTeam(res.team as any);
+          if (res.myRole) {
+            setAssignedRole(res.myRole);
+          }
+        }
+      } catch {
+        // Fallback keeps local storage squad
+      }
+    };
+    syncBackendSquad();
 
     setLoading(false);
   }, []);

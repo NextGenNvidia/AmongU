@@ -6,6 +6,7 @@ import { env } from './config/env';
 import authRoutes from './routes/auth.routes';
 import registrationRoutes from './routes/registration.routes';
 import adminRoutes from './routes/admin.routes';
+import teamRoutes from './routes/team.routes';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app: Application = express();
@@ -39,6 +40,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/teams', teamRoutes);
 
 // 404 Handler for undefined routes
 app.use((_req: Request, res: Response) => {
