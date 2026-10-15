@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Stage 1: Build Stage
+# Stage 1: Build & Prepare Production Dependencies
 # ------------------------------------------------------------------------------
 FROM node:22-alpine AS builder
 
@@ -22,6 +22,9 @@ COPY src ./src
 # Compile TypeScript to JavaScript in /app/dist
 RUN npm run build
 
+# Prune devDependencies to keep only production modules
+RUN npm prune --omit=dev && npm cache clean --force
+
 # ------------------------------------------------------------------------------
 # Stage 2: Production Runtime Stage
 # ------------------------------------------------------------------------------
@@ -31,11 +34,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy dependency manifests and install production-only dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-# Copy compiled JavaScript output from builder stage
+# Copy package manifest, pruned production dependencies, and compiled JavaScript
+COPY package.json ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 # Set file ownership to non-root user
