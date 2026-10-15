@@ -7,6 +7,8 @@ import {
   updateRound2Submission,
   assignRound3Impostors,
   getMyTeam,
+  getTeamMessages,
+  sendTeamMessage,
 } from '../controllers/team.controller';
 import { verifyAuth } from '../middlewares/auth';
 import { requireAdmin } from '../middlewares/admin';
@@ -15,6 +17,10 @@ const router = Router();
 
 // Candidate: View their own squad & secret role assignment
 router.get('/my-team', verifyAuth, getMyTeam);
+
+// Squad Encrypted Comms (Team Chat)
+router.get('/:id/messages', getTeamMessages);
+router.post('/:id/messages', sendTeamMessage);
 
 // Public / Authenticated: View squads list
 router.get('/', getTeams);

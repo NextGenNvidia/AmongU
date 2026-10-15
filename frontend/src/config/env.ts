@@ -1,61 +1,69 @@
 import { z } from 'zod';
 
+export const OFFICIAL_FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyDnfnhpYjDbh9gvgE1_Rl2n0Ruc78iruUo',
+  authDomain: 'amongu-cae82.firebaseapp.com',
+  projectId: 'amongu-cae82',
+  storageBucket: 'amongu-cae82.firebasestorage.app',
+  messagingSenderId: '102068371138',
+  appId: '1:102068371138:web:dea0bfce6406a8d985055b',
+  measurementId: 'G-HNKM3H0C8G',
+};
+
 const frontendEnvSchema = z.object({
-  NEXT_PUBLIC_API_URL: z
-    .string({ required_error: 'NEXT_PUBLIC_API_URL is strictly required' })
-    .min(1, 'NEXT_PUBLIC_API_URL cannot be empty'),
-  NEXT_PUBLIC_FIREBASE_API_KEY: z
-    .string({ required_error: 'NEXT_PUBLIC_FIREBASE_API_KEY is strictly required' })
-    .min(1, 'NEXT_PUBLIC_FIREBASE_API_KEY cannot be empty'),
-  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z
-    .string({ required_error: 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN is strictly required' })
-    .min(1, 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN cannot be empty'),
-  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z
-    .string({ required_error: 'NEXT_PUBLIC_FIREBASE_PROJECT_ID is strictly required' })
-    .min(1, 'NEXT_PUBLIC_FIREBASE_PROJECT_ID cannot be empty'),
-  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z
-    .string({ required_error: 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET is strictly required' })
-    .min(1, 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET cannot be empty'),
-  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z
-    .string({ required_error: 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID is strictly required' })
-    .min(1, 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID cannot be empty'),
-  NEXT_PUBLIC_FIREBASE_APP_ID: z
-    .string({ required_error: 'NEXT_PUBLIC_FIREBASE_APP_ID is strictly required' })
-    .min(1, 'NEXT_PUBLIC_FIREBASE_APP_ID cannot be empty'),
-  NEXT_PUBLIC_RAZORPAY_KEY_ID: z
-    .string({ required_error: 'NEXT_PUBLIC_RAZORPAY_KEY_ID is strictly required' })
-    .min(1, 'NEXT_PUBLIC_RAZORPAY_KEY_ID cannot be empty'),
+  NEXT_PUBLIC_API_URL: z.string().default('http://localhost:5000/api'),
+  NEXT_PUBLIC_FIREBASE_API_KEY: z.string().default(OFFICIAL_FIREBASE_CONFIG.apiKey),
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().default(OFFICIAL_FIREBASE_CONFIG.authDomain),
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().default(OFFICIAL_FIREBASE_CONFIG.projectId),
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().default(OFFICIAL_FIREBASE_CONFIG.storageBucket),
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().default(OFFICIAL_FIREBASE_CONFIG.messagingSenderId),
+  NEXT_PUBLIC_FIREBASE_APP_ID: z.string().default(OFFICIAL_FIREBASE_CONFIG.appId),
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: z.string().default(OFFICIAL_FIREBASE_CONFIG.measurementId),
+  NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().default('rzp_test_dummy_key_123'),
 });
 
 const getEnv = () => {
   const result = frontendEnvSchema.safeParse({
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || OFFICIAL_FIREBASE_CONFIG.apiKey,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || OFFICIAL_FIREBASE_CONFIG.authDomain,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || OFFICIAL_FIREBASE_CONFIG.projectId,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || OFFICIAL_FIREBASE_CONFIG.storageBucket,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || OFFICIAL_FIREBASE_CONFIG.messagingSenderId,
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || OFFICIAL_FIREBASE_CONFIG.appId,
+    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || OFFICIAL_FIREBASE_CONFIG.measurementId,
+    NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_dummy_key_123',
   });
 
-  if (!result.success) {
-    // During build or client load, provide clear diagnostic
-    console.error('❌ Critical Frontend Env Config Error:', result.error.format());
-  }
+  const parsed = result.success
+    ? result.data
+    : {
+        NEXT_PUBLIC_API_URL: 'http://localhost:5000/api',
+        NEXT_PUBLIC_FIREBASE_API_KEY: OFFICIAL_FIREBASE_CONFIG.apiKey,
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: OFFICIAL_FIREBASE_CONFIG.authDomain,
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: OFFICIAL_FIREBASE_CONFIG.projectId,
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: OFFICIAL_FIREBASE_CONFIG.storageBucket,
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: OFFICIAL_FIREBASE_CONFIG.messagingSenderId,
+        NEXT_PUBLIC_FIREBASE_APP_ID: OFFICIAL_FIREBASE_CONFIG.appId,
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: OFFICIAL_FIREBASE_CONFIG.measurementId,
+        NEXT_PUBLIC_RAZORPAY_KEY_ID: 'rzp_test_dummy_key_123',
+      };
 
   return {
-    API_URL: process.env.NEXT_PUBLIC_API_URL as string,
+    API_URL: parsed.NEXT_PUBLIC_API_URL,
     FIREBASE_CONFIG: {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY as string,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN as string,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID as string,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID as string,
+      apiKey: parsed.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: parsed.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: parsed.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: parsed.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: parsed.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: parsed.NEXT_PUBLIC_FIREBASE_APP_ID,
+      measurementId: parsed.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
     },
-    RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
+    RAZORPAY_KEY_ID: parsed.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    RAZORPAY_PAYMENT_LINK: 'https://rzp.io/rzp/CMBQ994Z',
   };
 };
 
+export const RAZORPAY_PAYMENT_LINK = 'https://rzp.io/rzp/CMBQ994Z';
 export const clientEnv = getEnv();

@@ -426,3 +426,78 @@ export const getMyTeam = async (req: Request, res: Response): Promise<void> => {
     });
   }
 };
+
+/**
+ * Get Team Chat Messages
+ */
+export const getTeamMessages = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const team = await findTeamByIdOrTeamId(id);
+    if (!team) {
+      res.status(404).json({ success: false, message: 'Squad not found' });
+      return;
+    }
+    res.status(200).json({
+      success: true,
+      messages: team.chatMessages || [],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error?.message || 'Error fetching squad messages',
+    });
+  }
+};
+
+/**
+ * Send Team Chat Message
+ */
+export const sendTeamMessage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { content, senderName, senderCollegeId, senderEmail, senderSuitColor } = req.body;
+
+    if (!content || !content.trim()) {
+      res.status(400).json({ success: false, message: 'Message content cannot be empty' });
+      return;
+    }
+
+    const team = await findTeamByIdOrTeamId(id);
+    if (!team) {
+      res.status(404).json({ success: false, message: 'Squad not found' });
+      return;
+    }
+
+    const newMessage = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      senderName: senderName || 'Squad Member',
+      senderCollegeId: senderCollegeId || 'Unknown',
+      senderEmail: senderEmail || '',
+      senderSuitColor: senderSuitColor || '#06B6D4',
+      content: content.trim(),
+      createdAt: new Date(),
+    };
+
+    if (!team.chatMessages) {
+      team.chatMessages = [];
+    }
+
+    team.chatMessages.push(newMessage);
+    if (team.chatMessages.length > 150) {
+      team.chatMessages = team.chatMessages.slice(-150);
+    }
+
+    await team.save();
+
+    res.status(201).json({
+      success: true,
+      message: newMessage,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error?.message || 'Error sending squad message',
+    });
+  }
+};

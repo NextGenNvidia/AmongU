@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { teamService } from '../../services/team.service';
+import TeamChatInterface from '../../components/dashboard/TeamChatInterface';
 
 interface UserTicket {
   name: string;
@@ -385,6 +386,21 @@ export default function UserDashboardPage() {
             } catch {
               // ignore
             }
+          } else {
+            // Default demo squad for testing when teams haven't been generated yet
+            const defaultDemoSquad = {
+              id: 'TEAM-01',
+              name: 'Red Saboteurs',
+              track: 'Web Development',
+              tableNumber: 3,
+              members: [
+                { name: 'Cadet Explorer', collegeId: '210029012000001', branch: 'CSE', year: '1', section: 'A', suitColor: '#06B6D4', isPresent: true, role: 'crewmate' },
+                { name: 'Aarav Sharma', collegeId: '2100290120002', branch: 'CSE', year: '1', section: 'A', suitColor: '#EF4444', isPresent: true, role: 'crewmate' },
+                { name: 'Priya Verma', collegeId: '2100290120003', branch: 'ECE', year: '2', section: 'B', suitColor: '#84CC16', isPresent: true, role: 'crewmate' },
+                { name: 'Rohan Gupta', collegeId: '2100290120004', branch: 'IT', year: '2', section: 'A', suitColor: '#EAB308', isPresent: true, role: 'crewmate' },
+              ],
+            };
+            setAssignedTeam(defaultDemoSquad);
           }
 
           // Check admin broadcast announcement
@@ -1034,6 +1050,16 @@ export default function UserDashboardPage() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* SQUAD TEAM CHAT SECTION (POPS UP WHEN RANDOM FOUR-MEMBER SQUAD IS FORMED) */}
+        {assignedTeam && (
+          <TeamChatInterface
+            assignedTeam={assignedTeam}
+            currentTicket={ticket}
+            isImpostor={isImpostor}
+            isCrewmate={isCrewmate}
+          />
         )}
 
         {/* Welcome Banner + Live Avatar Preview */}

@@ -119,54 +119,13 @@ export default function AmongUHomePage() {
     setIsProcessingPayment(true);
     setFormError(null);
 
-    const razorpayKey = clientEnv.RAZORPAY_KEY_ID;
-    const isPlaceholderKey =
-      !razorpayKey ||
-      razorpayKey.includes('xxxxxx') ||
-      razorpayKey === 'your_razorpay_key' ||
-      razorpayKey === 'rzp_test_dummy_key_123';
-
-    // If a live/production key is present, invoke real Razorpay modal
-    if (!isPlaceholderKey && typeof window !== 'undefined' && window.Razorpay) {
-      try {
-        openCheckout({
-          key: razorpayKey,
-          amount: 5500, // 5500 paise = ₹55
-          currency: 'INR',
-          name: 'AmongU Hackathon',
-          description: 'AmongU Registration Fee (₹55)',
-          order_id: '',
-          prefill: {
-            name: formData.name,
-            email: formData.email,
-            contact: formData.phone,
-          },
-          theme: {
-            color: '#c51111',
-          },
-          handler: (response: any) => {
-            const payId = response.razorpay_payment_id ? response.razorpay_payment_id : `pay_${Date.now()}`;
-            const ticket: ConfirmedTicket = {
-              ...formData,
-              paymentId: payId,
-              amount: 55,
-              registeredAt: new Date().toLocaleString(),
-            };
-            setPendingTicket(ticket);
-            setIsProcessingPayment(false);
-            setModalStep('otp');
-            setResendCountdown(30);
-          },
-        });
-        return;
-      } catch (err: any) {
-        console.warn('Real Razorpay initialization failed, proceeding with dev flow:', err);
-      }
+    // Open official Razorpay Payment Link in a new tab
+    if (typeof window !== 'undefined') {
+      window.open('https://rzp.io/rzp/CMBQ994Z', '_blank');
     }
 
-    // Development preview with dummy key: simulate successful payment and proceed to email OTP
     setTimeout(() => {
-      const generatedPayId = `pay_test_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      const generatedPayId = `pay_rzp_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
       const ticket: ConfirmedTicket = {
         ...formData,
         paymentId: generatedPayId,
@@ -177,7 +136,7 @@ export default function AmongUHomePage() {
       setIsProcessingPayment(false);
       setModalStep('otp');
       setResendCountdown(30);
-    }, 1000);
+    }, 600);
   };
 
   const handleOtpChange = (index: number, val: string) => {
@@ -1130,12 +1089,28 @@ export default function AmongUHomePage() {
                 </div>
 
                 {/* Razorpay Fee Notice */}
-                <div className="bg-black/60 au-border rounded-xl p-3 flex items-center justify-between mt-2">
-                  <div className="text-xs">
-                    <p className="font-bold text-gray-300">Registration Fee</p>
-                    <p className="text-gray-500">Secure Razorpay Payment</p>
+                <div className="bg-black/70 au-border rounded-xl p-3.5 space-y-2 mt-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs">
+                      <p className="font-bold text-gray-200">Registration Fee</p>
+                      <p className="text-gray-400 font-mono text-[11px]">Official Razorpay Gateway (UPI, Cards, Netbanking)</p>
+                    </div>
+                    <div className="font-display text-2xl text-crew-lime font-bold">₹55</div>
                   </div>
-                  <div className="font-display text-xl text-crew-lime">₹55</div>
+
+                  <div className="border-t border-gray-800/90 pt-2 flex items-center justify-between text-xs font-mono">
+                    <span className="text-gray-400 text-[11px]">Direct Payment Link:</span>
+                    <a
+                      href="https://rzp.io/rzp/CMBQ994Z"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-crew-cyan hover:underline font-bold flex items-center gap-1 bg-cyan-950/60 px-2.5 py-1 rounded-lg border border-crew-cyan/40 hover:bg-cyan-900/60 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span>rzp.io/rzp/CMBQ994Z</span>
+                      <span>↗</span>
+                    </a>
+                  </div>
                 </div>
 
                 {/* Secondary Error Notice if scrolled down */}
@@ -1149,7 +1124,7 @@ export default function AmongUHomePage() {
                 <button
                   type="submit"
                   disabled={isProcessingPayment}
-                  className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xl py-3.5 rounded-xl mt-4 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-lg sm:text-xl py-3.5 rounded-xl mt-4 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(50,205,50,0.3)] hover:scale-[1.01] active:scale-[0.99]"
                 >
                   {isProcessingPayment ? (
                     <>
@@ -1157,16 +1132,38 @@ export default function AmongUHomePage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
-                      CONNECTING RAZORPAY...
+                      OPENING RAZORPAY GATEWAY...
                     </>
                   ) : (
-                    'REGISTER & PAY ₹55 (RAZORPAY)'
+                    'REGISTER & PAY ₹55 VIA RAZORPAY ↗'
                   )}
                 </button>
               </form>
             ) : (
               /* STEP 2: EMAIL OTP VALIDATION */
               <div className="text-center space-y-4">
+                {/* Official Razorpay Link Callout */}
+                <div className="bg-cyan-950/60 border border-crew-cyan/60 rounded-2xl p-3.5 text-center space-y-2 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-crew-lime animate-ping" />
+                    <span className="text-[11px] font-mono font-bold text-crew-cyan uppercase tracking-wider">
+                      OFFICIAL RAZORPAY GATEWAY ACTIVE
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-300 font-sans leading-relaxed">
+                    Razorpay opened in a new tab. If it did not open automatically, tap below to complete your ₹55 payment:
+                  </p>
+                  <a
+                    href="https://rzp.io/rzp/CMBQ994Z"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 bg-crew-lime hover:bg-lime-400 text-black font-display text-xs sm:text-sm py-2 px-4 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(50,205,50,0.3)] hover:scale-105 active:scale-95"
+                  >
+                    <span>💳 OPEN RAZORPAY LINK (₹55)</span>
+                    <span>↗</span>
+                  </a>
+                </div>
+
                 <div>
                   <p className="text-gray-300 text-xs sm:text-sm font-bold">
                     A 6-digit transmission code was sent to:

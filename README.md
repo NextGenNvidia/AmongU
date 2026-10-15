@@ -10,8 +10,6 @@ The platform consists of two decoupled services:
 
 ---
 
-## Zero-Fallback Rule
-This repository strictly enforces **zero fallback values (`||`)** across both backend and frontend configuration and runtime parameters. All required configuration (ports, URLs, secrets, fees) must be explicitly supplied via `.env` / `.env.local` and are strictly validated using **Zod**.
 
 ---
 

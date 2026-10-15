@@ -38,6 +38,16 @@ export interface IRound2Submission {
   juryFeedback?: string;
 }
 
+export interface ITeamMessage {
+  id: string;
+  senderName: string;
+  senderCollegeId: string;
+  senderEmail?: string;
+  senderSuitColor: string;
+  content: string;
+  createdAt: Date;
+}
+
 export interface ITeam extends Document {
   teamId: string;
   name: string;
@@ -48,6 +58,7 @@ export interface ITeam extends Document {
   impostorRevealed: boolean;
   round1Submission?: IRound1Submission;
   round2Submission?: IRound2Submission;
+  chatMessages?: ITeamMessage[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -167,6 +178,17 @@ const teamSchema = new Schema<ITeam>(
       sabotageDetected: { type: Boolean, default: false },
       juryFeedback: { type: String, trim: true },
     },
+    chatMessages: [
+      {
+        id: { type: String, required: true },
+        senderName: { type: String, required: true },
+        senderCollegeId: { type: String, required: true },
+        senderEmail: { type: String },
+        senderSuitColor: { type: String, default: '#06B6D4' },
+        content: { type: String, required: true, trim: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,
