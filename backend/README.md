@@ -50,10 +50,52 @@ All parameters (ports, URLs, secrets, fees) must be defined in `.env`. At boot t
    npm run dev
    ```
 
-6. Build for production:
+6. Build and start manually:
    ```bash
    npm run build
    npm start
+   ```
+
+---
+
+## 🐳 Docker Deployment
+
+The backend is packaged into a production-grade multi-stage Docker image using `node:22-alpine` with least-privilege non-root execution and automated health monitoring.
+
+### Using Docker Compose (Recommended)
+
+1. Ensure your `.env` file is present in `AmongU/backend/`.
+2. Start the container in detached mode:
+   ```bash
+   npm run docker:up
+   # or: docker compose up -d --build
+   ```
+3. Check container logs:
+   ```bash
+   npm run docker:logs
+   # or: docker compose logs -f
+   ```
+4. Stop the container:
+   ```bash
+   npm run docker:down
+   # or: docker compose down
+   ```
+
+### Using Standalone Docker Commands
+
+1. Build the production image:
+   ```bash
+   npm run docker:build
+   # or: docker build -t amongu-backend .
+   ```
+2. Run the container:
+   ```bash
+   npm run docker:run
+   # or: docker run -d --name amongu-backend -p 5000:5000 --env-file .env amongu-backend
+   ```
+3. Check health status:
+   ```bash
+   docker inspect --format='{{json .State.Health}}' amongu-backend
    ```
 
 ---
