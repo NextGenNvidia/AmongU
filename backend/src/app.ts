@@ -13,9 +13,19 @@ const app: Application = express();
 
 // Security & request logging middlewares
 app.use(helmet());
+
+const allowedOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like server-to-server or curl) or matched origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
   })
 );
