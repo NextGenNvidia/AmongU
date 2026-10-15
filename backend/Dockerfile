@@ -34,13 +34,10 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package manifest, pruned production dependencies, and compiled JavaScript
-COPY package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-
-# Set file ownership to non-root user
-RUN chown -R node:node /app
+# Copy package manifest, pruned production dependencies, and compiled JavaScript with non-root ownership
+COPY --chown=node:node package.json ./
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/dist ./dist
 
 # Switch to the unprivileged 'node' user
 USER node
