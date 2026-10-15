@@ -90,6 +90,9 @@ export default function ImpostorAssigner({
         }
         localStorage.setItem('amongu_user_ticket', JSON.stringify(ticket));
       }
+
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('amongu_role_updated', { detail: { action: 'bulk_impostors_assigned' } }));
     } catch {
       // ignore
     }
@@ -99,6 +102,47 @@ export default function ImpostorAssigner({
     setSuccessBanner(
       `Round 3 Active! Exactly 1 secret Impostor assigned across all ${updatedTeams.length} squads and broadcast to participant dashboards.`
     );
+  };
+
+  const handleToggleSingleMemberRole = (teamId: string, memberCollegeId: string) => {
+    let nextRole: 'impostor' | 'crewmate' = 'impostor';
+    const updatedTeams = teams.map((team) => {
+      if (team.id !== teamId) return team;
+      return {
+        ...team,
+        members: team.members.map((m) => {
+          if (m.collegeId === memberCollegeId) {
+            nextRole = m.role === 'impostor' ? 'crewmate' : 'impostor';
+            return { ...m, role: nextRole };
+          }
+          return m;
+        }),
+      };
+    });
+
+    const updatedCandidates = candidates.map((c) => {
+      if (c.collegeId === memberCollegeId) {
+        return { ...c, assignedRole: nextRole };
+      }
+      return c;
+    });
+
+    try {
+      localStorage.setItem('amongu_teams_data', JSON.stringify(updatedTeams));
+      const ticketRaw = localStorage.getItem('amongu_user_ticket');
+      if (ticketRaw) {
+        const ticket = JSON.parse(ticketRaw);
+        if (ticket.collegeId === memberCollegeId) {
+          ticket.assignedRole = nextRole;
+          ticket.impostorAlert = nextRole === 'impostor';
+          localStorage.setItem('amongu_user_ticket', JSON.stringify(ticket));
+        }
+      }
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('amongu_role_updated', { detail: { collegeId: memberCollegeId, role: nextRole } }));
+    } catch {}
+
+    onImpostorsAssigned(updatedTeams, updatedCandidates);
   };
 
   return (
@@ -207,15 +251,22 @@ export default function ImpostorAssigner({
                         </div>
 
                         {revealToAdmin && (
-                          <div className="shrink-0 ml-1">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSingleMemberRole(team.id, m.collegeId)}
+                            title={`Admin Action: Click to flip ${m.name}'s role to ${isImpostor ? 'Crewmate' : 'Impostor'}`}
+                            className="shrink-0 ml-1 hover:scale-105 active:scale-95 transition-all"
+                          >
                             {isImpostor ? (
-                              <span className="text-[9px] bg-crew-red text-white font-bold px-1.5 py-0.2 rounded animate-pulse">
-                                IMPOSTOR
+                              <span className="text-[9px] bg-crew-red text-white font-extrabold px-2 py-0.5 rounded shadow-[0_0_10px_rgba(255,59,48,0.5)] animate-pulse border border-red-400">
+                                🚨 IMPOSTOR
                               </span>
                             ) : (
-                              <span className="text-[9px] text-gray-500">Crewmate</span>
+                              <span className="text-[9px] bg-cyan-950/90 text-crew-cyan border border-crew-cyan/60 font-bold px-2 py-0.5 rounded hover:bg-cyan-900/60">
+                                🛡️ CREWMATE
+                              </span>
                             )}
-                          </div>
+                          </button>
                         )}
                       </div>
                     );

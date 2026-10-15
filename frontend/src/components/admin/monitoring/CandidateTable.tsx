@@ -320,16 +320,32 @@ export default function CandidateTable({
                             </div>
                           </div>
 
-                          {/* Role Tag */}
-                          {member.assignedRole === 'impostor' ? (
-                            <span className="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-crew-red text-white shrink-0 animate-pulse">
-                              IMPOSTOR
-                            </span>
-                          ) : member.assignedRole === 'crewmate' ? (
-                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-crew-cyan/20 text-crew-cyan border border-crew-cyan/40 shrink-0">
-                              CREW
-                            </span>
-                          ) : null}
+                          {/* Role Tag & Toggle Action */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onUpdateRole(
+                                member.id || member.collegeId,
+                                member.assignedRole === 'impostor' ? 'crewmate' : 'impostor'
+                              )
+                            }
+                            title={`Click to switch ${member.name} to ${member.assignedRole === 'impostor' ? 'Crewmate' : 'Impostor'}`}
+                            className="shrink-0 hover:scale-105 active:scale-95 transition-transform"
+                          >
+                            {member.assignedRole === 'impostor' ? (
+                              <span className="text-[9px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-crew-red text-white shadow-[0_0_8px_rgba(255,59,48,0.5)] animate-pulse">
+                                🚨 IMPOSTOR
+                              </span>
+                            ) : member.assignedRole === 'crewmate' ? (
+                              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-crew-cyan/20 text-crew-cyan border border-crew-cyan/40">
+                                🛡️ CREW
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-mono text-gray-500 border border-gray-800 px-1.5 py-0.5 rounded hover:text-white hover:border-gray-600">
+                                + ROLE
+                              </span>
+                            )}
+                          </button>
                         </div>
 
                         {/* ID & Branch / Year */}

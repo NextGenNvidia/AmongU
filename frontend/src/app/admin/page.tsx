@@ -410,11 +410,30 @@ export default function AdminMonitoringPage() {
             const ticketRaw = localStorage.getItem('amongu_user_ticket');
             if (ticketRaw) {
               const ticket = JSON.parse(ticketRaw);
-              if (ticket.collegeId === c.collegeId) {
+              if (ticket.collegeId === c.collegeId || ticket.email?.toLowerCase() === c.email?.toLowerCase()) {
                 ticket.assignedRole = role;
                 localStorage.setItem('amongu_user_ticket', JSON.stringify(ticket));
               }
             }
+
+            // Also sync in amongu_teams_data
+            const teamsStored = localStorage.getItem('amongu_teams_data');
+            if (teamsStored) {
+              const parsedTeams = JSON.parse(teamsStored);
+              if (Array.isArray(parsedTeams)) {
+                const updatedTeams = parsedTeams.map((team: any) => ({
+                  ...team,
+                  members: team.members.map((m: any) =>
+                    m.collegeId === c.collegeId ? { ...m, role } : m
+                  ),
+                }));
+                localStorage.setItem('amongu_teams_data', JSON.stringify(updatedTeams));
+                setTeams(updatedTeams);
+              }
+            }
+
+            window.dispatchEvent(new Event('storage'));
+            window.dispatchEvent(new CustomEvent('amongu_role_updated', { detail: { role, collegeId: c.collegeId } }));
           } catch {
             // ignore
           }
