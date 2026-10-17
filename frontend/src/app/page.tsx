@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../hooks/useAuth';
+import ShhhIntroAnimation from '../components/animations/ShhhIntroAnimation';
 
 export default function AmongUHomePage() {
   const router = useRouter();
@@ -107,6 +108,9 @@ export default function AmongUHomePage() {
 
   return (
     <div className="relative min-h-screen font-body text-gray-100 antialiased selection:bg-crew-cyan selection:text-black">
+      {/* Among Us Shhhh! Cinematic Splash Intro */}
+      <ShhhIntroAnimation />
+
       {/* Moving Stars and Twinkling Starfield */}
       <div className="stars"></div>
       <div className="twinkling"></div>
