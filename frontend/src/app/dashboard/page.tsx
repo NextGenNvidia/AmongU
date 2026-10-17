@@ -728,27 +728,7 @@ export default function UserDashboardPage() {
               </div>
             )}
           </div>
-        ) : (
-          <div className="rounded-2xl p-3.5 sm:p-4 border border-yellow-700/60 bg-yellow-950/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">📱</span>
-              <div>
-                <span className="text-xs font-mono font-bold text-crew-yellow uppercase tracking-wider">
-                  VENUE ATTENDANCE PENDING
-                </span>
-                <p className="text-xs text-gray-300 font-mono mt-0.5">
-                  Scan the Venue QR code displayed on the entry screen to log your presence and unlock live squad pairing.
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/checkin"
-              className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-mono text-xs py-1.5 px-3.5 rounded-xl font-bold shrink-0 shadow"
-            >
-              SCAN / ENTER PASS
-            </Link>
-          </div>
-        )}
+        ) : null}
 
         {/* Welcome Banner + Live Avatar Preview */}
         <div className={`au-card rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden transition-all duration-500 ${theme.welcomeCard}`}>
