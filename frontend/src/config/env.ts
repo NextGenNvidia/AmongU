@@ -61,9 +61,9 @@ const getEnv = () => {
       measurementId: parsed.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
     },
     RAZORPAY_KEY_ID: parsed.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-    RAZORPAY_PAYMENT_LINK: 'https://rzp.io/rzp/CMBQ994Z',
+    RAZORPAY_PAYMENT_LINK: 'https://pages.razorpay.com/pl_Toye4lRXrvFFms/view',
   };
 };
 
-export const RAZORPAY_PAYMENT_LINK = 'https://rzp.io/rzp/CMBQ994Z';
+export const RAZORPAY_PAYMENT_LINK = 'https://pages.razorpay.com/pl_Toye4lRXrvFFms/view';
 export const clientEnv = getEnv();

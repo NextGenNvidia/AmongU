@@ -75,7 +75,7 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
 
       // Open official Razorpay payment page
       if (typeof window !== 'undefined') {
-        window.open('https://rzp.io/rzp/CMBQ994Z', '_blank');
+        window.open('https://pages.razorpay.com/pl_Toye4lRXrvFFms/view', '_blank');
       }
 
       // Try creating backend order if backend is active
@@ -339,12 +339,12 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
             <div className="bg-black/70 au-border rounded-xl p-3 flex items-center justify-between text-xs font-mono mt-2">
               <span className="text-gray-400">Official Payment Link:</span>
               <a
-                href="https://rzp.io/rzp/CMBQ994Z"
+                href="https://pages.razorpay.com/pl_Toye4lRXrvFFms/view"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-crew-cyan hover:underline font-bold flex items-center gap-1 bg-cyan-950/60 px-2.5 py-1 rounded-lg border border-crew-cyan/40"
               >
-                <span>rzp.io/rzp/CMBQ994Z</span>
+                <span>razorpay.com/view</span>
                 <span>↗</span>
               </a>
             </div>

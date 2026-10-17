@@ -43,8 +43,9 @@ export default function SquadPage() {
   useEffect(() => {
     let target = new Date('2026-10-28T09:00:00+05:30').getTime();
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-    fetch(`${apiUrl}/api/event/config`)
+    const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    const cleanApi = rawApiUrl.replace(/\/api\/?$/, '');
+    fetch(`${cleanApi}/api/event/config`)
       .then((res) => res.json())
       .then((data) => {
         if (data?.config?.eventStartDate) {

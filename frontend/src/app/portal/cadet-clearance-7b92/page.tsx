@@ -253,11 +253,22 @@ export default function CadetClearancePortalPage() {
 
     // Save final registration data draft to localStorage
     if (typeof window !== 'undefined') {
-      localStorage.setItem('amongu_registration_draft', JSON.stringify(formData));
-      console.log('💾 Stored registration draft. Redirecting to official Razorpay payment page...');
+      try {
+        localStorage.setItem('amongu_registration_draft', JSON.stringify(formData));
+        console.log('💾 Stored registration draft. Redirecting to official Razorpay payment page...');
+      } catch (e) {
+        console.warn('Could not save registration draft to localStorage:', e);
+      }
 
-      // Redirect to Razorpay Payment Page
-      window.location.assign('https://rzp.io/rzp/VpIdCLo');
+      const officialCheckoutUrl = 'https://pages.razorpay.com/pl_Toye4lRXrvFFms/view';
+
+      // Direct location href redirect (avoids 302 shortener hop)
+      window.location.href = officialCheckoutUrl;
+
+      // Auto-reset state if browser takes more than 3.5s or returns
+      setTimeout(() => {
+        setPaymentRedirecting(false);
+      }, 3500);
     }
   };
 
@@ -863,14 +874,70 @@ export default function CadetClearancePortalPage() {
                     {paymentRedirecting ? (
                       <>
                         <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                        <span>CONNECTING TO CHECKOUT...</span>
+                        <span>OPENING CHECKOUT...</span>
                       </>
                     ) : (
                       <span>PROCEED TO PAY ₹55 →</span>
                     )}
                   </button>
 
-                  <div className="text-center">
+                  {/* Fallback Direct Link for Mobile / WebView pop-up blockers */}
+                  <div className="bg-black/40 border border-gray-800 rounded-xl p-3 text-center space-y-2">
+                    <p className="text-xs text-gray-400">
+                      If checkout didn&apos;t open automatically on your phone:
+                    </p>
+                    <a
+                      href="https://pages.razorpay.com/pl_Toye4lRXrvFFms/view"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        try {
+                          localStorage.setItem('amongu_registration_draft', JSON.stringify(formData));
+                        } catch (e) {}
+                      }}
+                      className="inline-flex items-center gap-2 text-xs text-crew-cyan hover:text-white font-mono font-bold bg-crew-cyan/10 hover:bg-crew-cyan/20 border border-crew-cyan/40 px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <span>OPEN RAZORPAY CHECKOUT IN NEW TAB ↗</span>
+                    </a>
+                  </div>
+
+                  {/* Manual Payment ID Verification Option */}
+                  <div className="pt-3 border-t border-gray-800/80">
+                    <details className="text-left group bg-black/30 border border-gray-800/60 rounded-xl p-3">
+                      <summary className="text-xs text-gray-400 hover:text-crew-cyan cursor-pointer list-none flex items-center justify-between font-mono">
+                        <span>Already paid on Razorpay / UPI? Enter Payment ID</span>
+                        <span className="text-gray-500 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div className="mt-3 space-y-2">
+                        <p className="text-[11px] text-gray-500 font-mono">
+                          Paste your Razorpay Payment ID from your receipt or SMS (e.g. <span className="text-crew-cyan">pay_xxx</span>):
+                        </p>
+                        <input
+                          type="text"
+                          placeholder="pay_PABC1234567890"
+                          id="manual-pay-id-input"
+                          className="w-full bg-black border border-gray-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-gray-500 outline-none focus:border-crew-cyan"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById('manual-pay-id-input') as HTMLInputElement;
+                            const val = input?.value?.trim();
+                            if (!val) {
+                              alert('Please enter your Razorpay Payment ID (starts with pay_)');
+                              return;
+                            }
+                            finalizeRegistration(val);
+                          }}
+                          className="w-full bg-crew-cyan/20 hover:bg-crew-cyan text-crew-cyan hover:text-black border border-crew-cyan/40 font-mono text-xs font-bold py-2 px-3 rounded-xl transition-all cursor-pointer"
+                        >
+                          CONFIRM & ENTER MISSION DASHBOARD →
+                        </button>
+                      </div>
+                    </details>
+                  </div>
+
+                  <div className="text-center pt-1">
                     <button
                       type="button"
                       onClick={() => setStep('form')}
