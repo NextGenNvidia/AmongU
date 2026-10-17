@@ -678,8 +678,8 @@ export default function UserDashboardPage() {
               {isWithdrawalPending
                 ? 'WITHDRAWAL PENDING ⚠️'
                 : isImpostor
-                ? `PAID (₹${ticket?.amount}) • INFILTRATOR ACTIVE 🔪`
-                : `PAID (₹${ticket?.amount}) • CREW VERIFIED 🛡️`}
+                ? 'VERIFIED • INFILTRATOR ACTIVE 🔪'
+                : 'VERIFIED 🛡️'}
             </span>
           </div>
         </div>

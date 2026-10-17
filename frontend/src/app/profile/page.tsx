@@ -276,8 +276,8 @@ export default function CadetProfilePage() {
                 <p className="text-xs text-gray-400 font-mono">Linked to your authenticated institutional account</p>
               </div>
             </div>
-            <span className="text-xs font-mono text-crew-lime font-bold bg-black/60 px-3 py-1 rounded-full border border-gray-700">
-              ₹55 Paid
+            <span className="text-xs font-mono text-crew-lime font-bold bg-green-950/80 px-3 py-1 rounded-full border border-crew-lime/50">
+              VERIFIED
             </span>
           </div>
 

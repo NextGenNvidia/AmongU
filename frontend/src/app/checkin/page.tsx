@@ -297,8 +297,8 @@ export default function CheckInPage() {
                 <span className="text-white font-bold text-sm">Section {checkedInUser.section}</span>
               </div>
               <div>
-                <span className="text-gray-500 uppercase block text-[10px]">Fee Status</span>
-                <span className="text-crew-lime font-bold text-sm uppercase">PAID (₹55)</span>
+                <span className="text-gray-500 uppercase block text-[10px]">Registration Status</span>
+                <span className="text-crew-lime font-bold text-sm uppercase">VERIFIED</span>
               </div>
             </div>
 

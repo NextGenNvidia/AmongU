@@ -608,7 +608,7 @@ export default function SquadPage() {
 
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-black/60 border border-gray-700 rounded-full text-xs font-mono text-crew-lime font-bold">
-                  ✓ Seat Confirmed (₹55 Paid)
+                  ✓ Registration Verified
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-black/60 border border-gray-700 rounded-full text-xs font-mono text-crew-cyan font-bold">
                   ✓ Automatic Team Balancing
