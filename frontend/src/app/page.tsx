@@ -217,6 +217,12 @@ export default function AmongUHomePage() {
                         <span>DASHBOARD</span>
                       </Link>
                       <Link
+                        href="/squad"
+                        className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 transition-all font-bold shadow"
+                      >
+                        <span>SQUAD 👥</span>
+                      </Link>
+                      <Link
                         href="/profile"
                         className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 transition-all shadow-[0_0_10px_rgba(80,239,57,0.5)] font-bold"
                       >
@@ -337,13 +343,22 @@ export default function AmongUHomePage() {
               </button>
 
               {firebaseUser && (isRegistered || profile?.hasRegistered) && (
-                <Link
-                  href="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 font-bold cursor-pointer"
-                >
-                  <span>CADET PROFILE 👤</span>
-                </Link>
+                <>
+                  <Link
+                    href="/squad"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 font-bold cursor-pointer"
+                  >
+                    <span>SQUAD COMMS 👥</span>
+                  </Link>
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 font-bold cursor-pointer"
+                  >
+                    <span>CADET PROFILE 👤</span>
+                  </Link>
+                </>
               )}
             </div>
           </div>

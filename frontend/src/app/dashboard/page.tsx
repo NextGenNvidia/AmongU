@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { teamService } from '../../services/team.service';
-import TeamChatInterface from '../../components/dashboard/TeamChatInterface';
 import { useAuth } from '../../hooks/useAuth';
 import { registrationService } from '../../services/registration.service';
 
@@ -46,11 +45,6 @@ export default function UserDashboardPage() {
   const [adminBroadcast, setAdminBroadcast] = useState<string | null>(null);
   const [assignedRole, setAssignedRole] = useState<'crewmate' | 'impostor' | 'unassigned'>('unassigned');
   const [assignedTeam, setAssignedTeam] = useState<{ id: string; name: string; track?: string; tableNumber?: number; members: any[] } | null>(null);
-  const [round1PptUrl, setRound1PptUrl] = useState('');
-  const [round1ProjectTitle, setRound1ProjectTitle] = useState('');
-  const [round1Submitted, setRound1Submitted] = useState(false);
-  const [round2RepoUrl, setRound2RepoUrl] = useState('');
-  const [round2Submitted, setRound2Submitted] = useState(false);
   const [liveTimerSeconds, setLiveTimerSeconds] = useState<number>(4472);
 
   // Target Event Countdown: October 28, 2026 (09:00 AM IST)
@@ -400,6 +394,12 @@ export default function UserDashboardPage() {
               {ticket?.email}
             </span>
             <Link
+              href="/squad"
+              className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 font-bold shadow"
+            >
+              <span>SQUAD 👥</span>
+            </Link>
+            <Link
               href="/profile"
               className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 font-bold shadow"
             >
@@ -621,214 +621,6 @@ export default function UserDashboardPage() {
           </div>
         )}
 
-        {/* SQUAD / TEAM ASSIGNMENT MATRIX */}
-        {assignedTeam ? (
-          <div className={`au-card rounded-3xl p-5 sm:p-6 space-y-5 relative overflow-hidden transition-all duration-500 ${theme.squadCard}`}>
-            {/* Ambient Corner Glow */}
-            <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none ${
-              isImpostor ? 'bg-red-600/10' : 'bg-crew-cyan/10'
-            }`} />
-
-            {/* Squad Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow transition-colors ${
-                  isImpostor
-                    ? 'bg-red-950/70 border border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                    : 'bg-cyan-950/60 border border-crew-cyan/50 shadow-[0_0_15px_rgba(0,255,255,0.2)]'
-                }`}>
-                  {isImpostor ? '🔪' : '🚀'}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-black tracking-wider shadow ${theme.squadHeaderChip}`}>
-                      {assignedTeam.id}
-                    </span>
-                    <span className="text-[11px] font-mono text-crew-lime font-bold bg-green-950/50 border border-crew-lime/30 px-2 py-0.5 rounded">
-                      OFFICIAL SQUAD
-                    </span>
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl text-white font-bold tracking-tight mt-0.5">
-                    {assignedTeam.name}
-                  </h2>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-                <div className="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 flex items-center gap-1.5">
-                  <span className="text-gray-500">ASSIGNED VENUE TABLE:</span>
-                  <span className={isImpostor ? 'text-red-400 font-bold' : 'text-crew-yellow font-bold'}>
-                    Table #{assignedTeam.tableNumber || assignedTeam.id.slice(-2)}
-                  </span>
-                </div>
-                <div className="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-300">
-                  <span className={`font-bold ${theme.squadTitleText}`}>
-                    {assignedTeam.members?.length || 4} MEMBERS
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Teammates Cluster (4-Members Grid) */}
-            <div>
-              <div className="flex items-center justify-between mb-3 text-xs font-mono">
-                <span className="text-gray-400 uppercase tracking-wider font-bold flex items-center gap-1.5">
-                  <span>👥</span> YOUR SQUAD MATES (TEAM MEMBERS)
-                </span>
-                <span className="text-gray-500 text-[11px]">
-                  Assigned by Central Mission Control
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {assignedTeam.members &&
-                  assignedTeam.members.map((teammate: any, idx: number) => {
-                    const isCurrentUser =
-                      (ticket && teammate.collegeId === ticket.collegeId) ||
-                      (ticket && teammate.email?.toLowerCase() === ticket.email?.toLowerCase());
-
-                    return (
-                      <div
-                        key={teammate.collegeId || idx}
-                        className={`rounded-2xl p-3.5 border transition-all flex flex-col justify-between gap-3 relative overflow-hidden ${
-                          isCurrentUser
-                            ? isImpostor
-                              ? 'bg-red-950/60 border-red-500 ring-2 ring-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)]'
-                              : isCrewmate
-                              ? 'bg-cyan-950/60 border-crew-cyan ring-2 ring-crew-cyan shadow-[0_0_20px_rgba(6,182,212,0.35)]'
-                              : 'bg-cyan-950/40 border-crew-cyan ring-1 ring-crew-cyan'
-                            : 'bg-gray-900/80 border-gray-800 hover:border-gray-700'
-                        }`}
-                      >
-                        {/* Top: Avatar & Name */}
-                        <div className="flex items-start gap-2.5">
-                          <div
-                            className="w-9 h-9 rounded-xl border border-black flex items-center justify-center text-sm shrink-0 shadow mt-0.5"
-                            style={{ backgroundColor: teammate.suitColor || '#EF4444' }}
-                          >
-                            {isCurrentUser && isImpostor ? '🔪' : '🚀'}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-white font-bold text-xs sm:text-sm truncate">
-                                {teammate.name}
-                              </span>
-                              {isCurrentUser && (
-                                <span className={`px-1.5 py-0.2 rounded font-mono font-extrabold text-[9px] shrink-0 ${
-                                  isImpostor ? 'bg-red-600 text-white animate-pulse' : 'bg-crew-cyan text-black'
-                                }`}>
-                                  YOU
-                                </span>
-                              )}
-                            </div>
-                            <span className={`text-[10px] font-mono block font-bold truncate ${
-                              isCurrentUser && isImpostor ? 'text-red-400' : 'text-crew-cyan'
-                            }`}>
-                              {teammate.collegeId}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Middle: Department & Academic Year */}
-                        <div className="bg-black/50 border border-gray-800/80 rounded-xl p-2 text-[10px] font-mono text-gray-400 space-y-0.5">
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Dept:</span>
-                            <span className="text-gray-200 font-bold">{teammate.branch}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Year / Section:</span>
-                            <span className="text-gray-200">
-                              Year {teammate.year} - Sec {teammate.section}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Bottom: Presence Status */}
-                        <div className="flex items-center justify-between text-[10px] font-mono border-t border-gray-800/70 pt-1.5">
-                          <span
-                            className={`inline-flex items-center gap-1 font-bold ${
-                              teammate.isPresent !== false ? 'text-crew-lime' : 'text-gray-500'
-                            }`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                teammate.isPresent !== false ? 'bg-crew-lime animate-pulse' : 'bg-gray-600'
-                              }`}
-                            />
-                            {teammate.isPresent !== false ? 'Venue Present' : 'Awaiting Arrival'}
-                          </span>
-
-                          <span className={`text-[9px] font-bold ${
-                            isCurrentUser && isImpostor
-                              ? 'text-red-400 font-black'
-                              : isCurrentUser && isCrewmate
-                              ? 'text-crew-cyan font-black'
-                              : 'text-gray-500'
-                          }`}>
-                            {isCurrentUser
-                              ? isImpostor
-                                ? '🔪 YOU (IMPOSTOR)'
-                                : '🛡️ YOU (CREWMATE)'
-                              : isImpostor
-                              ? '🎯 TARGET CREW'
-                              : '🔍 SQUAD MATE'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-
-            {/* Squad Directives Footer */}
-            <div className="bg-black/60 border border-gray-800/80 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono">
-              <div className="flex items-center gap-2 text-gray-400">
-                <span>📍</span>
-                <span>
-                  Please locate <span className="text-white font-bold">Table #{assignedTeam.tableNumber || assignedTeam.id.slice(-2)}</span> in the arena and meet your squad.
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  const info = `AmongU 2026 Squad: ${assignedTeam.name} (${assignedTeam.id}) | Table #${assignedTeam.tableNumber || assignedTeam.id.slice(-2)} | Members: ${assignedTeam.members?.map((m: any) => m.name).join(', ')}`;
-                  navigator.clipboard.writeText(info);
-                  alert('Squad details copied to clipboard!');
-                }}
-                className={`px-3 py-1.5 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-200 border text-xs font-mono font-bold transition-all shrink-0 ${
-                  isImpostor ? 'border-red-800 hover:border-red-500 text-red-200' : 'border-gray-700 hover:border-crew-cyan'
-                }`}
-              >
-                📋 COPY TEAM INFO
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="au-card bg-gray-900/90 border-2 border-gray-800 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
-            <div className="w-16 h-16 bg-crew-cyan/20 border-2 border-crew-cyan rounded-full flex items-center justify-center mx-auto text-3xl">
-              🚀
-            </div>
-            <div className="max-w-md mx-auto space-y-2">
-              <h2 className="font-display text-2xl text-white">SQUAD ALLOCATION IN PROGRESS</h2>
-              <p className="text-gray-400 text-xs sm:text-sm font-mono leading-relaxed">
-                The Organizing Command Deck is balancing multi-disciplinary squads. Your assigned teammates, venue table number, and secret role will appear here as soon as Round 1 begins.
-              </p>
-            </div>
-            <span className="inline-block px-3 py-1 bg-black/60 border border-gray-700 rounded-full text-xs font-mono text-crew-lime font-bold">
-              ✓ Registration Confirmed • Stand by for team release
-            </span>
-          </div>
-        )}
-
-        {/* SQUAD TEAM CHAT SECTION (POPS UP WHEN RANDOM FOUR-MEMBER SQUAD IS FORMED) */}
-        {assignedTeam && (
-          <TeamChatInterface
-            assignedTeam={assignedTeam}
-            currentTicket={ticket}
-            isImpostor={isImpostor}
-            isCrewmate={isCrewmate}
-          />
-        )}
-
         {/* Welcome Banner + Live Avatar Preview */}
         <div className={`au-card rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden transition-all duration-500 ${theme.welcomeCard}`}>
           <div className="flex items-center gap-6">
@@ -859,7 +651,13 @@ export default function UserDashboardPage() {
               <p className="text-gray-300 font-bold text-sm sm:text-base mt-2">
                 Your drop-ship seat is confirmed for <span className={isImpostor ? 'text-red-400 font-bold' : 'text-crew-cyan font-bold'}>AmongU</span> at KIET Deemed to be University.
               </p>
-              <div className="flex gap-2 mt-3">
+              <div className="flex flex-wrap gap-2 mt-3">
+                <Link
+                  href="/squad"
+                  className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs py-1.5 px-4 rounded-full flex items-center gap-1.5 cursor-pointer font-bold shadow"
+                >
+                  <span>SQUAD ROOM 👥</span>
+                </Link>
                 <Link
                   href="/profile"
                   className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xs py-1.5 px-4 rounded-full flex items-center gap-1.5 cursor-pointer font-bold shadow"
@@ -998,86 +796,7 @@ export default function UserDashboardPage() {
               </p>
             </div>
           </div>
-
-          {/* SQUAD SUBMISSIONS PORTAL (PPT & CODE REPO) */}
-          <div className="pt-4 border-t border-gray-800 space-y-4">
-            <h3 className="font-display text-lg text-white flex items-center gap-2">
-              <span>📤</span> SQUAD SUBMISSION TERMINAL
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Round 1 PPT Submission Box */}
-              <div className="bg-black/70 au-border p-4 rounded-xl space-y-3 border-crew-yellow/40">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-crew-yellow">ROUND 1: PPT SUBMISSION</span>
-                  {round1Submitted && (
-                    <span className="text-[10px] font-mono text-crew-lime font-bold">✓ SUBMITTED</span>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  placeholder="Project Architecture Title..."
-                  value={round1ProjectTitle}
-                  onChange={(e) => setRound1ProjectTitle(e.target.value)}
-                  className="w-full bg-black border border-gray-800 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-crew-yellow"
-                />
-                <input
-                  type="url"
-                  placeholder="Paste Google Slides / PPT link..."
-                  value={round1PptUrl}
-                  onChange={(e) => setRound1PptUrl(e.target.value)}
-                  className="w-full bg-black border border-gray-800 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-crew-yellow font-mono"
-                />
-                <button
-                  onClick={() => {
-                    if (round1PptUrl.length === 0) return;
-                    setRound1Submitted(true);
-                    try {
-                      localStorage.setItem('amongu_user_round1_ppt', round1PptUrl);
-                      localStorage.setItem('amongu_user_round1_title', round1ProjectTitle);
-                    } catch {
-                      // ignore
-                    }
-                  }}
-                  className="au-btn w-full bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs py-2 rounded-lg"
-                >
-                  {round1Submitted ? 'UPDATE PPT SUBMISSION' : 'SUBMIT ROUND 1 DECK'}
-                </button>
-              </div>
-
-              {/* Round 2 GitHub Repo Submission Box */}
-              <div className="bg-black/70 au-border p-4 rounded-xl space-y-3 border-crew-lime/40">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-crew-lime">ROUND 2: CODE REPO SUBMISSION</span>
-                  {round2Submitted && (
-                    <span className="text-[10px] font-mono text-crew-lime font-bold">✓ REPO LINKED</span>
-                  )}
-                </div>
-                <input
-                  type="url"
-                  placeholder="https://github.com/team/amongu-repo..."
-                  value={round2RepoUrl}
-                  onChange={(e) => setRound2RepoUrl(e.target.value)}
-                  className="w-full bg-black border border-gray-800 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-crew-lime font-mono"
-                />
-                <button
-                  onClick={() => {
-                    if (round2RepoUrl.length === 0) return;
-                    setRound2Submitted(true);
-                    try {
-                      localStorage.setItem('amongu_user_round2_repo', round2RepoUrl);
-                    } catch {
-                      // ignore
-                    }
-                  }}
-                  className="au-btn w-full bg-crew-lime hover:bg-green-400 text-black font-display text-xs py-2 rounded-lg"
-                >
-                  {round2Submitted ? 'UPDATE GITHUB REPOSITORY' : 'LINK GITHUB REPO'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -1141,19 +860,28 @@ export default function UserDashboardPage() {
 
           {/* Card 2: Mission Schedule & Team Status */}
           <div className="space-y-6">
-            {/* Team Allocation Card */}
-            <div className="au-card bg-gray-900 rounded-3xl p-6 border-crew-yellow">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">👥</span>
-                <h3 className="font-display text-xl text-crew-yellow">CREW ASSIGNMENT</h3>
+            {/* Squad Command Center Link Card */}
+            <div className="au-card bg-gray-900 rounded-3xl p-6 border-2 border-crew-yellow/60 space-y-4 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">👥</span>
+                  <h3 className="font-display text-xl text-crew-yellow">SQUAD COMMAND CENTER</h3>
+                </div>
+                <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded bg-black au-border text-crew-lime">
+                  {assignedTeam ? 'ASSIGNED' : 'STANDBY'}
+                </span>
               </div>
-              <p className="text-gray-300 text-sm font-bold mb-4">
-                Teams are formed randomly with <span className="text-white">4 participants per crew</span>.
+              <p className="text-gray-300 text-xs sm:text-sm font-bold">
+                {assignedTeam
+                  ? `Active Squad: ${assignedTeam.name} (${assignedTeam.id}) at Table #${assignedTeam.tableNumber || assignedTeam.id.slice(-2)}.`
+                  : 'Multi-disciplinary 4-cadet crews, arena workstation table assignments, and submission terminals.'}
               </p>
-              <div className="bg-black/60 au-border rounded-xl p-3 text-center">
-                <p className="text-xs text-gray-400 font-bold uppercase">Assignment Schedule</p>
-                <p className="font-display text-crew-cyan text-sm mt-1">REVEALED ON EVENT DAY (ROUND 1)</p>
-              </div>
+              <Link
+                href="/squad"
+                className="au-btn w-full bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold shadow cursor-pointer"
+              >
+                <span>OPEN SQUAD ROOM &amp; COMMS 🚀</span>
+              </Link>
             </div>
 
             {/* Event Day Quick Details */}
