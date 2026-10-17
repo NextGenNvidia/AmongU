@@ -223,7 +223,7 @@ export default function CadetClearancePortalPage() {
 
     console.log('🔐 [OTP Verifying] Code entered:', entered);
 
-    if (serverOtp && entered !== serverOtp && entered !== '123456') {
+    if (serverOtp && entered !== serverOtp) {
       setIsVerifyingOtp(false);
       setOtpError('Invalid passcode. Please enter the 6-digit code transmitted to your email.');
       return;
@@ -551,10 +551,10 @@ export default function CadetClearancePortalPage() {
                     <span className="text-3xl">💳</span>
                   </div>
                   <h2 className="font-display text-3xl text-crew-lime mb-1" style={{ textShadow: '2px 2px 0 #000' }}>
-                    OFFICIAL RAZORPAY CHECKOUT
+                    Checkout
                   </h2>
                   <p className="text-gray-300 font-bold text-xs sm:text-sm">
-                    Step 3: Identity verified! Proceed to Razorpay to complete your ₹55 registration.
+                    Step 3: Identity verified! Complete payment of ₹55 to secure your seat.
                   </p>
                 </div>
               )}
@@ -719,7 +719,7 @@ export default function CadetClearancePortalPage() {
                     <p className="text-xs text-gray-300 mb-1">Transmission code dispatched to:</p>
                     <p className="text-sm font-mono text-crew-cyan font-bold">{formData.email}</p>
                     <p className="text-[11px] text-gray-400 mt-2">
-                      💡 Check your KIET email inbox. (Development bypass: <span className="font-mono text-crew-lime font-bold">123456</span>).
+                      💡 Please check your KIET student email inbox (including Spam/Updates) for your 6-digit code.
                     </p>
                   </div>
 
@@ -836,7 +836,7 @@ export default function CadetClearancePortalPage() {
                   </div>
 
                   <div className="bg-black/40 border border-gray-800 rounded-xl p-3 text-xs text-gray-400 text-center">
-                    🔒 Official checkout will open securely via Razorpay. After successful payment, your browser will return here automatically and take you straight to your Mission Dashboard.
+                    🔒 Official checkout will open securely. After successful payment, your browser will return here automatically and take you straight to your Mission Dashboard.
                   </div>
 
                   <button
@@ -848,10 +848,10 @@ export default function CadetClearancePortalPage() {
                     {paymentRedirecting ? (
                       <>
                         <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                        <span>CONNECTING TO RAZORPAY...</span>
+                        <span>CONNECTING TO CHECKOUT...</span>
                       </>
                     ) : (
-                      <span>PROCEED TO PAY ₹55 VIA RAZORPAY →</span>
+                      <span>PROCEED TO PAY ₹55 →</span>
                     )}
                   </button>
 
