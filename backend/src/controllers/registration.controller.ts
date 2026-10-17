@@ -291,13 +291,18 @@ export const venueCheckIn = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // Find registration matching any of the identifiers
-    const registration = await Registration.findOne({ $or: queries });
+    // Prioritize paid registration first, otherwise fall back to latest record
+    let registration = await Registration.findOne({ $or: queries, paymentStatus: 'success' });
+    if (!registration) {
+      registration = await Registration.findOne({ $or: queries }).sort({ createdAt: -1 });
+    }
 
     if (!registration) {
       res.status(404).json({
         success: false,
-        message: 'No registration found matching the provided details. Please check your College ID or visit the registration desk.',
+        message: targetEmail
+          ? `No registration found for Google account ${targetEmail}. Please register for AmongU first.`
+          : 'No registration record found. Please sign in with your registered Google account.',
       });
       return;
     }
@@ -305,7 +310,7 @@ export const venueCheckIn = async (req: Request, res: Response): Promise<void> =
     if (registration.paymentStatus !== 'success') {
       res.status(400).json({
         success: false,
-        message: `Registration found for ${registration.name}, but payment status is "${registration.paymentStatus}". Please complete fee payment to check in.`,
+        message: `Registration found for ${registration.name}, but payment is incomplete (${registration.paymentStatus}). Please complete fee payment to check in.`,
         registration,
       });
       return;
