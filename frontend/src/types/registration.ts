@@ -60,3 +60,27 @@ export interface PaymentVerificationPayload {
   razorpay_payment_id: string;
   razorpay_signature: string;
 }
+
+export interface RegistrationData {
+  name: string;
+  collegeId: string;
+  year: string;
+  branch: string;
+  section: string;
+  phone: string;
+  email: string;
+  track: string;
+}
+
+export interface ConfirmedTicket extends RegistrationData {
+  paymentId: string;
+  amount: number;
+  registeredAt: string;
+  isEmailVerified: boolean;
+  avatarColor?: string;
+  avatarHat?: string;
+  avatarMuffler?: string;
+  withdrawalStatus?: string;
+  assignedRole?: string;
+}
+
