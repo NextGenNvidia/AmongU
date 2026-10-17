@@ -159,8 +159,8 @@ export default function AmongUHomePage() {
         }`}
         id="navbar"
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+        <div className="max-w-[96rem] mx-auto px-4 sm:px-8 lg:px-12">
+          <div className="flex items-center justify-between h-20 gap-4 lg:gap-8">
             <div className="flex-shrink-0">
               <a href="#" className="font-display text-2xl md:text-3xl text-white tracking-wider flex items-center gap-2">
                 <svg width="30" height="30" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
@@ -186,25 +186,25 @@ export default function AmongUHomePage() {
                 U
               </a>
             </div>
-            <div className="hidden md:flex items-center space-x-6">
-              <a href="#about" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+            <div className="hidden md:flex items-center space-x-3.5 lg:space-x-5 xl:space-x-6">
+              <a href="#about" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 About
               </a>
-              <a href="#tracks" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+              <a href="#tracks" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 Tracks
               </a>
-              <a href="#schedule" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+              <a href="#schedule" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 Schedule
               </a>
-              <a href="#prizes" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+              <a href="#prizes" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 Prizes
               </a>
-              <a href="#faq" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
+              <a href="#faq" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 FAQ
               </a>
               
               {firebaseUser ? (
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2 lg:gap-2.5">
                   <span className="hidden xl:inline text-xs text-crew-cyan font-bold bg-black/60 px-3 py-1 rounded-full border border-gray-700 font-mono">
                     {firebaseUser.email}
                   </span>
