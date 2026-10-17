@@ -3,7 +3,7 @@ import '../styles/globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://amongu.vercel.app'),
-  title: 'AmongU | A Hackathon of Code, Creativity & Sabotage',
+  title: 'AmongU',
   description:
     'Join AmongU — an immersive social deduction hackathon at KIET Deemed to be University. Team up, ship software, and deduce the covert Impostor before the final reveal. ₹10,000 Prize Pool.',
   keywords: [
@@ -19,11 +19,11 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'NextGen Supercomputing Club' }],
   openGraph: {
-    title: 'AmongU — A Hackathon of Code, Creativity & Sabotage',
+    title: 'AmongU',
     description:
       'Code with your crew, ship real projects, and uncover the secret Impostor among you. Organized by NextGen Supercomputing Club at KIET Deemed to be University. ₹10,000 in Prizes.',
     url: 'https://amongu.vercel.app',
-    siteName: 'AmongU Hackathon',
+    siteName: 'AmongU',
     images: [
       {
         url: '/images/wp7932884.webp',
@@ -38,13 +38,18 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AmongU — A Hackathon of Code, Creativity & Sabotage',
+    title: 'AmongU',
     description:
       'Code with your crew, ship real projects, and uncover the secret Impostor among you. Organized by NextGen Supercomputing Club at KIET Deemed to be University.',
     images: ['/images/wp7932884.webp'],
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/images/61d183393a856e0004c6334b.webp', type: 'image/webp' },
+      { url: '/favicon.ico' },
+    ],
+    shortcut: '/images/61d183393a856e0004c6334b.webp',
+    apple: '/images/61d183393a856e0004c6334b.webp',
   },
 };
 
@@ -56,6 +61,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <head>
+        <link rel="icon" href="/images/61d183393a856e0004c6334b.webp" type="image/webp" />
+        <link rel="apple-touch-icon" href="/images/61d183393a856e0004c6334b.webp" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
