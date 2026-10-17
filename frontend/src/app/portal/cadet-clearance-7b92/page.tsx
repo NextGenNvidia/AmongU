@@ -67,16 +67,19 @@ export default function CadetClearancePortalPage() {
   // Check if ticket already exists in localStorage or profile
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
-  // 1. Check if already registered
+  // 1. Check if already registered strictly from backend truth
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTicket = localStorage.getItem('amongu_user_ticket');
-      if (savedTicket || isRegistered || profile?.hasRegistered) {
+      if (isRegistered || profile?.hasRegistered) {
         setAlreadyRegistered(true);
         const timer = setTimeout(() => {
           router.push('/dashboard');
         }, 1800);
         return () => clearTimeout(timer);
+      } else if (profile && !profile.hasRegistered) {
+        // User is authenticated but has NOT registered in MongoDB -> clear stale tickets!
+        localStorage.removeItem('amongu_user_ticket');
+        setAlreadyRegistered(false);
       }
     }
   }, [isRegistered, profile, router]);

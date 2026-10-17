@@ -16,15 +16,13 @@ export default function AmongUHomePage() {
   const [modalAuthError, setModalAuthError] = useState<string | null>(null);
 
   const handleRegisterClick = () => {
-    const localTicket = typeof window !== 'undefined' ? localStorage.getItem('amongu_user_ticket') : null;
-
     if (!firebaseUser) {
       setModalAuthError(null);
       setShowSignInModal(true);
       return;
     }
 
-    if (isRegistered || profile?.hasRegistered || localTicket) {
+    if (isRegistered || profile?.hasRegistered) {
       router.push('/dashboard');
     } else {
       router.push('/portal/cadet-clearance-7b92');
@@ -44,12 +42,11 @@ export default function AmongUHomePage() {
 
       setShowSignInModal(false);
 
-      const localTicket = typeof window !== 'undefined' ? localStorage.getItem('amongu_user_ticket') : null;
-      if (loggedIn.hasRegistered || localTicket) {
+      if (loggedIn.hasRegistered) {
         console.log('✅ Cadet already registered, redirecting to dashboard');
         router.push('/dashboard');
       } else {
-        console.log('🚀 Cadet authenticated, taking to unguessable clearance screen');
+        console.log('🚀 Cadet authenticated and unregistered, taking to registration clearance screen');
         router.push('/portal/cadet-clearance-7b92');
       }
     } catch (err: any) {

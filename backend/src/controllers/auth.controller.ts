@@ -25,8 +25,23 @@ export const userSignIn = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Verify user exists and ensure role is 'user' (unless already admin via admin portal)
-    let user = await User.findOne({ firebaseUid: uid });
+    // Atomic upsert: ensures race conditions don't throw E11000 duplicate key error
+    let user = await User.findOneAndUpdate(
+      { firebaseUid: uid },
+      {
+        $setOnInsert: {
+          firebaseUid: uid,
+          role: 'user',
+          isBlocked: false,
+        },
+        $set: {
+          email: email.toLowerCase(),
+          name,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
     if (user && user.isBlocked) {
       console.warn(`⛔ [Auth] Blocked cadet attempted login: ${email} (${uid})`);
       res.status(403).json({
@@ -36,20 +51,12 @@ export const userSignIn = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    if (!user) {
-      user = await User.create({
-        firebaseUid: uid,
-        email,
-        name,
-        role: 'user',
-        isBlocked: false,
-      });
-    }
-
-    // Check existing registration
+    // Check existing registration strictly by firebaseUid OR email
     const existingRegistration = await Registration.findOne({
-      firebaseUid: uid,
-      paymentStatus: 'success',
+      $or: [
+        { firebaseUid: uid, paymentStatus: 'success' },
+        { email: email.toLowerCase(), paymentStatus: 'success' },
+      ],
     });
 
     console.log(`\n======================================================`);

@@ -48,6 +48,13 @@ export const useAuth = () => {
             };
             setProfile(userWithReg);
             setIsRegistered(!!res.hasRegistered);
+
+            // Database is the single source of truth: if not registered in DB, purge stale local storage!
+            if (!res.hasRegistered && typeof window !== 'undefined') {
+              console.log('🧹 [Auth] Backend confirms cadet has NOT registered. Cleared stale local tickets.');
+              localStorage.removeItem('amongu_user_ticket');
+              localStorage.removeItem('amongu_registration_draft');
+            }
           }
         } catch (err) {
           console.error('Error syncing user profile:', err);
@@ -99,6 +106,14 @@ export const useAuth = () => {
         };
         setProfile(fullProfile);
         setIsRegistered(!!res.hasRegistered);
+
+        // Clear stale local storage if user is not registered in database
+        if (!res.hasRegistered && typeof window !== 'undefined') {
+          console.log('🧹 [Auth] Backend confirms new/unregistered cadet. Purged stale tickets.');
+          localStorage.removeItem('amongu_user_ticket');
+          localStorage.removeItem('amongu_registration_draft');
+        }
+
         return fullProfile;
       }
       return null;
