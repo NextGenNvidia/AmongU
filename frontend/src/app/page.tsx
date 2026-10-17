@@ -454,27 +454,48 @@ export default function AmongUHomePage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-6">
-              <button
-                type="button"
-                onClick={handleRegisterClick}
-                className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_25px_rgba(197,17,17,0.8)] animate-pulse hover:animate-none transition-all cursor-pointer"
-              >
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
-                <span>REGISTER NOW</span>
-                <span className="bg-crew-yellow text-black text-sm font-black px-2.5 py-0.5 rounded-full border-2 border-black">
-                  ₹55
-                </span>
-              </button>
-              <a href="#about" className="au-btn bg-crew-white text-black hover:bg-gray-200 font-display text-xl py-4 px-8 rounded-full">
-                VIEW MISSIONS
-              </a>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mt-6">
+              {firebaseUser && (isRegistered || profile?.hasRegistered) ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_25px_rgba(6,182,212,0.8)] hover:scale-105 transition-all cursor-pointer font-bold"
+                  >
+                    <span>GO TO DASHBOARD</span>
+                    <span>🚀</span>
+                  </Link>
+                  <Link
+                    href="/squad"
+                    className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-2.5 shadow-[0_0_20px_rgba(250,204,21,0.6)] hover:scale-105 transition-all cursor-pointer font-bold"
+                  >
+                    <span>VIEW SQUAD</span>
+                    <span>👥</span>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleRegisterClick}
+                    className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_25px_rgba(197,17,17,0.8)] animate-pulse hover:animate-none transition-all cursor-pointer"
+                  >
+                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                    <span>REGISTER NOW</span>
+                    <span className="bg-crew-yellow text-black text-sm font-black px-2.5 py-0.5 rounded-full border-2 border-black">
+                      ₹55
+                    </span>
+                  </button>
+                  <a href="#about" className="au-btn bg-crew-white text-black hover:bg-gray-200 font-display text-xl py-4 px-8 rounded-full">
+                    VIEW MISSIONS
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </div>
