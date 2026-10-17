@@ -354,7 +354,7 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
               disabled={submitting}
               className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-lg sm:text-xl py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(50,205,50,0.3)] hover:scale-[1.01]"
             >
-              {submitting ? 'OPENING RAZORPAY...' : `PAY ₹${feeINR} VIA RAZORPAY ↗`}
+              {submitting ? 'OPENING RAZORPAY...' : 'PAY VIA RAZORPAY ↗'}
             </button>
           </form>
         )}

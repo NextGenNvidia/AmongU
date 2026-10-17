@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ALLOWED_BRANCHES, ALLOWED_SECTIONS, ALLOWED_YEARS } from '../constants/branches';
 import { useRazorpay } from '../hooks/useRazorpay';
 import { clientEnv } from '../config/env';
+import ShhhIntroAnimation from '../components/animations/ShhhIntroAnimation';
 
 interface RegistrationData {
   name: string;
@@ -54,6 +55,60 @@ export default function AmongUHomePage() {
   const [resendCountdown, setResendCountdown] = useState(30);
 
   const { openCheckout } = useRazorpay();
+
+  // Animated Mission Timeline Scroll Progress with silky smooth Lerp interpolation
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const [timelineProgress, setTimelineProgress] = useState(0);
+  const targetProgressRef = useRef(0);
+  const currentProgressRef = useRef(0);
+  const [isTimelineRunning, setIsTimelineRunning] = useState(false);
+
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+      setIsTimelineRunning(true);
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => setIsTimelineRunning(false), 250);
+
+      if (timelineRef.current) {
+        const rect = timelineRef.current.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+
+        // Start filling when top of timeline reaches 65% of screen height
+        const triggerOffset = windowHeight * 0.65;
+        const distanceScrolled = triggerOffset - rect.top;
+        const totalHeight = rect.height;
+
+        const percentage = (distanceScrolled / totalHeight) * 100;
+        targetProgressRef.current = Math.max(0, Math.min(100, percentage));
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    let animFrame: number;
+    const lerpLoop = () => {
+      const diff = targetProgressRef.current - currentProgressRef.current;
+      if (Math.abs(diff) > 0.05) {
+        currentProgressRef.current += diff * 0.16; // Silky smooth damping physics
+        setTimelineProgress(Math.round(currentProgressRef.current * 10) / 10);
+      } else if (currentProgressRef.current !== targetProgressRef.current) {
+        currentProgressRef.current = targetProgressRef.current;
+        setTimelineProgress(Math.round(currentProgressRef.current * 10) / 10);
+      }
+      animFrame = requestAnimationFrame(lerpLoop);
+    };
+    animFrame = requestAnimationFrame(lerpLoop);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animFrame);
+      clearTimeout(scrollTimeout);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -215,6 +270,8 @@ export default function AmongUHomePage() {
 
   return (
     <div className="relative min-h-screen font-body text-gray-100 antialiased selection:bg-crew-cyan selection:text-black">
+      {/* 🤫 Intro "Shhhhh!" Animation Video on Page Load */}
+      <ShhhIntroAnimation />
       {/* Moving Stars and Twinkling Starfield */}
       <div className="stars"></div>
       <div className="twinkling"></div>
@@ -261,34 +318,7 @@ export default function AmongUHomePage() {
         </svg>
       </div>
 
-      {/* 🛸 FLOATING "REGISTER NOW" BUTTON (Stuck along scrollbar on right top corner) */}
-      <aside aria-label="Quick Registration" className="fixed top-24 right-4 z-[90] sm:right-6 pointer-events-auto">
-        <button
-          type="button"
-          onClick={() => openModal()}
-          className="au-btn group bg-crew-red hover:bg-red-500 cursor-pointer text-white font-display text-sm sm:text-base py-3 px-5 sm:px-6 rounded-full flex items-center gap-3 shadow-[0_0_20px_rgba(197,17,17,0.9)] hover:scale-105 active:scale-95 transition-all"
-          title="Click to Register for AmongU (₹55)"
-        >
-          <svg width="22" height="26" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-            <path
-              d="M70,100 v10 a10,10 0 0,1 -20,0 v-10 h-10 v10 a10,10 0 0,1 -20,0 v-10 C10,95 10,70 10,60 v-20 C10,15 30,10 45,10 c15,0 35,5 35,30 v20 C80,70 80,95 70,100 Z"
-              fill="#fff"
-              stroke="#000"
-              strokeWidth="6"
-            />
-            <path
-              d="M35,30 h40 a15,15 0 0,1 15,15 v5 a15,15 0 0,1 -15,15 h-40 a15,15 0 0,1 -15,-15 v-5 a15,15 0 0,1 15,-15 Z"
-              fill="#9cdbfa"
-              stroke="#000"
-              strokeWidth="6"
-            />
-          </svg>
-          <span className="tracking-wide">REGISTER NOW</span>
-          <span className="bg-crew-yellow text-black text-xs font-black px-2 py-0.5 rounded-full border-2 border-black">
-            ₹55
-          </span>
-        </button>
-      </aside>
+      
 
       {/* Navigation */}
       <nav
@@ -481,9 +511,10 @@ export default function AmongUHomePage() {
               A Hackathon of Code, Creativity &amp; Sabotage
             </p>
 
-            <p className="text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto font-bold mb-8 bg-black/50 p-4 rounded-xl au-border">
-              November 2, 2026 • KIET Deemed to be University
-            </p>
+            <div className="text-base sm:text-xl font-mono tracking-wider text-gray-200 max-w-2xl mx-auto font-bold mb-8 bg-black/60 p-4 rounded-xl au-border space-y-1">
+              <div>MISSION DATE: 02.11.2026</div>
+              <div className="text-crew-cyan text-sm sm:text-base md:text-lg">COORD: 28.73139°N, 77.47585°E</div>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-6">
               <button
@@ -626,65 +657,279 @@ export default function AmongUHomePage() {
             MISSION <span className="text-crew-cyan">TIMELINE</span>
           </h2>
 
-          <div className="relative">
-            {/* Task Progress Bar (Vertical Line) */}
-            <div className="absolute left-8 md:left-1/2 transform md:-translate-x-1/2 h-full w-4 bg-gray-800 au-border rounded-full">
-              <div className="w-full bg-crew-lime h-3/4 rounded-t-full relative">
-                {/* Glow effect */}
-                <div className="absolute inset-0 bg-crew-lime blur-sm opacity-50"></div>
+          <div ref={timelineRef} className="relative">
+            {/* Task Progress Bar (Vertical Line Conduit) */}
+            <div className="absolute left-8 md:left-1/2 transform md:-translate-x-1/2 h-full w-4 bg-gray-900 border-2 border-black rounded-full overflow-hidden shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)]">
+              {/* Dynamic Animated Glowing Green Beam driven by smooth Lerp */}
+              <div
+                className="w-full bg-crew-lime relative shadow-[0_0_25px_#50ef39]"
+                style={{ height: `${timelineProgress}%` }}
+              >
+                {/* Internal Glow Effect */}
+                <div className="absolute inset-0 bg-crew-lime blur-sm opacity-60"></div>
+                {/* Moving Animated Tracer Head at the lead tip of the green beam */}
+                {timelineProgress > 1 && (
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-5 h-5 bg-white rounded-full border-2 border-crew-lime shadow-[0_0_20px_#50ef39,0_0_8px_#ffffff] z-10 animate-pulse">
+                    <div className="absolute inset-0 rounded-full bg-crew-lime animate-ping opacity-75" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Animated Running Among Us Crewmate over the Green Line */}
+            <div
+              className="absolute left-8 md:left-1/2 -translate-x-1/2 pointer-events-none z-50 select-none"
+              style={{
+                top: `${timelineProgress}%`,
+                transform: 'translate(-50%, -78%)',
+                opacity: timelineProgress >= 2 ? 1 : 0,
+                transition: 'opacity 0.25s ease-out',
+              }}
+            >
+              {/* Running Crewmate Wrapper with body bob & tilt */}
+              <div className="relative animate-crewmate-run-body flex flex-col items-center">
+                {/* Running Speed Dust Particles at feet */}
+                <div className="absolute -bottom-1 left-2 flex items-center gap-1 pointer-events-none">
+                  <div className="w-2 h-2 rounded-full bg-crew-lime/60 animate-run-dust" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/70 animate-run-dust" style={{ animationDelay: '0.15s' }} />
+                </div>
+
+                {/* Running Among Us Character SVG */}
+                <svg
+                  width="46"
+                  height="54"
+                  viewBox="0 0 100 115"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] filter"
+                >
+                  {/* 1. Left Leg (Back Leg with stride animation) */}
+                  <g className="animate-run-leg-left">
+                    <rect
+                      x="26"
+                      y="76"
+                      width="18"
+                      height="28"
+                      rx="9"
+                      fill="#990d0d"
+                      stroke="#000"
+                      strokeWidth="5"
+                    />
+                    {/* Foot sole */}
+                    <ellipse cx="35" cy="100" rx="9" ry="4" fill="#000" opacity="0.4" />
+                  </g>
+
+                  {/* 2. Backpack */}
+                  <rect
+                    x="6"
+                    y="28"
+                    width="22"
+                    height="44"
+                    rx="8"
+                    fill="#c51111"
+                    stroke="#000"
+                    strokeWidth="5.5"
+                  />
+                  <rect x="10" y="32" width="14" height="36" rx="4" fill="#990d0d" />
+
+                  {/* 3. Main Torso / Body */}
+                  <path
+                    d="M74,84 C74,54 72,16 46,16 C22,16 18,54 18,84 C24,86 68,86 74,84 Z"
+                    fill="#c51111"
+                    stroke="#000"
+                    strokeWidth="5.5"
+                  />
+                  {/* Body Front Highlight Curve */}
+                  <path
+                    d="M46,20 C58,20 68,26 68,44 v22"
+                    stroke="#ef4444"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+
+                  {/* 4. Helmet Visor */}
+                  <path
+                    d="M34,26 h38 a12,12 0 0,1 12,12 v4 a12,12 0 0,1 -12,12 h-38 a12,12 0 0,1 -12,-12 v-4 a12,12 0 0,1 12,-12 Z"
+                    fill="#38fedc"
+                    stroke="#000"
+                    strokeWidth="5.5"
+                  />
+                  {/* Visor Glare Reflection */}
+                  <path
+                    d="M38,31 h24 a4,4 0 0,1 4,4 v0 a4,4 0 0,1 -4,4 h-24 a4,4 0 0,1 -4,-4 v0 a4,4 0 0,1 4,-4 Z"
+                    fill="#ffffff"
+                    opacity="0.9"
+                  />
+
+                  {/* 5. Right Leg (Front Leg with stride animation) */}
+                  <g className="animate-run-leg-right">
+                    <rect
+                      x="50"
+                      y="76"
+                      width="18"
+                      height="28"
+                      rx="9"
+                      fill="#c51111"
+                      stroke="#000"
+                      strokeWidth="5.5"
+                    />
+                    {/* Foot sole */}
+                    <ellipse cx="59" cy="100" rx="9" ry="4" fill="#000" opacity="0.3" />
+                  </g>
+                </svg>
+
+                {/* Green Pulse Ring around runner feet */}
+                <div className="w-7 h-2 rounded-full bg-crew-lime/50 blur-[2px] -mt-1 animate-pulse" />
               </div>
             </div>
 
             {/* Timeline Items */}
-            <div className="space-y-12">
-              {/* Item 1 */}
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-lime au-border rounded-full z-10 shadow-[0_0_15px_#50ef39]"></div>
-                <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl">
-                  <span className="text-crew-lime font-bold mb-1 block">Duration: 45 Minutes</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Round 1 — Random Ideas, Real Solutions</h3>
-                  <p className="text-gray-300 font-bold">
-                    Form a randomly assigned team, identify an interesting problem, choose a track, and submit your proposed solution as a presentation.
-                  </p>
-                </div>
-              </div>
+            {(() => {
+              const isRound1Focused = timelineProgress >= 6 && timelineProgress <= 25;
+              const isRound2Focused = timelineProgress >= 30 && timelineProgress <= 50;
+              const isRound3Focused = timelineProgress >= 57 && timelineProgress <= 77;
+              const isRound4Focused = timelineProgress >= 84;
 
-              {/* Item 2 */}
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-lime au-border rounded-full z-10 shadow-[0_0_15px_#50ef39]"></div>
-                <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl">
-                  <span className="text-crew-lime font-bold mb-1 block">Duration: 1 Hour 30 Minutes</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Round 2 — Development Round I</h3>
-                  <p className="text-gray-300 font-bold">
-                    Turn your proposal into a working prototype. Collaborate with your team and bring your idea to life.
-                  </p>
-                </div>
-              </div>
+              return (
+                <div className="space-y-16 md:space-y-24 py-6">
+                  {/* Item 1 */}
+                  <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                    <div
+                      className={`absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full transition-all duration-300 ${
+                        isRound1Focused
+                          ? 'bg-crew-lime au-border shadow-[0_0_45px_#50ef39,0_0_20px_#fff] scale-[1.75] md:scale-[1.9] z-40 ring-8 ring-crew-lime/40'
+                          : timelineProgress > 25
+                          ? 'bg-crew-lime au-border shadow-[0_0_15px_#50ef39] scale-100 z-10'
+                          : 'bg-gray-800 border-2 border-gray-700 shadow-none scale-100 opacity-60 z-10'
+                      }`}
+                    ></div>
+                    <div
+                      className={`ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 md:p-8 rounded-2xl transition-all duration-300 origin-left md:origin-center ${
+                        isRound1Focused
+                          ? 'scale-110 sm:scale-115 md:scale-[1.28] lg:scale-[1.32] -translate-y-4 border-4 border-crew-lime shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_55px_rgba(80,239,57,0.45)] z-30 ring-4 ring-crew-lime/40'
+                          : timelineProgress > 25
+                          ? 'scale-100 translate-y-0 border-crew-lime/40 opacity-90 z-10'
+                          : 'scale-100 translate-y-0 border-black opacity-75 z-10'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-crew-lime font-bold block text-sm md:text-base">Duration: 45 Minutes</span>
+                        {isRound1Focused && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-black uppercase tracking-wider bg-crew-lime text-black animate-pulse shadow-[0_0_15px_#50ef39]">
+                            ACTIVE STAGE
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-display text-2xl md:text-3xl text-white mb-2">Round 1 — Random Ideas, Real Solutions</h3>
+                      <p className="text-gray-300 font-bold text-sm md:text-base leading-relaxed">
+                        Form a randomly assigned team, identify an interesting problem, choose a track, and submit your proposed solution as a presentation.
+                      </p>
+                    </div>
+                  </div>
 
-              {/* Item 3 */}
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-yellow au-border rounded-full z-10 shadow-[0_0_15px_#f5f557]"></div>
-                <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl">
-                  <span className="text-crew-yellow font-bold mb-1 block">Duration: 1 Hour 30 Minutes</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Round 3 — Development Round II: Impostor Challenge</h3>
-                  <p className="text-gray-300 font-bold">
-                    Continue developing your prototype while navigating the hidden Impostor Challenge. Build, debug, and protect your project from sabotage.
-                  </p>
-                </div>
-              </div>
+                  {/* Item 2 */}
+                  <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                    <div
+                      className={`absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full transition-all duration-300 ${
+                        isRound2Focused
+                          ? 'bg-crew-lime au-border shadow-[0_0_45px_#50ef39,0_0_20px_#fff] scale-[1.75] md:scale-[1.9] z-40 ring-8 ring-crew-lime/40'
+                          : timelineProgress > 50
+                          ? 'bg-crew-lime au-border shadow-[0_0_15px_#50ef39] scale-100 z-10'
+                          : 'bg-gray-800 border-2 border-gray-700 shadow-none scale-100 opacity-60 z-10'
+                      }`}
+                    ></div>
+                    <div
+                      className={`ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 md:p-8 rounded-2xl transition-all duration-300 origin-left md:origin-center ${
+                        isRound2Focused
+                          ? 'scale-110 sm:scale-115 md:scale-[1.28] lg:scale-[1.32] -translate-y-4 border-4 border-crew-lime shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_55px_rgba(80,239,57,0.45)] z-30 ring-4 ring-crew-lime/40'
+                          : timelineProgress > 50
+                          ? 'scale-100 translate-y-0 border-crew-lime/40 opacity-90 z-10'
+                          : 'scale-100 translate-y-0 border-black opacity-75 z-10'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-crew-lime font-bold block text-sm md:text-base">Duration: 1 Hour 30 Minutes</span>
+                        {isRound2Focused && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-black uppercase tracking-wider bg-crew-lime text-black animate-pulse shadow-[0_0_15px_#50ef39]">
+                            ACTIVE STAGE
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-display text-2xl md:text-3xl text-white mb-2">Round 2 — Development Round I</h3>
+                      <p className="text-gray-300 font-bold text-sm md:text-base leading-relaxed">
+                        Turn your proposal into a working prototype. Collaborate with your team and bring your idea to life.
+                      </p>
+                    </div>
+                  </div>
 
-              {/* Item 4 */}
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-crew-red au-border rounded-full z-10 shadow-[0_0_15px_#c51111]"></div>
-                <div className="ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 rounded-2xl border-crew-red">
-                  <span className="text-crew-red font-bold mb-1 block">Final Phase</span>
-                  <h3 className="font-display text-2xl text-white mb-2">Final Emergency Meeting</h3>
-                  <p className="text-gray-300 font-bold">
-                    After the final round, teams will be asked to identify the Impostor within their team. Correct identifications earn points.
-                  </p>
+                  {/* Item 3 */}
+                  <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                    <div
+                      className={`absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full transition-all duration-300 ${
+                        isRound3Focused
+                          ? 'bg-crew-yellow au-border shadow-[0_0_45px_#f5f557,0_0_20px_#fff] scale-[1.75] md:scale-[1.9] z-40 ring-8 ring-crew-yellow/40'
+                          : timelineProgress > 77
+                          ? 'bg-crew-yellow au-border shadow-[0_0_15px_#f5f557] scale-100 z-10'
+                          : 'bg-gray-800 border-2 border-gray-700 shadow-none scale-100 opacity-60 z-10'
+                      }`}
+                    ></div>
+                    <div
+                      className={`ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 md:p-8 rounded-2xl transition-all duration-300 origin-left md:origin-center ${
+                        isRound3Focused
+                          ? 'scale-110 sm:scale-115 md:scale-[1.28] lg:scale-[1.32] -translate-y-4 border-4 border-crew-yellow shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_55px_rgba(245,245,87,0.45)] z-30 ring-4 ring-crew-yellow/40'
+                          : timelineProgress > 77
+                          ? 'scale-100 translate-y-0 border-crew-yellow/40 opacity-90 z-10'
+                          : 'scale-100 translate-y-0 border-black opacity-75 z-10'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-crew-yellow font-bold block text-sm md:text-base">Duration: 1 Hour 30 Minutes</span>
+                        {isRound3Focused && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-black uppercase tracking-wider bg-crew-yellow text-black animate-pulse shadow-[0_0_15px_#f5f557]">
+                            ACTIVE STAGE
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-display text-2xl md:text-3xl text-white mb-2">Round 3 — Development Round II: Impostor Challenge</h3>
+                      <p className="text-gray-300 font-bold text-sm md:text-base leading-relaxed">
+                        Continue developing your prototype while navigating the hidden Impostor Challenge. Build, debug, and protect your project from sabotage.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Item 4 */}
+                  <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
+                    <div
+                      className={`absolute left-8 md:left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full transition-all duration-300 ${
+                        isRound4Focused
+                          ? 'bg-crew-red au-border shadow-[0_0_50px_#c51111,0_0_25px_#fff] scale-[1.75] md:scale-[1.9] z-40 ring-8 ring-red-600/40 animate-pulse'
+                          : 'bg-gray-800 border-2 border-gray-700 shadow-none scale-100 opacity-60 z-10'
+                      }`}
+                    ></div>
+                    <div
+                      className={`ml-20 md:ml-0 md:w-5/12 au-card bg-gray-900 p-6 md:p-8 rounded-2xl border-crew-red transition-all duration-300 origin-left md:origin-center ${
+                        isRound4Focused
+                          ? 'scale-110 sm:scale-115 md:scale-[1.28] lg:scale-[1.32] -translate-y-4 border-4 border-crew-red shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_55px_rgba(239,68,68,0.55)] z-30 ring-4 ring-crew-red/40'
+                          : 'scale-100 translate-y-0 border-black opacity-75 z-10'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-crew-red font-bold block text-sm md:text-base">Final Phase</span>
+                        {isRound4Focused && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-black uppercase tracking-wider bg-crew-red text-white animate-pulse shadow-[0_0_15px_#ef4444]">
+                            FINAL EMERGENCY
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-display text-2xl md:text-3xl text-white mb-2">Final Emergency Meeting</h3>
+                      <p className="text-gray-300 font-bold text-sm md:text-base leading-relaxed">
+                        After the final round, teams will be asked to identify the Impostor within their team. Correct identifications earn points.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
         </div>
       </section>
