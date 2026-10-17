@@ -170,8 +170,9 @@ export default function CadetClearancePortalPage() {
       setFormError('Please enter your full name (at least 2 characters).');
       return false;
     }
-    if (!formData.collegeId.trim() || !/^\d{15}$/.test(formData.collegeId.trim())) {
-      setFormError('College ID must be strictly 15 digits (e.g. 210029012000000).');
+    const cleanedCollegeId = formData.collegeId.trim();
+    if (!cleanedCollegeId || !/^[a-zA-Z0-9_-]{3,15}$/.test(cleanedCollegeId)) {
+      setFormError('College ID must be between 3 and 15 alphanumeric characters (e.g. 2630btech... or Roll Number).');
       return false;
     }
     if (!formData.phone.trim() || !/^[6-9]\d{9}$/.test(formData.phone.trim())) {
@@ -629,7 +630,7 @@ export default function CadetClearancePortalPage() {
 
                   <div>
                     <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">
-                      College ID (15 Digits Roll Number)
+                      College ID / Roll No. (Max 15 Characters)
                     </label>
                     <input
                       type="text"
@@ -638,7 +639,7 @@ export default function CadetClearancePortalPage() {
                       value={formData.collegeId}
                       onChange={(e) => setFormData({ ...formData, collegeId: e.target.value })}
                       className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan font-mono text-sm"
-                      placeholder="210029012000000"
+                      placeholder="e.g. 2630btech... or Roll Number"
                     />
                   </div>
 

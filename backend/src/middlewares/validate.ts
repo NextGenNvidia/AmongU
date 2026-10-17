@@ -57,7 +57,9 @@ export const studentRegistrationSchema = z.object({
   collegeId: z
     .string({ required_error: 'College ID is required' })
     .trim()
-    .regex(/^\d{15}$/, 'College ID must be exactly 15 digits'),
+    .min(3, 'College ID must be at least 3 characters')
+    .max(15, 'College ID cannot exceed 15 characters')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'College ID must contain only alphanumeric characters'),
   year: z.enum(ALLOWED_YEARS, {
     errorMap: () => ({ message: 'Year must be 1 or 2 (1st and 2nd year only)' }),
   }),

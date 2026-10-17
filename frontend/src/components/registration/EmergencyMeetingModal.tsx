@@ -57,8 +57,9 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
       setErrorMsg('Please enter both your First Name and Last Name.');
       return;
     }
-    if (!/^\d{15}$/.test(formData.collegeId.trim())) {
-      setErrorMsg('College ID must be strictly 15 digits.');
+    const cleanedCollegeId = formData.collegeId.trim();
+    if (!/^[a-zA-Z0-9_-]{3,15}$/.test(cleanedCollegeId)) {
+      setErrorMsg('College ID must be between 3 and 15 alphanumeric characters (e.g. 2630btech... or Roll Number).');
       return;
     }
     if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) {
@@ -248,7 +249,7 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-crew-cyan font-bold mb-1 text-sm">College ID (15 Digits)</label>
+              <label className="block text-crew-cyan font-bold mb-1 text-sm">College ID / Roll No. (Max 15 Characters)</label>
               <input
                 type="text"
                 required
@@ -256,7 +257,7 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
                 value={formData.collegeId}
                 onChange={(e) => setFormData({ ...formData, collegeId: e.target.value })}
                 className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan font-mono"
-                placeholder="e.g. 210029012000000"
+                placeholder="e.g. 2630btech... or Roll Number"
               />
             </div>
 

@@ -54,7 +54,7 @@ export default function TermsAndConditionsPage() {
                 <strong>Institutional Affiliation:</strong> Registration is strictly limited to currently enrolled undergraduate students of <strong>KIET Deemed to be University</strong>.
               </li>
               <li>
-                <strong>Account Validation:</strong> Students must authenticate using their official institutional email (ending with <code>@kiet.edu</code>) and provide their valid 15-digit College Registration Roll Number.
+                <strong>Account Validation:</strong> Students must authenticate using their official institutional email (ending with <code>@kiet.edu</code>) and provide their valid College Registration ID / Roll Number (up to 15 characters).
               </li>
               <li>
                 <strong>Individual Registration:</strong> All cadets register individually. Team allocation and secret role distribution (Crewmate vs Impostor) are conducted dynamically by the central organizer evaluation matrix.
