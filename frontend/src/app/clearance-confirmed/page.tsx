@@ -254,7 +254,7 @@ function ClearanceConfirmedContent() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t-4 border-black bg-space/90 p-4 text-center text-xs text-gray-500">
-        AmongU Hackathon • Organized by College Tech Society • KIET Deemed to be University
+        AmongU Hackathon • Organized by NextGen Supercomputing Club • KIET Deemed to be University
       </footer>
     </div>
   );

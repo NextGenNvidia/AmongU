@@ -299,10 +299,10 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
               <select
                 value={formData.branch}
                 onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan"
+                className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan font-bold uppercase text-sm"
               >
                 {ALLOWED_BRANCHES.map((b) => (
-                  <option key={b} value={b}>
+                  <option key={b} value={b} className="font-bold uppercase bg-gray-900 text-white">
                     {b}
                   </option>
                 ))}

@@ -681,10 +681,10 @@ export default function CadetClearancePortalPage() {
                     <select
                       value={formData.branch}
                       onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                      className="w-full bg-black au-border rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-crew-cyan text-sm"
+                      className="w-full bg-black au-border rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-crew-cyan text-sm font-bold uppercase"
                     >
                       {ALLOWED_BRANCHES.map((b) => (
-                        <option key={b} value={b}>
+                        <option key={b} value={b} className="font-bold uppercase bg-gray-900 text-white">
                           {b}
                         </option>
                       ))}
@@ -955,7 +955,7 @@ export default function CadetClearancePortalPage() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t-4 border-black bg-space/90 p-4 text-center text-xs text-gray-500">
-        AmongU Hackathon • Organized by College Tech Society • KIET Deemed to be University
+        AmongU Hackathon • Organized by NextGen Supercomputing Club • KIET Deemed to be University
       </footer>
     </div>
   );

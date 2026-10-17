@@ -487,9 +487,6 @@ export default function AmongUHomePage() {
                       ></path>
                     </svg>
                     <span>REGISTER NOW</span>
-                    <span className="bg-crew-yellow text-black text-sm font-black px-2.5 py-0.5 rounded-full border-2 border-black">
-                      ₹55
-                    </span>
                   </button>
                   <a href="#about" className="au-btn bg-crew-white text-black hover:bg-gray-200 font-display text-xl py-4 px-8 rounded-full">
                     VIEW MISSIONS
