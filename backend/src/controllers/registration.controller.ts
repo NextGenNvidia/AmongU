@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { env } from '../config/env';
 import { razorpayInstance } from '../config/razorpay';
 import { Registration } from '../models/Registration';
+import { User } from '../models/User';
 import { mailService } from '../services/mail.service';
 
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
@@ -354,8 +355,29 @@ export const confirmRegistration = async (req: Request, res: Response): Promise<
   try {
     const { name, email, collegeId, branch, year, section, track, phone, paymentId } = req.body;
 
-    const userUid = req.user?.uid || 'direct_user';
-    const userId = req.user?.dbUser?._id;
+    let finalUserId = req.user?.dbUser?._id;
+    let finalUid = req.user?.uid;
+
+    if (!finalUserId && email) {
+      let existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+      if (!existingUser) {
+        existingUser = await User.findOneAndUpdate(
+          { email: email.toLowerCase().trim() },
+          {
+            $setOnInsert: {
+              firebaseUid: finalUid || `cadet_${collegeId}`,
+              email: email.toLowerCase().trim(),
+              name,
+              role: 'user',
+              isBlocked: false,
+            },
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      }
+      finalUserId = existingUser?._id;
+      finalUid = existingUser?.firebaseUid || finalUid || `cadet_${collegeId}`;
+    }
 
     console.log(`\n======================================================`);
     console.log(`🎉 [REGISTRATION & PAYMENT CONFIRMED]`);
@@ -366,19 +388,21 @@ export const confirmRegistration = async (req: Request, res: Response): Promise<
     console.log(`🎯 Track: ${track}`);
     console.log(`💾 Saving participant record to MongoDB...`);
 
-    // Upsert registration in MongoDB
+    // Upsert registration in MongoDB by collegeId or email
     const registration = await Registration.findOneAndUpdate(
-      { collegeId },
       {
-        userId: userId || undefined,
-        firebaseUid: userUid,
+        $or: [{ collegeId }, { email: email.toLowerCase().trim() }],
+      },
+      {
+        userId: finalUserId || undefined,
+        firebaseUid: finalUid || 'direct_user',
         name,
         collegeId,
         year: year as any,
         branch,
         section,
         phone,
-        email: email.toLowerCase(),
+        email: email.toLowerCase().trim(),
         amount: 55,
         paymentStatus: 'success',
         paymentMethod: 'razorpay',

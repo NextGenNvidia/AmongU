@@ -70,14 +70,21 @@ export default function CadetClearancePortalPage() {
   // 1. Check if already registered strictly from backend truth
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasPaymentParam =
+        urlParams.get('razorpay_payment_id') ||
+        urlParams.get('payment_id') ||
+        urlParams.get('razorpay_payment_link_id') ||
+        urlParams.get('razorpay_payment_link_status');
+
       if (isRegistered || profile?.hasRegistered) {
         setAlreadyRegistered(true);
         const timer = setTimeout(() => {
           router.push('/dashboard');
         }, 1800);
         return () => clearTimeout(timer);
-      } else if (profile && !profile.hasRegistered) {
-        // User is authenticated but has NOT registered in MongoDB -> clear stale tickets!
+      } else if (profile && !profile.hasRegistered && !hasPaymentParam) {
+        // User is authenticated but has NOT registered in MongoDB and not returning from payment
         localStorage.removeItem('amongu_user_ticket');
         setAlreadyRegistered(false);
       }
@@ -106,7 +113,8 @@ export default function CadetClearancePortalPage() {
     const payId =
       urlParams.get('razorpay_payment_id') ||
       urlParams.get('payment_id') ||
-      urlParams.get('razorpay_payment_link_id');
+      urlParams.get('razorpay_payment_link_id') ||
+      (urlParams.get('razorpay_payment_link_status') === 'paid' ? `pay_rzp_${Date.now()}` : null);
 
     if (payId && !alreadyRegistered) {
       console.log('🎉 [Razorpay Return] Detected payment reference:', payId);
@@ -254,8 +262,13 @@ export default function CadetClearancePortalPage() {
   };
 
   const finalizeRegistration = async (payId: string, currentData: RegistrationData = formData) => {
+    const resolvedEmail = currentData.email || (firebaseUser?.email as string) || '';
+    const resolvedName = currentData.name || (firebaseUser?.displayName as string) || 'Cadet';
+
     const verifiedTicket: ConfirmedTicket = {
       ...currentData,
+      email: resolvedEmail,
+      name: resolvedName,
       paymentId: payId,
       amount: 55,
       registeredAt: new Date().toLocaleString(),
@@ -268,7 +281,7 @@ export default function CadetClearancePortalPage() {
     };
 
     try {
-      console.log('💾 [Backend Sync] Sending confirmed registration record to MongoDB...');
+      console.log('💾 [Backend Sync] Sending confirmed registration record to MongoDB...', verifiedTicket);
       await registrationService.confirmRegistration(verifiedTicket);
       console.log('🎉 [Success] MongoDB confirmed registration saved!');
     } catch (err) {
@@ -284,7 +297,9 @@ export default function CadetClearancePortalPage() {
 
     setIsProcessingPayment(false);
     setAutoConfirmingPayment(false);
-    router.push('/dashboard');
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 400);
   };
 
   const handleOtpChange = (index: number, val: string) => {

@@ -35,7 +35,7 @@ const registrationSchema = new Schema<IRegistration>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
       index: true,
     },
     firebaseUid: {

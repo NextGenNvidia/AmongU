@@ -62,18 +62,22 @@ export const verifyAuth = async (req: Request, res: Response, next: NextFunction
     const email = (decoded.email || '').toLowerCase().trim();
     const name = decoded.name || 'Student';
 
-    // Find user in MongoDB
-    let dbUser = await User.findOne({ firebaseUid: decoded.uid });
-
-    if (!dbUser) {
-      // Create user record default to 'user' role
-      dbUser = await User.create({
-        firebaseUid: decoded.uid,
-        email,
-        name,
-        role: 'user',
-      });
-    }
+    // Find or atomically upsert user in MongoDB to eliminate race-condition duplicate key errors
+    let dbUser = await User.findOneAndUpdate(
+      { firebaseUid: decoded.uid },
+      {
+        $setOnInsert: {
+          firebaseUid: decoded.uid,
+          role: 'user',
+          isBlocked: false,
+        },
+        $set: {
+          email,
+          name,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     req.user = {
       uid: decoded.uid,
@@ -111,16 +115,21 @@ export const optionalAuth = async (req: Request, _res: Response, next: NextFunct
     const email = (decoded.email || '').toLowerCase().trim();
     const name = decoded.name || 'Student';
 
-    let dbUser = await User.findOne({ firebaseUid: decoded.uid });
-
-    if (!dbUser) {
-      dbUser = await User.create({
-        firebaseUid: decoded.uid,
-        email,
-        name,
-        role: 'user',
-      });
-    }
+    let dbUser = await User.findOneAndUpdate(
+      { firebaseUid: decoded.uid },
+      {
+        $setOnInsert: {
+          firebaseUid: decoded.uid,
+          role: 'user',
+          isBlocked: false,
+        },
+        $set: {
+          email,
+          name,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     req.user = {
       uid: decoded.uid,
