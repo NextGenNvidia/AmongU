@@ -6,6 +6,7 @@ export interface UserProfile {
   email: string;
   name: string;
   role: UserRole;
+  hasRegistered?: boolean;
 }
 
 export interface AuthResponse {

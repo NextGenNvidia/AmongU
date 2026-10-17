@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Registration } from '../models/Registration';
+import { User } from '../models/User';
 import { env } from '../config/env';
+import { firebaseAuth } from '../config/firebase';
 import { convertRegistrationsToCsv } from '../utils/csvExporter';
 
 export const getRegistrations = async (req: Request, res: Response): Promise<void> => {
@@ -243,3 +245,187 @@ export const exportRegistrationsCsv = async (_req: Request, res: Response): Prom
     res.status(500).json({ success: false, message: error?.message || 'Error exporting registrations' });
   }
 };
+
+export const adminLoginWithCredentials = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id, password } = req.body;
+    const adminUser = env.ADMIN_USERNAME;
+    const adminPass = env.ADMIN_PASSWORD;
+
+    if (!adminUser || !adminPass) {
+      res.status(500).json({ success: false, message: 'Admin credentials not configured in server environment' });
+      return;
+    }
+
+    if (!id || !password) {
+      res.status(400).json({ success: false, message: 'Please provide both Admin ID and Password' });
+      return;
+    }
+
+    if (id.trim() !== adminUser || password.trim() !== adminPass) {
+      console.warn(`🚨 [Admin Auth Failed] Invalid credentials attempt for ID: "${id}"`);
+      res.status(401).json({ success: false, message: 'Invalid Admin ID or Password' });
+      return;
+    }
+
+    console.log(`\n======================================================`);
+    console.log(`🛡️ [ADMIN AUTH GRANTED] Organizer logged in with ID: ${id}`);
+    console.log(`⏰ Time: ${new Date().toLocaleString()}`);
+    console.log(`======================================================\n`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Admin authenticated successfully',
+      token: 'amongu_admin_secret_token_2026',
+      admin: {
+        id: 'admin_master_super',
+        username: id,
+        name: 'Chief Organizer',
+        role: 'admin',
+      },
+    });
+  } catch (error: any) {
+    console.error('Admin Login Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAllUsers = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 }).lean();
+    const registrations = await Registration.find().lean();
+
+    const regByUid = new Map<string, any>();
+    const regByEmail = new Map<string, any>();
+    registrations.forEach((r) => {
+      if (r.firebaseUid) regByUid.set(r.firebaseUid, r);
+      if (r.email) regByEmail.set(r.email.toLowerCase(), r);
+    });
+
+    const enrichedUsers = users.map((u) => {
+      const reg = regByUid.get(u.firebaseUid) || regByEmail.get(u.email.toLowerCase()) || null;
+      return {
+        id: u._id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        isBlocked: Boolean(u.isBlocked),
+        firebaseUid: u.firebaseUid,
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+        hasRegistered: Boolean(reg && reg.paymentStatus === 'success'),
+        registration: reg
+          ? {
+              collegeId: reg.collegeId,
+              branch: reg.branch,
+              year: reg.year,
+              section: reg.section,
+              phone: reg.phone,
+              track: reg.notes?.includes('Track:') ? reg.notes.split('Track:')[1]?.trim() : (reg as any).track || 'Web Development',
+              paymentStatus: reg.paymentStatus,
+              amount: reg.amount,
+              paymentId: reg.razorpayPaymentId,
+              registeredAt: reg.createdAt,
+              isPresent: reg.isPresent,
+            }
+          : null,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      total: enrichedUsers.length,
+      users: enrichedUsers,
+    });
+  } catch (error: any) {
+    console.error('Admin Get All Users Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleBlockUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    if (!user) {
+      res.status(404).json({ success: false, message: 'Cadet user not found' });
+      return;
+    }
+
+    user.isBlocked = !user.isBlocked;
+    await user.save();
+
+    console.log(`\n======================================================`);
+    console.log(`🛡️ [ADMIN ACTION] USER BLOCK STATUS UPDATED`);
+    console.log(`👤 User: ${user.name} (${user.email})`);
+    console.log(`🚫 Is Blocked: ${user.isBlocked ? 'YES (BLOCKED)' : 'NO (ACTIVE)'}`);
+    console.log(`======================================================\n`);
+
+    res.status(200).json({
+      success: true,
+      message: user.isBlocked
+        ? `Cadet ${user.name} has been suspended/blocked from accessing AmongU.`
+        : `Cadet ${user.name} has been unblocked.`,
+      isBlocked: user.isBlocked,
+    });
+  } catch (error: any) {
+    console.error('Toggle Block User Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteUserCompletely = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    if (!user) {
+      res.status(404).json({ success: false, message: 'Cadet user not found' });
+      return;
+    }
+
+    const { firebaseUid, email, name } = user;
+
+    // 1. Delete user from Firebase Auth
+    if (firebaseUid && !firebaseUid.startsWith('otp_') && !firebaseUid.startsWith('direct_')) {
+      try {
+        await firebaseAuth.deleteUser(firebaseUid);
+        console.log(`🔥 [Firebase Admin] Successfully deleted user from Firebase Auth: ${firebaseUid}`);
+      } catch (fbErr: any) {
+        console.warn(`Firebase Auth delete warning (account may already be removed or offline): ${fbErr?.message}`);
+      }
+    }
+
+    // 2. Delete all related registrations from MongoDB
+    const regDeleteResult = await Registration.deleteMany({
+      $or: [
+        { firebaseUid },
+        { email: email.toLowerCase() },
+        { userId: user._id },
+      ],
+    });
+
+    // 3. Delete user document from MongoDB
+    await User.findByIdAndDelete(user._id);
+
+    console.log(`\n======================================================`);
+    console.log(`🗑️ [USER ACCOUNT COMPLETELY PURGED BY ADMIN]`);
+    console.log(`👤 Name: ${name}`);
+    console.log(`📧 Email: ${email}`);
+    console.log(`🆔 Firebase UID: ${firebaseUid}`);
+    console.log(`🎟️ Deleted Registrations: ${regDeleteResult.deletedCount}`);
+    console.log(`✅ Fully purged from MongoDB and Firebase Auth - ready for fresh start.`);
+    console.log(`======================================================\n`);
+
+    res.status(200).json({
+      success: true,
+      message: `Cadet ${name} (${email}) has been completely deleted from MongoDB and Firebase Auth. Everything is fresh for them.`,
+    });
+  } catch (error: any) {
+    console.error('Delete User Completely Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+

@@ -6,6 +6,10 @@ import {
   manualRegister,
   getStats,
   exportRegistrationsCsv,
+  adminLoginWithCredentials,
+  getAllUsers,
+  toggleBlockUser,
+  deleteUserCompletely,
 } from '../controllers/admin.controller';
 import { verifyAuth } from '../middlewares/auth';
 import { requireAdmin } from '../middlewares/admin';
@@ -17,11 +21,23 @@ import {
 
 const router = Router();
 
-// Protect ALL admin routes with Firebase verification + Admin role guard
+// Public: Admin ID and Password Login
+router.post('/login', adminLoginWithCredentials);
+
+// Protect ALL admin routes with token verification + Admin role guard
 router.use(verifyAuth, requireAdmin);
 
 // Analytics & metrics overview
 router.get('/stats', getStats);
+
+// All logged in users from MongoDB (joined with registration data)
+router.get('/users', getAllUsers);
+
+// Block/Unblock a user
+router.patch('/users/:id/block', toggleBlockUser);
+
+// Permanently delete a user from MongoDB and Firebase Auth
+router.delete('/users/:id', deleteUserCompletely);
 
 // CSV Export
 router.get('/export/csv', exportRegistrationsCsv);

@@ -7,6 +7,7 @@ export interface IUser extends Document {
   email: string;
   name: string;
   role: UserRole;
+  isBlocked?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +38,10 @@ const userSchema = new Schema<IUser>(
       enum: ['user', 'admin'],
       required: true,
       default: 'user',
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
   },
   {

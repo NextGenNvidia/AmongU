@@ -12,14 +12,37 @@ export const userSignIn = async (req: Request, res: Response): Promise<void> => 
 
     const { uid, email, name } = req.user;
 
+    // Strict validation: Only @kiet.edu emails or authorized admin emails
+    const isKietDomain = email.toLowerCase().endsWith('@kiet.edu');
+    const isAdminEmail = env.ADMIN_EMAILS.includes(email.toLowerCase());
+
+    if (!isKietDomain && !isAdminEmail) {
+      console.warn(`⛔ [Auth] Blocked non-KIET email login attempt: ${email} (${uid})`);
+      res.status(403).json({
+        success: false,
+        message: 'Access restricted: Only official @kiet.edu email addresses are permitted to log in.',
+      });
+      return;
+    }
+
     // Verify user exists and ensure role is 'user' (unless already admin via admin portal)
     let user = await User.findOne({ firebaseUid: uid });
+    if (user && user.isBlocked) {
+      console.warn(`⛔ [Auth] Blocked cadet attempted login: ${email} (${uid})`);
+      res.status(403).json({
+        success: false,
+        message: 'Your cadet account has been suspended by an administrator. Please contact event coordinators.',
+      });
+      return;
+    }
+
     if (!user) {
       user = await User.create({
         firebaseUid: uid,
         email,
         name,
         role: 'user',
+        isBlocked: false,
       });
     }
 
@@ -28,6 +51,14 @@ export const userSignIn = async (req: Request, res: Response): Promise<void> => 
       firebaseUid: uid,
       paymentStatus: 'success',
     });
+
+    console.log(`\n======================================================`);
+    console.log(`👤 [BACKEND AUTH] GOOGLE SIGN-IN VERIFIED`);
+    console.log(`📧 Email: ${email}`);
+    console.log(`👤 Name: ${name}`);
+    console.log(`🆔 Firebase UID: ${uid}`);
+    console.log(`🎟️ Status: ${existingRegistration ? 'ALREADY REGISTERED' : 'NEW / FIRST-TIME USER'}`);
+    console.log(`======================================================\n`);
 
     res.status(200).json({
       success: true,
@@ -43,6 +74,7 @@ export const userSignIn = async (req: Request, res: Response): Promise<void> => 
       registration: existingRegistration,
     });
   } catch (error: any) {
+    console.error('❌ [Auth Error] userSignIn failed:', error);
     res.status(500).json({ success: false, message: error.message || 'Error during user sign-in' });
   }
 };

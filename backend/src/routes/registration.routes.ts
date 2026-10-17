@@ -5,6 +5,8 @@ import {
   getMyStatus,
   handleWebhook,
   venueCheckIn,
+  initiateRegistration,
+  confirmRegistration,
 } from '../controllers/registration.controller';
 import { verifyAuth, optionalAuth } from '../middlewares/auth';
 import { validateRequest, studentRegistrationSchema, paymentVerificationSchema } from '../middlewares/validate';
@@ -13,6 +15,12 @@ const router = Router();
 
 // Student status check
 router.get('/my-status', verifyAuth, getMyStatus);
+
+// Initiate payment & OTP dispatch logging
+router.post('/initiate', optionalAuth, initiateRegistration);
+
+// Confirm payment & save registration record to MongoDB
+router.post('/confirm', optionalAuth, confirmRegistration);
 
 // Create ₹55 Razorpay order for valid student form
 router.post('/create-order', verifyAuth, validateRequest(studentRegistrationSchema), createOrder);

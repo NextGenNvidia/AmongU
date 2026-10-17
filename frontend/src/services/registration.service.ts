@@ -40,4 +40,16 @@ export const registrationService = {
     const res = await apiClient.post<VenueCheckInResponse>('/registrations/venue-checkin', payload);
     return res.data;
   },
+
+  // Notify backend of payment initiation & OTP dispatch
+  initiateRegistration: async (data: any): Promise<{ success: boolean; message: string }> => {
+    const res = await apiClient.post('/registrations/initiate', data);
+    return res.data;
+  },
+
+  // Confirm registration & save to MongoDB
+  confirmRegistration: async (data: any): Promise<{ success: boolean; registration: any }> => {
+    const res = await apiClient.post('/registrations/confirm', data);
+    return res.data;
+  },
 };

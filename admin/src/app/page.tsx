@@ -1,0 +1,145 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import LoginScreen from '../components/auth/LoginScreen';
+import Sidebar from '../components/layout/Sidebar';
+import UsersRoster from '../components/users/UsersRoster';
+import { adminService } from '../services/admin.service';
+import { LoggedInUserRecord } from '../types';
+
+export default function AdminDashboardPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Users State
+  const [users, setUsers] = useState<LoggedInUserRecord[]>([]);
+  const [usersLoading, setUsersLoading] = useState<boolean>(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if token exists in session
+    if (typeof window !== 'undefined') {
+      const token = sessionStorage.getItem('amongu_admin_token') || localStorage.getItem('amongu_admin_token');
+      const isAuth = sessionStorage.getItem('amongu_admin_auth') || localStorage.getItem('amongu_admin_auth');
+      if (token && isAuth === 'true') {
+        setIsAuthenticated(true);
+      }
+    }
+    setIsCheckingAuth(false);
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setUsersLoading(true);
+      setUsersError(null);
+      const res = await adminService.getUsers();
+      if (res && res.users) {
+        setUsers(res.users);
+      }
+    } catch (err: any) {
+      console.error('Error fetching users in admin:', err);
+      setUsersError(err?.response?.data?.message || err?.message || 'Failed to fetch users from database');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUsers();
+    }
+  }, [isAuthenticated]);
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('amongu_admin_token');
+      sessionStorage.removeItem('amongu_admin_auth');
+      localStorage.removeItem('amongu_admin_token');
+      localStorage.removeItem('amongu_admin_auth');
+    }
+    setIsAuthenticated(false);
+  };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-[#070b14] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-crew-red border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // 1. If not authenticated: Show Login Screen with ID and Password
+  if (!isAuthenticated) {
+    return <LoginScreen onSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  // 2. If authenticated: Show Admin Console with Sidebar & Users View
+  return (
+    <div className="min-h-screen bg-[#070b14] text-white flex font-sans">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <Sidebar
+          onLogout={handleLogout}
+          totalUsersCount={users.length}
+        />
+      </div>
+
+      {/* Main View Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header */}
+        <div className="md:hidden flex items-center justify-between p-4 bg-gray-950 border-b border-gray-800 sticky top-0 z-30">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-crew-red flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <span className="font-display text-lg text-crew-red">AMONGU ADMIN</span>
+          </div>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg bg-gray-800 text-white font-mono text-xs cursor-pointer"
+          >
+            {mobileMenuOpen ? 'CLOSE' : 'MENU'}
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-gray-950 border-b-2 border-gray-800 p-4 space-y-2">
+            <div className="w-full flex items-center justify-between p-3 rounded-xl font-display text-sm bg-crew-red text-white">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <span>Users</span>
+              </div>
+              <span className="text-xs font-mono">{users.length} Cadets</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full bg-red-950 text-red-200 p-2.5 rounded-xl font-mono text-xs font-bold mt-2 flex items-center justify-center gap-2"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Logout</span>
+            </button>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+          <UsersRoster
+            users={users}
+            loading={usersLoading}
+            error={usersError}
+            onRefresh={loadUsers}
+          />
+        </main>
+      </div>
+    </div>
+  );
+}

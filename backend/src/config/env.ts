@@ -72,6 +72,17 @@ const envSchema = z.object({
         .map((email) => email.trim().toLowerCase())
         .filter((email) => email.length > 0)
     ),
+  SMTP_HOST: z.string().optional().default('smtp.gmail.com'),
+  SMTP_PORT: z
+    .string()
+    .optional()
+    .default('587')
+    .transform((val) => parseInt(val, 10) || 587),
+  SMTP_USER: z.string().optional().default(''),
+  SMTP_PASS: z.string().optional().default(''),
+  SMTP_FROM: z.string().optional().default('"AmongU Hackathon" <no-reply@amongu.kiet.edu>'),
+  ADMIN_USERNAME: z.string().optional().default(''),
+  ADMIN_PASSWORD: z.string().optional().default(''),
 });
 
 const parseEnv = () => {

@@ -1,59 +1,66 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ALLOWED_BRANCHES, ALLOWED_SECTIONS, ALLOWED_YEARS } from '../constants/branches';
-import { useRazorpay } from '../hooks/useRazorpay';
-import { clientEnv } from '../config/env';
-
-interface RegistrationData {
-  name: string;
-  collegeId: string;
-  year: '1' | '2';
-  branch: string;
-  section: 'A' | 'B' | 'C' | 'D' | 'E';
-  phone: string;
-  email: string;
-  track: string;
-}
-
-interface ConfirmedTicket extends RegistrationData {
-  paymentId: string;
-  amount: number;
-  registeredAt: string;
-}
+import { useAuth } from '../hooks/useAuth';
 
 export default function AmongUHomePage() {
   const router = useRouter();
+  const { firebaseUser, profile, isRegistered, loginWithGoogle, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalStep, setModalStep] = useState<'form' | 'otp'>('form');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [authErrorModal, setAuthErrorModal] = useState<string | null>(null);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [modalAuthError, setModalAuthError] = useState<string | null>(null);
 
-  // Form State
-  const [formData, setFormData] = useState<RegistrationData>({
-    name: '',
-    collegeId: '',
-    year: '1',
-    branch: ALLOWED_BRANCHES[0],
-    section: 'A',
-    phone: '',
-    email: '',
-    track: 'Web Development',
-  });
+  const handleRegisterClick = () => {
+    const localTicket = typeof window !== 'undefined' ? localStorage.getItem('amongu_user_ticket') : null;
 
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [pendingTicket, setPendingTicket] = useState<ConfirmedTicket | null>(null);
+    if (!firebaseUser) {
+      setModalAuthError(null);
+      setShowSignInModal(true);
+      return;
+    }
 
-  // OTP State
-  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
-  const [isOtpSuccess, setIsOtpSuccess] = useState(false);
-  const [resendCountdown, setResendCountdown] = useState(30);
+    if (isRegistered || profile?.hasRegistered || localTicket) {
+      router.push('/dashboard');
+    } else {
+      router.push('/register');
+    }
+  };
 
-  const { openCheckout } = useRazorpay();
+  const handleSignInWithGoogle = async () => {
+    try {
+      setIsSigningIn(true);
+      setModalAuthError(null);
+      console.log('🚀 [Sign-In Modal] Cadet initiating Google Sign-In...');
+      const loggedIn = await loginWithGoogle();
+      if (!loggedIn) {
+        setIsSigningIn(false);
+        return;
+      }
+
+      setShowSignInModal(false);
+
+      const localTicket = typeof window !== 'undefined' ? localStorage.getItem('amongu_user_ticket') : null;
+      if (loggedIn.hasRegistered || localTicket) {
+        console.log('✅ Cadet already registered, redirecting to dashboard');
+        router.push('/dashboard');
+      } else {
+        console.log('🚀 Cadet authenticated, taking to registration screen');
+        router.push('/register');
+      }
+    } catch (err: any) {
+      console.error('Sign-in error from modal:', err);
+      setModalAuthError(
+        err?.message || 'Authentication failed. Please ensure you sign in with an official @kiet.edu Google account.'
+      );
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -62,156 +69,6 @@ export default function AmongUHomePage() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // OTP Resend Countdown Timer
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (modalStep === 'otp' && resendCountdown > 0) {
-      timer = setTimeout(() => setResendCountdown((prev) => prev - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [modalStep, resendCountdown]);
-
-  const openModal = () => {
-    setModalOpen(true);
-    setModalStep('form');
-    setFormError(null);
-    setOtpError(null);
-    setIsOtpSuccess(false);
-    setIsVerifyingOtp(false);
-    setOtpDigits(['', '', '', '', '', '']);
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setModalStep('form');
-    setIsOtpSuccess(false);
-    setIsVerifyingOtp(false);
-    document.body.style.overflow = 'auto';
-  };
-
-  const validateForm = (): boolean => {
-    if (formData.name.trim().length < 2) {
-      setFormError('Please enter your name (at least 2 characters).');
-      return false;
-    }
-    if (!formData.collegeId.trim() || !/^\d{15}$/.test(formData.collegeId.trim())) {
-      setFormError('College ID must be strictly 15 digits (e.g. 210029012000000).');
-      return false;
-    }
-    if (!formData.phone.trim() || !/^[6-9]\d{9}$/.test(formData.phone.trim())) {
-      setFormError('WhatsApp number must be a valid 10-digit Indian mobile number (e.g. 9876543210).');
-      return false;
-    }
-    if (!formData.email.trim() || !formData.email.trim().toLowerCase().endsWith('@kiet.edu')) {
-      setFormError('Only official KIET college email IDs ending with @kiet.edu are allowed (e.g. cadet@kiet.edu).');
-      return false;
-    }
-    setFormError(null);
-    return true;
-  };
-
-  const handleRazorpayPayment = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsProcessingPayment(true);
-    setFormError(null);
-
-    // Open official Razorpay Payment Link in a new tab
-    if (typeof window !== 'undefined') {
-      window.open('https://rzp.io/rzp/CMBQ994Z', '_blank');
-    }
-
-    setTimeout(() => {
-      const generatedPayId = `pay_rzp_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-      const ticket: ConfirmedTicket = {
-        ...formData,
-        paymentId: generatedPayId,
-        amount: 55,
-        registeredAt: new Date().toLocaleString(),
-      };
-      setPendingTicket(ticket);
-      setIsProcessingPayment(false);
-      setModalStep('otp');
-      setResendCountdown(30);
-    }, 600);
-  };
-
-  const handleOtpChange = (index: number, val: string) => {
-    const cleanVal = val.replace(/\D/g, '');
-    if (!cleanVal && val !== '') return;
-
-    const newOtp = [...otpDigits];
-    if (cleanVal.length > 1) {
-      const pasted = cleanVal.slice(0, 6).split('');
-      pasted.forEach((d, i) => {
-        if (i < 6) newOtp[i] = d;
-      });
-      setOtpDigits(newOtp);
-      const nextIdx = Math.min(pasted.length, 5);
-      const targetEl = document.getElementById(`otp-input-${nextIdx}`);
-      if (targetEl) (targetEl as HTMLInputElement).focus();
-      return;
-    }
-
-    newOtp[index] = cleanVal;
-    setOtpDigits(newOtp);
-    setOtpError(null);
-
-    if (cleanVal && index < 5) {
-      const targetEl = document.getElementById(`otp-input-${index + 1}`);
-      if (targetEl) (targetEl as HTMLInputElement).focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
-      const prevEl = document.getElementById(`otp-input-${index - 1}`);
-      if (prevEl) (prevEl as HTMLInputElement).focus();
-    }
-  };
-
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    const entered = otpDigits.join('');
-    if (entered.length !== 6) {
-      setOtpError('Please enter all 6 digits of the transmission passcode.');
-      return;
-    }
-
-    setIsVerifyingOtp(true);
-    setOtpError(null);
-
-    setTimeout(() => {
-      if (pendingTicket) {
-        const verifiedTicket = {
-          ...pendingTicket,
-          isEmailVerified: true,
-        };
-        try {
-          localStorage.setItem('amongu_user_ticket', JSON.stringify(verifiedTicket));
-        } catch (err) {
-          console.error('Failed to store ticket in localStorage:', err);
-        }
-        setIsOtpSuccess(true);
-        setTimeout(() => {
-          closeModal();
-          router.push('/dashboard');
-        }, 900);
-      } else {
-        setIsVerifyingOtp(false);
-      }
-    }, 600);
-  };
-
-  const handleResendOtp = () => {
-    if (resendCountdown > 0) return;
-    setResendCountdown(30);
-    setOtpError(null);
-    setOtpDigits(['', '', '', '', '', '']);
-  };
 
   return (
     <div className="relative min-h-screen font-body text-gray-100 antialiased selection:bg-crew-cyan selection:text-black">
@@ -260,35 +117,6 @@ export default function AmongUHomePage() {
           />
         </svg>
       </div>
-
-      {/* 🛸 FLOATING "REGISTER NOW" BUTTON (Stuck along scrollbar on right top corner) */}
-      <aside aria-label="Quick Registration" className="fixed top-24 right-4 z-[90] sm:right-6 pointer-events-auto">
-        <button
-          type="button"
-          onClick={() => openModal()}
-          className="au-btn group bg-crew-red hover:bg-red-500 cursor-pointer text-white font-display text-sm sm:text-base py-3 px-5 sm:px-6 rounded-full flex items-center gap-3 shadow-[0_0_20px_rgba(197,17,17,0.9)] hover:scale-105 active:scale-95 transition-all"
-          title="Click to Register for AmongU (₹55)"
-        >
-          <svg width="22" height="26" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
-            <path
-              d="M70,100 v10 a10,10 0 0,1 -20,0 v-10 h-10 v10 a10,10 0 0,1 -20,0 v-10 C10,95 10,70 10,60 v-20 C10,15 30,10 45,10 c15,0 35,5 35,30 v20 C80,70 80,95 70,100 Z"
-              fill="#fff"
-              stroke="#000"
-              strokeWidth="6"
-            />
-            <path
-              d="M35,30 h40 a15,15 0 0,1 15,15 v5 a15,15 0 0,1 -15,15 h-40 a15,15 0 0,1 -15,-15 v-5 a15,15 0 0,1 15,-15 Z"
-              fill="#9cdbfa"
-              stroke="#000"
-              strokeWidth="6"
-            />
-          </svg>
-          <span className="tracking-wide">REGISTER NOW</span>
-          <span className="bg-crew-yellow text-black text-xs font-black px-2 py-0.5 rounded-full border-2 border-black">
-            ₹55
-          </span>
-        </button>
-      </aside>
 
       {/* Navigation */}
       <nav
@@ -340,25 +168,43 @@ export default function AmongUHomePage() {
               <a href="#faq" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-base lg:text-lg">
                 FAQ
               </a>
-              <button
-                type="button"
-                onClick={() => openModal()}
-                className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-sm py-2 px-5 rounded-full flex items-center gap-2 shadow-[0_0_12px_rgba(197,17,17,0.8)] hover:scale-105 transition-all cursor-pointer"
-              >
-                <span>REGISTER NOW</span>
-                <span className="bg-crew-yellow text-black text-xs font-black px-1.5 py-0.5 rounded-full border border-black">
-                  ₹55
-                </span>
-              </button>
+              
+              {firebaseUser ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-crew-cyan font-bold bg-black/60 px-3 py-1 rounded-full border border-gray-700 font-mono">
+                    {firebaseUser.email}
+                  </span>
+                  <Link
+                    href={isRegistered || (typeof window !== 'undefined' && localStorage.getItem('amongu_user_ticket')) ? '/dashboard' : '/register'}
+                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-sm py-2 px-4 rounded-full flex items-center gap-1.5 transition-all"
+                  >
+                    <span>{isRegistered || (typeof window !== 'undefined' && localStorage.getItem('amongu_user_ticket')) ? 'DASHBOARD' : 'REGISTER'}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => logout()}
+                    className="text-xs text-gray-400 hover:text-crew-red font-bold underline cursor-pointer"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleRegisterClick}
+                  className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-sm py-2 px-5 rounded-full flex items-center gap-2 shadow-[0_0_12px_rgba(80,239,57,0.8)] hover:scale-105 transition-all cursor-pointer"
+                >
+                  <span>REGISTER</span>
+                </button>
+              )}
             </div>
             <div className="md:hidden flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => openModal()}
-                className="au-btn bg-crew-red text-white font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5"
+                onClick={handleRegisterClick}
+                className="au-btn bg-crew-lime text-black font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 cursor-pointer"
               >
-                <span>REGISTER</span>
-                <span className="bg-crew-yellow text-black text-[10px] font-black px-1 rounded-full">₹55</span>
+                <span>{firebaseUser ? (isRegistered ? 'DASHBOARD' : 'REGISTER') : 'REGISTER'}</span>
               </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -415,14 +261,11 @@ export default function AmongUHomePage() {
                 type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  openModal();
+                  handleRegisterClick();
                 }}
-                className="w-full au-btn bg-crew-red hover:bg-red-500 text-white font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 shadow-[0_0_12px_rgba(197,17,17,0.8)] cursor-pointer"
+                className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 shadow-[0_0_12px_rgba(80,239,57,0.8)] cursor-pointer"
               >
-                <span>REGISTER NOW</span>
-                <span className="bg-crew-yellow text-black text-xs font-black px-2 py-0.5 rounded-full border border-black">
-                  ₹55
-                </span>
+                <span>{firebaseUser ? (isRegistered ? 'MISSION DASHBOARD' : 'REGISTER') : 'REGISTER'}</span>
               </button>
             </div>
           </div>
@@ -488,7 +331,7 @@ export default function AmongUHomePage() {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-6">
               <button
                 type="button"
-                onClick={() => openModal()}
+                onClick={handleRegisterClick}
                 className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_25px_rgba(197,17,17,0.8)] animate-pulse hover:animate-none transition-all cursor-pointer"
               >
                 <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -600,7 +443,7 @@ export default function AmongUHomePage() {
               </p>
             </div>
 
-            {/* Track 3: Open Innovation */}
+            {/* Track 3: Open Track */}
             <div className="au-card bg-crew-orange rounded-2xl p-8 relative group overflow-hidden">
               <div className="absolute -right-4 -top-4 w-28 h-28 bg-white opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
               <div className="bg-black w-16 h-16 rounded-full flex items-center justify-center au-border mb-6">
@@ -609,7 +452,7 @@ export default function AmongUHomePage() {
                 </svg>
               </div>
               <h3 className="font-display text-3xl text-white mb-3" style={{ textShadow: '2px 2px 0 #000' }}>
-                Open Innovation
+                Open Track
               </h3>
               <p className="text-gray-100 font-bold text-lg leading-relaxed">
                 Explore any problem worth solving and build an original solution using your creativity and technical skills.
@@ -776,7 +619,7 @@ export default function AmongUHomePage() {
                 <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
               </summary>
               <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4 text-lg">
-                Web Development, Game Development, and Open Innovation.
+                Web Development, Game Development, and Open Track.
               </div>
             </details>
 
@@ -883,381 +726,144 @@ export default function AmongUHomePage() {
               </svg>
             </a>
           </div>
+
+          {/* Compliance & Policy Links for Payment Gateway */}
+          <div className="flex flex-wrap justify-center md:justify-end gap-x-5 gap-y-2 text-xs font-mono text-gray-400">
+            <Link href="/privacy" className="hover:text-crew-cyan transition-colors underline-offset-4 hover:underline">
+              Privacy Policy
+            </Link>
+            <span className="text-gray-700">•</span>
+            <Link href="/terms" className="hover:text-crew-cyan transition-colors underline-offset-4 hover:underline">
+              Terms &amp; Conditions
+            </Link>
+            <span className="text-gray-700">•</span>
+            <Link href="/refund" className="hover:text-crew-cyan transition-colors underline-offset-4 hover:underline">
+              Refund &amp; Cancellation
+            </Link>
+            <span className="text-gray-700">•</span>
+            <Link href="/contact" className="hover:text-crew-cyan transition-colors underline-offset-4 hover:underline">
+              Contact Us
+            </Link>
+          </div>
         </div>
       </footer>
 
-      {/* 🚨 EMERGENCY MEETING REGISTRATION MODAL */}
-      {modalOpen && (
-        <div
-          id="registerModal"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeModal();
-          }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
-        >
-          <div className="au-card bg-gray-900 w-full max-w-lg rounded-3xl p-6 sm:p-8 relative my-8 animate-[float_0.3s_ease-out]">
+      {/* 🚀 SIGN IN TO REGISTER POPUP MODAL */}
+      {showSignInModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 font-sans">
+          <div className="au-card bg-gray-950 w-full max-w-md rounded-3xl p-6 sm:p-8 text-center border-4 border-black relative shadow-[0_0_50px_rgba(56,254,220,0.3)]">
             {/* Close Button */}
             <button
-              onClick={closeModal}
-              className="absolute -top-4 -right-4 w-12 h-12 bg-crew-red au-border rounded-full text-white font-display text-xl hover:bg-red-500 hover:scale-110 transition-transform flex items-center justify-center shadow-lg"
+              type="button"
+              onClick={() => {
+                setShowSignInModal(false);
+                setModalAuthError(null);
+              }}
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-900 border border-gray-700 text-gray-400 hover:text-white hover:bg-gray-800 flex items-center justify-center text-sm font-mono transition-colors cursor-pointer"
             >
               ✕
             </button>
 
-            {/* Modal Header */}
-            {modalStep === 'form' ? (
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-crew-red mx-auto au-border rounded-full flex items-center justify-center mb-3 shadow-[0_0_20px_#c51111] animate-pulse">
-                  <span className="text-4xl">🚨</span>
-                </div>
-                <h3 className="font-display text-3xl text-white mb-1" style={{ textShadow: '2px 2px 0 #000' }}>
-                  EMERGENCY MEETING
-                </h3>
-                <p className="text-gray-400 font-bold text-sm">Register your crew before the ship takes off!</p>
-                <div className="inline-block bg-black au-border rounded-full px-4 py-1 mt-2 text-crew-lime font-display text-sm">
-                  Registration Fee: ₹55
-                </div>
+            {/* Crewmate / Lock Graphic */}
+            <div className="w-20 h-20 bg-crew-cyan/15 border-4 border-crew-cyan mx-auto rounded-full flex items-center justify-center mb-5 shadow-[0_0_25px_rgba(56,254,220,0.5)]">
+              <svg width="40" height="40" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="30" width="25" height="50" rx="8" fill="#38fedc" stroke="#000" strokeWidth="6" />
+                <path
+                  d="M70,100 v10 a10,10 0 0,1 -20,0 v-10 h-10 v10 a10,10 0 0,1 -20,0 v-10 C10,95 10,70 10,60 v-20 C10,15 30,10 45,10 c15,0 35,5 35,30 v20 C80,70 80,95 70,100 Z"
+                  fill="#38fedc"
+                  stroke="#000"
+                  strokeWidth="6"
+                />
+                <path
+                  d="M35,30 h40 a15,15 0 0,1 15,15 v5 a15,15 0 0,1 -15,15 h-40 a15,15 0 0,1 -15,-15 v-5 a15,15 0 0,1 15,-15 Z"
+                  fill="#000"
+                  stroke="#000"
+                  strokeWidth="4"
+                />
+              </svg>
+            </div>
+
+            <div className="inline-block px-3 py-1 bg-cyan-950/80 border border-crew-cyan/50 rounded-full text-[11px] font-mono text-crew-cyan font-bold tracking-widest uppercase mb-2">
+              CREW IDENTITY CHECK
+            </div>
+
+            <h3 className="font-display text-2xl sm:text-3xl text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>
+              SIGN IN TO REGISTER
+            </h3>
+            <p className="text-gray-300 font-bold text-xs sm:text-sm mb-5 leading-relaxed">
+              Sign in with your official KIET Google account to proceed to hackathon registration.
+            </p>
+
+            {/* KIET Domain Notice */}
+            <div className="bg-black/60 border border-gray-800 rounded-2xl p-3.5 mb-5 text-left text-xs font-mono">
+              <div className="flex items-center gap-2 text-crew-cyan font-bold mb-1">
+                <span className="w-2 h-2 rounded-full bg-crew-cyan animate-pulse" />
+                <span>OFFICIAL KIET DOMAIN REQUIRED</span>
               </div>
-            ) : (
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-crew-cyan/20 border-4 border-crew-cyan mx-auto rounded-full flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(56,254,220,0.5)]">
-                  <span className="text-4xl">🔐</span>
-                </div>
-                <h3 className="font-display text-3xl text-crew-cyan mb-1" style={{ textShadow: '2px 2px 0 #000' }}>
-                  CLEARANCE PASSCODE
-                </h3>
-                <p className="text-gray-300 font-bold text-sm">Step 2: Validate your college email ID</p>
-                <div className="inline-block bg-black au-border rounded-full px-4 py-1 mt-2 text-crew-lime font-mono text-xs">
-                  PAYMENT CONFIRMED (₹55) • CODE TRANSMITTED
-                </div>
-              </div>
-            )}
+              <p className="text-gray-400 leading-relaxed text-[11px]">
+                You must sign in with your <strong className="text-crew-lime font-mono">@kiet.edu</strong> student ID. Personal accounts will be rejected.
+              </p>
+            </div>
 
-            {/* Error Message */}
-            {formError && modalStep === 'form' && (
-              <div className="bg-red-950/80 border-2 border-crew-red text-red-200 text-xs sm:text-sm font-bold p-3 rounded-xl mb-4 text-center">
-                ⚠️ {formError}
-              </div>
-            )}
-
-            {/* STEP 1: REGISTRATION FORM */}
-            {modalStep === 'form' ? (
-              <form onSubmit={handleRazorpayPayment} className="space-y-3.5">
-                {/* Quick Auto-Fill for Testing */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData({
-                      name: 'Ankit Singh',
-                      collegeId: '210029012000001',
-                      year: '1',
-                      branch: ALLOWED_BRANCHES[0],
-                      section: 'A',
-                      phone: '9876543210',
-                      email: 'ankit.singh@kiet.edu',
-                      track: 'Web Development',
-                    });
-                    setFormError(null);
-                  }}
-                  className="w-full bg-gray-800/90 hover:bg-gray-700 text-crew-cyan hover:text-white text-xs font-bold py-2 px-3 rounded-xl border border-gray-700 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  ⚡ Auto-Fill Sample Details (Quick Test)
-                </button>
-
-                {/* Name */}
-                <div>
-                  <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">
-                    Full Name (First &amp; Last Name)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan text-sm"
-                    placeholder="e.g. John Doe"
-                  />
-                </div>
-
-                {/* College ID */}
-                <div>
-                  <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">
-                    College ID (15 Digits Roll Number)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={15}
-                    value={formData.collegeId}
-                    onChange={(e) => setFormData({ ...formData, collegeId: e.target.value })}
-                    className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan font-mono text-sm"
-                    placeholder="210029012000000"
-                  />
-                </div>
-
-                {/* Year & Section */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Year</label>
-                    <select
-                      value={formData.year}
-                      onChange={(e) => setFormData({ ...formData, year: e.target.value as '1' | '2' })}
-                      className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-sm"
-                    >
-                      {ALLOWED_YEARS.map((y) => (
-                        <option key={y} value={y}>
-                          Year {y}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Section</label>
-                    <select
-                      value={formData.section}
-                      onChange={(e) =>
-                        setFormData({ ...formData, section: e.target.value as 'A' | 'B' | 'C' | 'D' | 'E' })
-                      }
-                      className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-sm"
-                    >
-                      {ALLOWED_SECTIONS.map((s) => (
-                        <option key={s} value={s}>
-                          Section {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Department / Branch */}
-                <div>
-                  <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Department / Branch</label>
-                  <select
-                    value={formData.branch}
-                    onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                    className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-sm"
-                  >
-                    {ALLOWED_BRANCHES.map((b) => (
-                      <option key={b} value={b}>
-                        {b}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* WhatsApp Phone & KIET Email */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">WhatsApp Number</label>
-                    <input
-                      type="tel"
-                      required
-                      maxLength={10}
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan font-mono text-sm"
-                      placeholder="9876543210"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">KIET Email (@kiet.edu)</label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-xs font-mono"
-                      placeholder="your.name@kiet.edu"
-                    />
-                  </div>
-                </div>
-
-                {/* Preferred Track */}
-                <div>
-                  <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Preferred Track</label>
-                  <select
-                    value={formData.track}
-                    onChange={(e) => setFormData({ ...formData, track: e.target.value })}
-                    className="w-full bg-black au-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-crew-cyan text-sm"
-                  >
-                    <option>Web Development</option>
-                    <option>Game Development</option>
-                    <option>Open Innovation</option>
-                  </select>
-                </div>
-
-                {/* Razorpay Fee Notice */}
-                <div className="bg-black/70 au-border rounded-xl p-3.5 space-y-2 mt-2">
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs">
-                      <p className="font-bold text-gray-200">Registration Fee</p>
-                      <p className="text-gray-400 font-mono text-[11px]">Official Razorpay Gateway (UPI, Cards, Netbanking)</p>
-                    </div>
-                    <div className="font-display text-2xl text-crew-lime font-bold">₹55</div>
-                  </div>
-
-                  <div className="border-t border-gray-800/90 pt-2 flex items-center justify-between text-xs font-mono">
-                    <span className="text-gray-400 text-[11px]">Direct Payment Link:</span>
-                    <a
-                      href="https://rzp.io/rzp/CMBQ994Z"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-crew-cyan hover:underline font-bold flex items-center gap-1 bg-cyan-950/60 px-2.5 py-1 rounded-lg border border-crew-cyan/40 hover:bg-cyan-900/60 transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span>rzp.io/rzp/CMBQ994Z</span>
-                      <span>↗</span>
-                    </a>
-                  </div>
-                </div>
-
-                {/* Secondary Error Notice if scrolled down */}
-                {formError && (
-                  <div className="bg-red-950/80 border-2 border-crew-red text-red-200 text-xs font-bold p-2.5 rounded-xl text-center">
-                    ⚠️ {formError}
-                  </div>
-                )}
-
-                {/* Submit / Pay Button */}
-                <button
-                  type="submit"
-                  disabled={isProcessingPayment}
-                  className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-lg sm:text-xl py-3.5 rounded-xl mt-4 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(50,205,50,0.3)] hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  {isProcessingPayment ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                      </svg>
-                      OPENING RAZORPAY GATEWAY...
-                    </>
-                  ) : (
-                    'REGISTER & PAY ₹55 VIA RAZORPAY ↗'
-                  )}
-                </button>
-              </form>
-            ) : (
-              /* STEP 2: EMAIL OTP VALIDATION */
-              <div className="text-center space-y-4">
-                {/* Official Razorpay Link Callout */}
-                <div className="bg-cyan-950/60 border border-crew-cyan/60 rounded-2xl p-3.5 text-center space-y-2 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-crew-lime animate-ping" />
-                    <span className="text-[11px] font-mono font-bold text-crew-cyan uppercase tracking-wider">
-                      OFFICIAL RAZORPAY GATEWAY ACTIVE
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-300 font-sans leading-relaxed">
-                    Razorpay opened in a new tab. If it did not open automatically, tap below to complete your ₹55 payment:
-                  </p>
-                  <a
-                    href="https://rzp.io/rzp/CMBQ994Z"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-crew-lime hover:bg-lime-400 text-black font-display text-xs sm:text-sm py-2 px-4 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(50,205,50,0.3)] hover:scale-105 active:scale-95"
-                  >
-                    <span>💳 OPEN RAZORPAY LINK (₹55)</span>
-                    <span>↗</span>
-                  </a>
-                </div>
-
-                <div>
-                  <p className="text-gray-300 text-xs sm:text-sm font-bold">
-                    A 6-digit transmission code was sent to:
-                  </p>
-                  <p className="font-mono text-crew-yellow font-bold text-sm sm:text-base mt-1">
-                    {pendingTicket?.email}
-                  </p>
-                </div>
-
-                {otpError && (
-                  <div className="bg-red-950/80 border-2 border-crew-red text-red-200 text-xs font-bold p-3 rounded-xl text-center">
-                    ⚠️ {otpError}
-                  </div>
-                )}
-
-                {isOtpSuccess ? (
-                  <div className="bg-green-950/90 border-2 border-crew-lime text-green-200 text-sm font-display p-5 rounded-2xl animate-pulse space-y-2">
-                    <p className="text-2xl">✅ CLEARANCE APPROVED!</p>
-                    <p className="text-xs font-mono text-gray-300">REDIRECTING TO CREWMATE DASHBOARD...</p>
-                  </div>
-                ) : (
-                  <form onSubmit={handleVerifyOtp} className="space-y-4">
-                    {/* 6 Digit Input Boxes */}
-                    <div className="flex justify-center gap-2 sm:gap-3 my-3">
-                      {otpDigits.map((digit, idx) => (
-                        <input
-                          key={idx}
-                          id={`otp-input-${idx}`}
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleOtpChange(idx, e.target.value)}
-                          onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                          className="w-10 h-12 sm:w-12 sm:h-14 bg-black border-2 border-crew-cyan/70 focus:border-crew-cyan text-crew-cyan font-mono font-bold text-xl sm:text-2xl text-center rounded-xl focus:outline-none focus:shadow-[0_0_10px_#38fedc] transition-all"
-                          autoFocus={idx === 0}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="bg-black/60 au-border rounded-xl p-3 text-xs text-gray-400 font-bold text-left">
-                      💡 <span className="text-gray-300">Preview Mode:</span> Enter any 6-digit code (e.g.{' '}
-                      <span className="text-crew-lime font-mono">123456</span>) to authenticate email.
-                    </div>
-
-                    {/* Resend Option */}
-                    <div className="flex items-center justify-between text-xs font-bold text-gray-400 px-1">
-                      <span>Didn&apos;t receive code?</span>
-                      {resendCountdown > 0 ? (
-                        <span className="text-crew-yellow font-mono">Resend in {resendCountdown}s</span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleResendOtp}
-                          className="text-crew-cyan hover:underline font-bold"
-                        >
-                          Resend Code
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                      type="submit"
-                      disabled={isVerifyingOtp}
-                      className="w-full au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-xl py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
-                    >
-                      {isVerifyingOtp ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                          </svg>
-                          AUTHENTICATING...
-                        </>
-                      ) : (
-                        'VALIDATE & ENTER DASHBOARD'
-                      )}
-                    </button>
-
-                    <div className="pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setModalStep('form')}
-                        className="text-gray-400 hover:text-white text-xs font-bold underline"
-                      >
-                        ← Modify Registration Info
-                      </button>
-                    </div>
-                  </form>
-                )}
+            {/* Error Message inside modal */}
+            {modalAuthError && (
+              <div className="bg-red-950/90 border-2 border-crew-red text-red-200 text-xs font-bold p-3 rounded-xl mb-4 text-left leading-relaxed">
+                ⚠️ {modalAuthError}
               </div>
             )}
+
+            {/* Google Sign In Button */}
+            <button
+              type="button"
+              onClick={handleSignInWithGoogle}
+              disabled={isSigningIn}
+              className="w-full au-btn bg-white hover:bg-gray-100 text-gray-900 font-display text-base sm:text-lg py-3.5 px-6 rounded-2xl flex items-center justify-center gap-3 shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60"
+            >
+              {/* Google G Logo */}
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+              <span>{isSigningIn ? 'CONNECTING TO GOOGLE...' : 'Sign in with Google'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ⚠️ AUTH RESTRICTION / ERROR MODAL */}
+      {authErrorModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="au-card bg-gray-900 w-full max-w-md rounded-3xl p-6 sm:p-8 text-center border-4 border-crew-red animate-[float_0.3s_ease-out]">
+            <div className="w-16 h-16 bg-crew-red/20 border-4 border-crew-red mx-auto rounded-full flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(197,17,17,0.8)]">
+              <span className="text-3xl">⛔</span>
+            </div>
+            <h3 className="font-display text-2xl text-crew-red mb-2" style={{ textShadow: '1px 1px 0 #000' }}>
+              ACCESS RESTRICTED
+            </h3>
+            <p className="text-gray-300 text-sm font-bold mb-6 leading-relaxed">
+              {authErrorModal}
+            </p>
+            <button
+              type="button"
+              onClick={() => setAuthErrorModal(null)}
+              className="au-btn bg-crew-red hover:bg-red-500 text-white font-display py-2.5 px-8 rounded-full text-sm cursor-pointer shadow-lg"
+            >
+              UNDERSTOOD
+            </button>
           </div>
         </div>
       )}

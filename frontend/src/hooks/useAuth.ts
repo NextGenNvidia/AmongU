@@ -24,18 +24,36 @@ export const useAuth = () => {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       clearTimeout(safetyTimer);
-      setFirebaseUser(user);
       if (user) {
+        const email = (user.email || '').toLowerCase().trim();
+        if (!email.endsWith('@kiet.edu')) {
+          console.warn('Non-KIET account detected on state change, signing out:', email);
+          if (auth) {
+            await fbSignOut(auth);
+          }
+          setFirebaseUser(null);
+          setProfile(null);
+          setIsRegistered(false);
+          setLoading(false);
+          return;
+        }
+
+        setFirebaseUser(user);
         try {
           const res = await authService.syncUser();
           if (res.user) {
-            setProfile(res.user);
+            const userWithReg: UserProfile = {
+              ...res.user,
+              hasRegistered: !!res.hasRegistered,
+            };
+            setProfile(userWithReg);
             setIsRegistered(!!res.hasRegistered);
           }
         } catch (err) {
           console.error('Error syncing user profile:', err);
         }
       } else {
+        setFirebaseUser(null);
         setProfile(null);
         setIsRegistered(false);
       }
@@ -55,16 +73,37 @@ export const useAuth = () => {
     }
     try {
       setLoading(true);
-      await signInWithPopup(auth, googleProvider);
+      console.log('🚀 [Auth] Initiating Google Sign-In popup...');
+      const result = await signInWithPopup(auth, googleProvider);
+      const email = (result.user?.email || '').toLowerCase().trim();
+      console.log('✅ [Auth] Google authentication successful:', email);
+
+      if (!email.endsWith('@kiet.edu')) {
+        console.warn('⛔ [Auth] Non-@kiet.edu domain rejected:', email);
+        await fbSignOut(auth);
+        setFirebaseUser(null);
+        setProfile(null);
+        setIsRegistered(false);
+        throw new Error('Access restricted: Only official @kiet.edu email addresses are permitted to participate in AmongU.');
+      }
+
+      setFirebaseUser(result.user);
+      console.log('📡 [Auth] Syncing user profile with backend API (/api/auth/user/signin)...');
       const res = await authService.syncUser();
+      console.log('✨ [Auth] Backend sync completed:', res);
+
       if (res.user) {
-        setProfile(res.user);
+        const fullProfile: UserProfile = {
+          ...res.user,
+          hasRegistered: !!res.hasRegistered,
+        };
+        setProfile(fullProfile);
         setIsRegistered(!!res.hasRegistered);
-        return res.user;
+        return fullProfile;
       }
       return null;
     } catch (error) {
-      console.error('Google Sign-In failed:', error);
+      console.error('❌ [Auth] Google Sign-In error:', error);
       throw error;
     } finally {
       setLoading(false);

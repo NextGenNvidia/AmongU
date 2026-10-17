@@ -90,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenRegister, userEmail, onLog
                   onClick={onOpenRegister}
                   className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-sm py-2 px-5 rounded-full"
                 >
-                  LOGIN
+                  REGISTER / LOGIN
                 </button>
               )}
             </div>

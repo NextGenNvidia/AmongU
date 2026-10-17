@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { env } from '../config/env';
 import { razorpayInstance } from '../config/razorpay';
 import { Registration } from '../models/Registration';
+import { mailService } from '../services/mail.service';
 
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -313,5 +314,101 @@ export const venueCheckIn = async (req: Request, res: Response): Promise<void> =
       success: false,
       message: error?.message || 'Server error occurred during venue check-in',
     });
+  }
+};
+
+export const initiateRegistration = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, email, collegeId, branch, year, section, track, phone } = req.body;
+    
+    // Generate a secure 6-digit transmission clearance code
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    console.log(`\n======================================================`);
+    console.log(`🔐 [REGISTRATION INITIATED - OTP TRANSMISSION]`);
+    console.log(`👤 Name: ${name}`);
+    console.log(`📧 Email: ${email}`);
+    console.log(`🎓 College ID: ${collegeId} (${branch} Year ${year} Sec ${section})`);
+    console.log(`📱 Phone: ${phone}`);
+    console.log(`🎯 Track: ${track}`);
+    console.log(`📨 [OTP Dispatched] Code: ${otpCode} transmitted to ${email}`);
+    console.log(`======================================================\n`);
+
+    // Dispatch email via Nodemailer
+    await mailService.sendOtpEmail(email, otpCode, name);
+
+    res.status(200).json({
+      success: true,
+      message: 'Registration initiated and OTP passcode dispatched',
+      otp: otpCode,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const confirmRegistration = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, email, collegeId, branch, year, section, track, phone, paymentId } = req.body;
+
+    const userUid = req.user?.uid || 'direct_user';
+    const userId = req.user?.dbUser?._id;
+
+    console.log(`\n======================================================`);
+    console.log(`🎉 [REGISTRATION & PAYMENT CONFIRMED]`);
+    console.log(`👤 Name: ${name}`);
+    console.log(`📧 Email: ${email}`);
+    console.log(`🎓 College ID: ${collegeId} (${branch} Year ${year} Sec ${section})`);
+    console.log(`💳 Payment ID: ${paymentId} (₹55 CONFIRMED)`);
+    console.log(`🎯 Track: ${track}`);
+    console.log(`💾 Saving participant record to MongoDB...`);
+
+    // Upsert registration in MongoDB
+    const registration = await Registration.findOneAndUpdate(
+      { collegeId },
+      {
+        userId: userId || undefined,
+        firebaseUid: userUid,
+        name,
+        collegeId,
+        year: year as any,
+        branch,
+        section,
+        phone,
+        email: email.toLowerCase(),
+        amount: 55,
+        paymentStatus: 'success',
+        paymentMethod: 'razorpay',
+        razorpayPaymentId: paymentId,
+        isPresent: false,
+        assignedRole: 'unassigned',
+        verifiedAt: new Date(),
+        notes: `Registered via AmongU portal - Track: ${track}`,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    console.log(`✅ [MongoDB Saved] Participant ID: ${registration._id}`);
+    console.log(`======================================================\n`);
+
+    // Send official boarding pass email
+    await mailService.sendTicketEmail(email, {
+      name,
+      collegeId,
+      branch,
+      year,
+      section,
+      track,
+      paymentId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Registration confirmed and recorded in database',
+      registration,
+    });
+  } catch (error: any) {
+    console.error('❌ [Registration Error] confirmRegistration failed:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

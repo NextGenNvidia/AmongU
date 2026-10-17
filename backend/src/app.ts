@@ -14,13 +14,17 @@ const app: Application = express();
 // Security & request logging middlewares
 app.use(helmet());
 
-const allowedOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim());
+const allowedOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim().replace(/\/$/, ''));
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like server-to-server or curl) or matched origins
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin, matched CORS_ORIGIN, or any localhost port in development
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        (env.NODE_ENV === 'development' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))
+      ) {
         callback(null, true);
       } else {
         callback(new Error(`Origin ${origin} not allowed by CORS`));
