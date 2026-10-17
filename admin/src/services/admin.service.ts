@@ -37,5 +37,36 @@ export const adminService = {
     const res = await apiClient.put('/admin/event/config', data);
     return res.data;
   },
+
+  // Interactive Squads & Impostor Management
+  getTeamsOverview: async (): Promise<{
+    success: boolean;
+    totalRegistered: number;
+    assignedCount: number;
+    unassignedCount: number;
+    teams: any[];
+    unassignedMembers: any[];
+  }> => {
+    const res = await apiClient.get('/teams/admin/overview');
+    return res.data;
+  },
+
+  saveAllTeams: async (teams: any[]): Promise<{
+    success: boolean;
+    message: string;
+    teams: any[];
+  }> => {
+    const res = await apiClient.post('/teams/admin/save-all', { teams });
+    return res.data;
+  },
+
+  appointImpostor: async (teamId: string, collegeId: string): Promise<{
+    success: boolean;
+    message: string;
+    team: any;
+  }> => {
+    const res = await apiClient.put(`/teams/admin/${teamId}/impostor`, { collegeId });
+    return res.data;
+  },
 };
 

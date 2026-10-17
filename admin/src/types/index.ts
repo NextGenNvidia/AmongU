@@ -34,3 +34,27 @@ export interface AdminLoginResponse {
     role: string;
   };
 }
+
+export interface TeamMember {
+  collegeId: string;
+  name: string;
+  email: string;
+  branch: string;
+  year: string;
+  section: string;
+  role: 'crewmate' | 'impostor';
+  suitColor: string;
+}
+
+export interface TeamRecord {
+  _id?: string;
+  teamId: string;
+  name: string;
+  tableNumber: number;
+  members: TeamMember[];
+  impostorId?: string;
+  round1Score?: number;
+  round2Score?: number;
+  totalScore?: number;
+}
+

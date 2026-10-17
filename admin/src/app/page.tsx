@@ -5,6 +5,7 @@ import LoginScreen from '../components/auth/LoginScreen';
 import Sidebar from '../components/layout/Sidebar';
 import UsersRoster from '../components/users/UsersRoster';
 import EventSettings from '../components/settings/EventSettings';
+import TeamsManager from '../components/teams/TeamsManager';
 import { adminService } from '../services/admin.service';
 import { LoggedInUserRecord } from '../types';
 
@@ -12,7 +13,7 @@ export default function AdminDashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'users' | 'settings'>('users');
+  const [currentTab, setCurrentTab] = useState<'users' | 'settings' | 'teams'>('users');
 
   // Users State
   const [users, setUsers] = useState<LoggedInUserRecord[]>([]);
@@ -133,6 +134,24 @@ export default function AdminDashboardPage() {
 
             <button
               onClick={() => {
+                setCurrentTab('teams');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-display text-sm ${
+                currentTab === 'teams' ? 'bg-crew-cyan text-black font-bold' : 'bg-gray-900 text-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <span>Teams & Impostors</span>
+              </div>
+              <span className="text-xs font-mono text-crew-cyan">Squads</span>
+            </button>
+
+            <button
+              onClick={() => {
                 setCurrentTab('settings');
                 setMobileMenuOpen(false);
               }}
@@ -170,6 +189,8 @@ export default function AdminDashboardPage() {
               error={usersError}
               onRefresh={loadUsers}
             />
+          ) : currentTab === 'teams' ? (
+            <TeamsManager />
           ) : (
             <EventSettings />
           )}

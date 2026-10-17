@@ -501,3 +501,198 @@ export const sendTeamMessage = async (req: Request, res: Response): Promise<void
     });
   }
 };
+
+/**
+ * Admin: Get overview of all teams and unassigned registered candidates
+ */
+export const getAdminTeamsOverview = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const teams = await Team.find().sort({ tableNumber: 1 });
+    const allPaidRegistrations = await Registration.find({ paymentStatus: 'success' }).sort({ createdAt: 1 });
+
+    // Collect all assigned collegeIds
+    const assignedCollegeIds = new Set<string>();
+    teams.forEach((t) => {
+      t.members.forEach((m) => {
+        if (m.collegeId) assignedCollegeIds.add(m.collegeId);
+      });
+    });
+
+    const unassignedCandidates = allPaidRegistrations
+      .filter((r) => !assignedCollegeIds.has(r.collegeId))
+      .map((r, idx) => ({
+        registrationId: r._id,
+        candidateId: r.collegeId || r._id.toString(),
+        name: r.name,
+        collegeId: r.collegeId,
+        email: r.email,
+        phone: r.phone,
+        branch: r.branch,
+        year: r.year,
+        section: r.section,
+        suitColor: SUIT_COLORS[idx % SUIT_COLORS.length],
+        role: 'unassigned' as const,
+        isPresent: r.isPresent,
+      }));
+
+    res.status(200).json({
+      success: true,
+      teams,
+      unassignedCandidates,
+      totalRegistered: allPaidRegistrations.length,
+      assignedCount: assignedCollegeIds.size,
+      unassignedCount: unassignedCandidates.length,
+    });
+  } catch (error: any) {
+    console.error('getAdminTeamsOverview error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Error fetching teams overview' });
+  }
+};
+
+/**
+ * Admin: Save all teams, members, and impostor assignments in one atomic update
+ */
+export const saveAllTeams = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { teams } = req.body;
+
+    if (!Array.isArray(teams)) {
+      res.status(400).json({ success: false, message: 'Teams array is required' });
+      return;
+    }
+
+    // 1. Clear current Team collection and recreate with updated structure
+    await Team.deleteMany({});
+
+    const savedTeams = [];
+    const assignedMemberCollegeIds: string[] = [];
+
+    for (let i = 0; i < teams.length; i++) {
+      const t = teams[i];
+      const teamId = t.teamId || `TEAM-${(i + 1).toString().padStart(2, '0')}`;
+      const teamName = t.name || SQUAD_NAMES[i % SQUAD_NAMES.length] || `Squad ${i + 1}`;
+      const tableNumber = Number(t.tableNumber) || i + 1;
+      const track = t.track || 'Web Development';
+      const impostorId = t.impostorId || undefined;
+
+      const members: ITeamMember[] = (t.members || []).map((m: any, idx: number) => {
+        assignedMemberCollegeIds.push(m.collegeId);
+        const isImpostor = m.collegeId === impostorId || m.role === 'impostor';
+        return {
+          registrationId: m.registrationId,
+          candidateId: m.candidateId || m.collegeId,
+          name: m.name,
+          collegeId: m.collegeId,
+          email: m.email,
+          phone: m.phone || '',
+          branch: m.branch || 'CSE',
+          year: m.year || '1',
+          section: m.section || 'A',
+          suitColor: m.suitColor || SUIT_COLORS[idx % SUIT_COLORS.length],
+          role: isImpostor ? 'impostor' : 'crewmate',
+          isPresent: m.isPresent !== false,
+        };
+      });
+
+      const newTeam = await Team.create({
+        teamId,
+        name: teamName,
+        track,
+        tableNumber,
+        members,
+        impostorId,
+        impostorRevealed: false,
+      });
+
+      savedTeams.push(newTeam);
+
+      // Update registrations for members of this team
+      for (const m of members) {
+        await Registration.findOneAndUpdate(
+          { collegeId: m.collegeId },
+          {
+            $set: {
+              assignedTeamId: newTeam.teamId,
+              assignedTeamName: newTeam.name,
+              assignedRole: m.role,
+            },
+          }
+        );
+      }
+    }
+
+    // Reset unassigned registrations
+    await Registration.updateMany(
+      { collegeId: { $nin: assignedMemberCollegeIds }, paymentStatus: 'success' },
+      {
+        $set: {
+          assignedTeamId: '',
+          assignedTeamName: '',
+          assignedRole: 'unassigned',
+        },
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully synchronized ${savedTeams.length} squads with database!`,
+      teams: savedTeams,
+    });
+  } catch (error: any) {
+    console.error('saveAllTeams error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Error saving teams' });
+  }
+};
+
+/**
+ * Admin: Appoint specific cadet as Impostor for a team
+ */
+export const appointTeamImpostor = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { collegeId } = req.body;
+
+    const team = await findTeamByIdOrTeamId(id);
+    if (!team) {
+      res.status(404).json({ success: false, message: 'Squad not found' });
+      return;
+    }
+
+    team.impostorId = collegeId;
+    team.impostorRevealed = false;
+
+    // Update members
+    team.members = team.members.map((m) => {
+      const isImp = m.collegeId === collegeId;
+      return {
+        ...m,
+        role: isImp ? 'impostor' : 'crewmate',
+      };
+    });
+
+    await team.save();
+
+    // Persist to Registration collection
+    for (const m of team.members) {
+      await Registration.findOneAndUpdate(
+        { collegeId: m.collegeId },
+        {
+          $set: {
+            assignedRole: m.role,
+            assignedTeamId: team.teamId,
+            assignedTeamName: team.name,
+          },
+        }
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Cadet ${collegeId} appointed as secret Impostor for ${team.name}!`,
+      team,
+    });
+  } catch (error: any) {
+    console.error('appointTeamImpostor error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Error appointing impostor' });
+  }
+};
