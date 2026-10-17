@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import LoginScreen from '../components/auth/LoginScreen';
 import Sidebar from '../components/layout/Sidebar';
 import UsersRoster from '../components/users/UsersRoster';
+import EventSettings from '../components/settings/EventSettings';
 import { adminService } from '../services/admin.service';
 import { LoggedInUserRecord } from '../types';
 
@@ -11,6 +12,7 @@ export default function AdminDashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState<'users' | 'settings'>('users');
 
   // Users State
   const [users, setUsers] = useState<LoggedInUserRecord[]>([]);
@@ -80,6 +82,8 @@ export default function AdminDashboardPage() {
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar
+          currentTab={currentTab}
+          onSelectTab={(tab) => setCurrentTab(tab)}
           onLogout={handleLogout}
           totalUsersCount={users.length}
         />
@@ -109,7 +113,15 @@ export default function AdminDashboardPage() {
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-gray-950 border-b-2 border-gray-800 p-4 space-y-2">
-            <div className="w-full flex items-center justify-between p-3 rounded-xl font-display text-sm bg-crew-red text-white">
+            <button
+              onClick={() => {
+                setCurrentTab('users');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-display text-sm ${
+                currentTab === 'users' ? 'bg-crew-red text-white' : 'bg-gray-900 text-gray-300'
+              }`}
+            >
               <div className="flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -117,7 +129,26 @@ export default function AdminDashboardPage() {
                 <span>Users</span>
               </div>
               <span className="text-xs font-mono">{users.length} Cadets</span>
-            </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setCurrentTab('settings');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-display text-sm ${
+                currentTab === 'settings' ? 'bg-crew-lime text-black font-bold' : 'bg-gray-900 text-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Event Schedule</span>
+              </div>
+              <span className="text-xs font-mono text-crew-lime">Timers</span>
+            </button>
+
             <button
               onClick={handleLogout}
               className="w-full bg-red-950 text-red-200 p-2.5 rounded-xl font-mono text-xs font-bold mt-2 flex items-center justify-center gap-2"
@@ -132,12 +163,16 @@ export default function AdminDashboardPage() {
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          <UsersRoster
-            users={users}
-            loading={usersLoading}
-            error={usersError}
-            onRefresh={loadUsers}
-          />
+          {currentTab === 'users' ? (
+            <UsersRoster
+              users={users}
+              loading={usersLoading}
+              error={usersError}
+              onRefresh={loadUsers}
+            />
+          ) : (
+            <EventSettings />
+          )}
         </main>
       </div>
     </div>

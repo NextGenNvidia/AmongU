@@ -10,6 +10,8 @@ import {
   getAllUsers,
   toggleBlockUser,
   deleteUserCompletely,
+  getEventConfig,
+  updateEventConfig,
 } from '../controllers/admin.controller';
 import { verifyAuth } from '../middlewares/auth';
 import { requireAdmin } from '../middlewares/admin';
@@ -53,5 +55,9 @@ router.patch('/registrations/:id/status', validateRequest(adminUpdateStatusSchem
 
 // Manual offline/cash registration entry by admin
 router.post('/registrations/manual', validateRequest(adminManualRegistrationSchema), manualRegister);
+
+// Event Schedule & Config
+router.get('/event/config', getEventConfig);
+router.put('/event/config', updateEventConfig);
 
 export default router;

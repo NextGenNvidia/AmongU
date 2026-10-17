@@ -25,5 +25,17 @@ export const adminService = {
     const res = await apiClient.delete(`/admin/users/${id}`);
     return res.data;
   },
+
+  // Get current event schedule & configuration
+  getEventConfig: async (): Promise<{ success: boolean; config: any }> => {
+    const res = await apiClient.get('/admin/event/config');
+    return res.data;
+  },
+
+  // Update event schedule & configuration
+  updateEventConfig: async (data: any): Promise<{ success: boolean; message: string; config: any }> => {
+    const res = await apiClient.put('/admin/event/config', data);
+    return res.data;
+  },
 };
 

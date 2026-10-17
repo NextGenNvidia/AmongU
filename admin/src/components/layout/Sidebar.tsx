@@ -3,13 +3,14 @@
 import React from 'react';
 
 interface SidebarProps {
-  currentTab?: string;
-  onSelectTab?: (tab: 'users') => void;
+  currentTab?: 'users' | 'settings';
+  onSelectTab?: (tab: 'users' | 'settings') => void;
   onLogout: () => void;
   totalUsersCount: number;
 }
 
 export default function Sidebar({
+  currentTab = 'users',
   onSelectTab,
   onLogout,
   totalUsersCount,
@@ -50,16 +51,41 @@ export default function Sidebar({
         <button
           type="button"
           onClick={() => onSelectTab?.('users')}
-          className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-display tracking-wide transition-all text-left cursor-pointer bg-crew-red text-white shadow-[0_0_15px_rgba(197,17,17,0.4)] border border-red-500"
+          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-display tracking-wide transition-all text-left cursor-pointer ${
+            currentTab === 'users'
+              ? 'bg-crew-red text-white shadow-[0_0_15px_rgba(197,17,17,0.4)] border border-red-500'
+              : 'text-gray-400 hover:text-white hover:bg-gray-900 border border-transparent'
+          }`}
         >
           <div className="flex items-center gap-3">
-            <svg className="w-5 h-5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             <span>Users</span>
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-black/60 text-white">
             {totalUsersCount} Cadets
+          </span>
+        </button>
+
+        {/* 2. EVENT SCHEDULE & SETTINGS TAB */}
+        <button
+          type="button"
+          onClick={() => onSelectTab?.('settings')}
+          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-display tracking-wide transition-all text-left cursor-pointer ${
+            currentTab === 'settings'
+              ? 'bg-crew-lime text-black shadow-[0_0_15px_rgba(80,239,57,0.4)] border border-crew-lime font-bold'
+              : 'text-gray-400 hover:text-white hover:bg-gray-900 border border-transparent'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>Event Schedule</span>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-black/60 text-crew-lime">
+            Timers
           </span>
         </button>
       </div>

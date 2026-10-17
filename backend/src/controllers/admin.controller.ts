@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Registration } from '../models/Registration';
 import { User } from '../models/User';
+import { EventConfig } from '../models/EventConfig';
 import { env } from '../config/env';
 import { firebaseAuth } from '../config/firebase';
 import { convertRegistrationsToCsv } from '../utils/csvExporter';
@@ -427,5 +428,66 @@ export const deleteUserCompletely = async (req: Request, res: Response): Promise
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getEventConfig = async (req: Request, res: Response): Promise<void> => {
+  try {
+    let config = await EventConfig.findOne({ key: 'main_event' });
+    if (!config) {
+      config = await EventConfig.create({
+        key: 'main_event',
+        eventTitle: 'AmongU Hackathon',
+        eventStartDate: '2026-10-28T09:00:00+05:30',
+        venue: 'KIET Deemed to be University',
+        registrationOpen: true,
+        registrationFeeINR: 55,
+        prizePool: '₹10,000',
+      });
+    }
+    res.status(200).json({
+      success: true,
+      config,
+    });
+  } catch (error: any) {
+    console.error('Get Event Config Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateEventConfig = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { eventStartDate, eventTitle, venue, registrationOpen, registrationFeeINR, prizePool } = req.body;
+
+    const updateFields: any = {};
+    if (eventStartDate !== undefined) updateFields.eventStartDate = eventStartDate;
+    if (eventTitle !== undefined) updateFields.eventTitle = eventTitle;
+    if (venue !== undefined) updateFields.venue = venue;
+    if (registrationOpen !== undefined) updateFields.registrationOpen = registrationOpen;
+    if (registrationFeeINR !== undefined) updateFields.registrationFeeINR = registrationFeeINR;
+    if (prizePool !== undefined) updateFields.prizePool = prizePool;
+
+    const config = await EventConfig.findOneAndUpdate(
+      { key: 'main_event' },
+      { $set: updateFields },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    console.log(`\n======================================================`);
+    console.log(`⚙️ [EVENT SCHEDULE & CONFIG UPDATED BY ADMIN]`);
+    console.log(`📅 Start Date & Time: ${config.eventStartDate}`);
+    console.log(`📍 Venue: ${config.venue}`);
+    console.log(`⚡ Registration Open: ${config.registrationOpen}`);
+    console.log(`======================================================\n`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Event settings successfully updated',
+      config,
+    });
+  } catch (error: any) {
+    console.error('Update Event Config Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 

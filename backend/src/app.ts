@@ -52,6 +52,10 @@ app.get('/api/health', (_req: Request, res: Response) => {
   });
 });
 
+// Public Event Schedule & Configuration for Landing Page & Dashboard Timers
+import { getEventConfig } from './controllers/admin.controller';
+app.get('/api/event/config', getEventConfig);
+
 // Primary API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/registrations', registrationRoutes);

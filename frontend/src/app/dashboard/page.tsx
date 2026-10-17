@@ -33,222 +33,13 @@ interface UserTicket {
   isPresent?: boolean;
 }
 
-// 12 Authentic Among Us Colors
-const AVATAR_COLORS = [
-  { name: 'Red', hex: '#c51111' },
-  { name: 'Blue', hex: '#132ed1' },
-  { name: 'Green', hex: '#117f2d' },
-  { name: 'Pink', hex: '#ed54ba' },
-  { name: 'Orange', hex: '#ef7d0d' },
-  { name: 'Yellow', hex: '#f5f557' },
-  { name: 'Black', hex: '#3f474e' },
-  { name: 'White', hex: '#d6e0f0' },
-  { name: 'Purple', hex: '#6b2fbb' },
-  { name: 'Cyan', hex: '#38fedc' },
-  { name: 'Lime', hex: '#50ef39' },
-  { name: 'Brown', hex: '#71491e' },
-];
-
-// Hats Selection
-const AVATAR_HATS = [
-  { id: 'none', label: 'None', emoji: '🚫' },
-  { id: 'top-hat', label: 'Top Hat', emoji: '🎩' },
-  { id: 'sprout', label: 'Sprout', emoji: '🌱' },
-  { id: 'party-hat', label: 'Party Hat', emoji: '🎉' },
-  { id: 'mini-crewmate', label: 'Mini Mate', emoji: '👨‍🚀' },
-  { id: 'viking', label: 'Viking', emoji: '⚔️' },
-  { id: 'detective', label: 'Detective', emoji: '🕵️' },
-  { id: 'bandana', label: 'Bandana', emoji: '🔴' },
-];
-
-// Mufflers & Neckwear
-const AVATAR_MUFFLERS = [
-  { id: 'none', label: 'None', emoji: '🚫' },
-  { id: 'winter-scarf', label: 'Red Scarf', emoji: '🧣' },
-  { id: 'cyan-muffler', label: 'Cyan Muffler', emoji: '🧣' },
-  { id: 'gold-chain', label: 'Gold Chain', emoji: '🪙' },
-  { id: 'bowtie', label: 'Bowtie', emoji: '🎀' },
-  { id: 'necktie', label: 'Necktie', emoji: '👔' },
-  { id: 'stethoscope', label: 'Stethoscope', emoji: '🩺' },
-];
-
-// Dynamic Crewmate SVG with Hats & Mufflers
-const CrewmateAvatarView: React.FC<{
-  color: string;
-  hat: string;
-  muffler: string;
-  width?: number;
-  height?: number;
-  className?: string;
-}> = ({ color, hat, muffler, width = 110, height = 135, className = '' }) => {
-  return (
-    <svg
-      width={width}
-      height={height}
-      viewBox="0 -28 100 148"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-    >
-      {/* Backpack */}
-      <rect x="2" y="30" width="25" height="50" rx="8" fill={color} stroke="#000" strokeWidth="5" />
-
-      {/* Main Body & Legs */}
-      <path
-        d="M70,100 v10 a10,10 0 0,1 -20,0 v-10 h-10 v10 a10,10 0 0,1 -20,0 v-10 C10,95 10,70 10,60 v-20 C10,15 30,10 45,10 c15,0 35,5 35,30 v20 C80,70 80,95 70,100 Z"
-        fill={color}
-        stroke="#000"
-        strokeWidth="5"
-      />
-
-      {/* Visor */}
-      <path
-        d="M30,30 h45 a15,15 0 0,1 15,15 v5 a15,15 0 0,1 -15,15 h-45 a15,15 0 0,1 -15,-15 v-5 a15,15 0 0,1 15,-15 Z"
-        fill="#9cdbfa"
-        stroke="#000"
-        strokeWidth="5"
-      />
-      {/* Visor Reflection Gloss */}
-      <path
-        d="M36,36 h24 a4,4 0 0,1 4,4 v0 a4,4 0 0,1 -4,4 h-24 a4,4 0 0,1 -4,-4 v0 a4,4 0 0,1 4,-4 Z"
-        fill="#ffffff"
-        opacity="0.8"
-      />
-
-      {/* HATS LAYER */}
-      {hat === 'top-hat' && (
-        <g id="hat-top-hat">
-          <ellipse cx="48" cy="16" rx="27" ry="6" fill="#18181b" stroke="#000" strokeWidth="3.5" />
-          <path d="M33,16 L35,-10 L61,-10 L63,16 Z" fill="#18181b" stroke="#000" strokeWidth="3.5" />
-          <path d="M34,10 L34.5,16 L61.5,16 L62,10 Z" fill="#c51111" stroke="#000" strokeWidth="2" />
-        </g>
-      )}
-
-      {hat === 'sprout' && (
-        <g id="hat-sprout">
-          <path d="M48,15 Q50,0 44,-12" fill="none" stroke="#15803d" strokeWidth="4" strokeLinecap="round" />
-          <path d="M44,-12 Q30,-20 35,-6 Q42,-4 44,-12 Z" fill="#22c55e" stroke="#000" strokeWidth="2.5" />
-          <path d="M44,-12 Q58,-18 53,-4 Q47,-3 44,-12 Z" fill="#22c55e" stroke="#000" strokeWidth="2.5" />
-        </g>
-      )}
-
-      {hat === 'party-hat' && (
-        <g id="hat-party-hat">
-          <polygon points="48,-18 32,16 64,16" fill="#facc15" stroke="#000" strokeWidth="3" />
-          <line x1="36" y1="6" x2="60" y2="6" stroke="#ef4444" strokeWidth="3.5" />
-          <line x1="41" y1="-5" x2="55" y2="-5" stroke="#3b82f6" strokeWidth="3.5" />
-          <circle cx="48" cy="-21" r="5" fill="#06b6d4" stroke="#000" strokeWidth="2" />
-        </g>
-      )}
-
-      {hat === 'mini-crewmate' && (
-        <g id="hat-mini-crewmate">
-          <rect x="36" y="-6" width="22" height="22" rx="7" fill={color} stroke="#000" strokeWidth="3" />
-          <rect x="44" y="-3" width="16" height="9" rx="4" fill="#9cdbfa" stroke="#000" strokeWidth="2.5" />
-        </g>
-      )}
-
-      {hat === 'viking' && (
-        <g id="hat-viking">
-          <path d="M26,17 Q48,-2 70,17 Z" fill="#78350f" stroke="#000" strokeWidth="3.5" />
-          <path d="M26,14 Q14,8 18,-8 Q25,4 28,12 Z" fill="#fef3c7" stroke="#000" strokeWidth="2.5" />
-          <path d="M70,14 Q82,8 78,-8 Q71,4 68,12 Z" fill="#fef3c7" stroke="#000" strokeWidth="2.5" />
-        </g>
-      )}
-
-      {hat === 'detective' && (
-        <g id="hat-detective">
-          <ellipse cx="48" cy="16" rx="27" ry="6" fill="#92400e" stroke="#000" strokeWidth="3.5" />
-          <path d="M34,14 Q48,-5 62,14 Z" fill="#92400e" stroke="#000" strokeWidth="3" />
-          <path d="M34,13 Q48,7 62,13 L62,16 Q48,10 34,16 Z" fill="#451a03" />
-        </g>
-      )}
-
-      {hat === 'bandana' && (
-        <g id="hat-bandana">
-          <path d="M22,23 Q48,13 74,23 L74,30 Q48,20 22,30 Z" fill="#c51111" stroke="#000" strokeWidth="3" />
-          <circle cx="23" cy="27" r="4.5" fill="#c51111" stroke="#000" strokeWidth="2" />
-          <polygon points="23,29 14,37 19,41 25,31" fill="#c51111" stroke="#000" strokeWidth="2" />
-        </g>
-      )}
-
-      {/* MUFFLERS & NECKWEAR LAYER */}
-      {muffler === 'winter-scarf' && (
-        <g id="muffler-winter-scarf">
-          <path
-            d="M26,58 Q48,66 70,58 Q73,69 68,73 Q48,79 26,71 Z"
-            fill="#c51111"
-            stroke="#000"
-            strokeWidth="3.5"
-          />
-          <line x1="36" y1="61" x2="38" y2="72" stroke="#ffffff" strokeWidth="3" />
-          <line x1="56" y1="61" x2="54" y2="72" stroke="#ffffff" strokeWidth="3" />
-          <path d="M60,67 L69,96 L55,98 L53,72 Z" fill="#c51111" stroke="#000" strokeWidth="3.5" />
-          <line x1="56" y1="98" x2="68" y2="96" stroke="#ffffff" strokeWidth="3" strokeDasharray="2,2" />
-        </g>
-      )}
-
-      {muffler === 'cyan-muffler' && (
-        <g id="muffler-cyan-muffler">
-          <path
-            d="M26,58 Q48,66 70,58 Q73,69 68,73 Q48,79 26,71 Z"
-            fill="#06b6d4"
-            stroke="#000"
-            strokeWidth="3.5"
-          />
-          <path d="M33,67 L25,96 L39,98 L41,72 Z" fill="#06b6d4" stroke="#000" strokeWidth="3.5" />
-        </g>
-      )}
-
-      {muffler === 'gold-chain' && (
-        <g id="muffler-gold-chain">
-          <path d="M28,60 Q48,82 68,60" fill="none" stroke="#fbbf24" strokeWidth="4.5" strokeLinecap="round" />
-          <circle cx="48" cy="74" r="6.5" fill="#f59e0b" stroke="#000" strokeWidth="2" />
-          <circle cx="48" cy="74" r="3" fill="#c51111" />
-        </g>
-      )}
-
-      {muffler === 'bowtie' && (
-        <g id="muffler-bowtie">
-          <polygon points="48,66 34,58 34,74" fill="#c51111" stroke="#000" strokeWidth="2.5" />
-          <polygon points="48,66 62,58 62,74" fill="#c51111" stroke="#000" strokeWidth="2.5" />
-          <circle cx="48" cy="66" r="4" fill="#18181b" stroke="#000" strokeWidth="2" />
-        </g>
-      )}
-
-      {muffler === 'necktie' && (
-        <g id="muffler-necktie">
-          <polygon points="45,60 51,60 50,66 46,66" fill="#2563eb" stroke="#000" strokeWidth="2" />
-          <polygon points="46,66 50,66 53,92 48,99 43,92" fill="#2563eb" stroke="#000" strokeWidth="2.5" />
-        </g>
-      )}
-
-      {muffler === 'stethoscope' && (
-        <g id="muffler-stethoscope">
-          <path d="M32,58 Q48,78 64,58" fill="none" stroke="#64748b" strokeWidth="3.5" strokeLinecap="round" />
-          <path d="M48,70 Q55,83 51,92" fill="none" stroke="#64748b" strokeWidth="3.5" />
-          <circle cx="51" cy="94" r="5.5" fill="#e2e8f0" stroke="#000" strokeWidth="2" />
-        </g>
-      )}
-    </svg>
-  );
-};
+import { CrewmateAvatarView } from '../../components/common/CrewmateAvatarView';
 
 export default function UserDashboardPage() {
   const router = useRouter();
   const [ticket, setTicket] = useState<UserTicket | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Avatar Customizer Modal State
-  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [selectedColor, setSelectedColor] = useState('#c51111');
-  const [selectedHat, setSelectedHat] = useState('none');
-  const [selectedMuffler, setSelectedMuffler] = useState('none');
-
-  // Withdrawal Modal State
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const [withdrawReason, setWithdrawReason] = useState('Schedule Conflict');
-  const [customWithdrawReason, setCustomWithdrawReason] = useState('');
-  const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
   const [withdrawFeedback, setWithdrawFeedback] = useState<string | null>(null);
 
   // Admin Broadcast & Squad Assignment State
@@ -272,7 +63,18 @@ export default function UserDashboardPage() {
   }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
 
   useEffect(() => {
-    const target = new Date('2026-10-28T09:00:00+05:30').getTime();
+    let target = new Date('2026-10-28T09:00:00+05:30').getTime();
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    fetch(`${apiUrl}/api/event/config`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.config?.eventStartDate) {
+          target = new Date(data.config.eventStartDate).getTime();
+        }
+      })
+      .catch(() => {});
+
     const updateCountdown = () => {
       const diff = target - Date.now();
       if (diff <= 0) {
@@ -316,6 +118,25 @@ export default function UserDashboardPage() {
         const res = await registrationService.getMyStatus();
         if (res.success && res.registration) {
           const reg = res.registration;
+          let storedAvatarColor = '#c51111';
+          let storedAvatarHat = 'none';
+          let storedAvatarMuffler = 'none';
+          let storedWithdrawalStatus: 'none' | 'pending' | 'approved' = 'none';
+          let storedWithdrawalReason: string | undefined = undefined;
+          let storedWithdrawalDate: string | undefined = undefined;
+
+          try {
+            const rawStored = localStorage.getItem('amongu_user_ticket');
+            if (rawStored) {
+              const parsed = JSON.parse(rawStored);
+              if (parsed.avatarColor) storedAvatarColor = parsed.avatarColor;
+              if (parsed.avatarHat) storedAvatarHat = parsed.avatarHat;
+              if (parsed.avatarMuffler) storedAvatarMuffler = parsed.avatarMuffler;
+              if (parsed.withdrawalStatus) storedWithdrawalStatus = parsed.withdrawalStatus;
+              if (parsed.withdrawalReason) storedWithdrawalReason = parsed.withdrawalReason;
+              if (parsed.withdrawalDate) storedWithdrawalDate = parsed.withdrawalDate;
+            }
+          } catch {}
           const realTicket: UserTicket = {
             name: reg.name || firebaseUser.displayName || 'Cadet',
             collegeId: reg.collegeId,
@@ -329,15 +150,16 @@ export default function UserDashboardPage() {
             amount: reg.amount || 55,
             registeredAt: new Date(reg.createdAt).toLocaleString(),
             isEmailVerified: true,
-            avatarColor: '#c51111',
-            avatarHat: 'none',
-            avatarMuffler: 'none',
-            withdrawalStatus: 'none',
+            avatarColor: storedAvatarColor,
+            avatarHat: storedAvatarHat,
+            avatarMuffler: storedAvatarMuffler,
+            withdrawalStatus: storedWithdrawalStatus,
+            withdrawalReason: storedWithdrawalReason,
+            withdrawalDate: storedWithdrawalDate,
             assignedRole: (reg.assignedRole as any) || 'unassigned',
             assignedTeamId: reg.assignedTeamId,
           };
           setTicket(realTicket);
-          setSelectedColor(realTicket.avatarColor as string);
           localStorage.setItem('amongu_user_ticket', JSON.stringify(realTicket));
         } else {
           // If no registration record in MongoDB, bounce to registration
@@ -426,52 +248,6 @@ export default function UserDashboardPage() {
     };
   }, [firebaseUser, profile, isRegistered, authLoading, router]);
 
-  const handleSaveAvatar = () => {
-    if (!ticket) return;
-    const updatedTicket: UserTicket = {
-      ...ticket,
-      avatarColor: selectedColor,
-      avatarHat: selectedHat,
-      avatarMuffler: selectedMuffler,
-    };
-    setTicket(updatedTicket);
-    try {
-      localStorage.setItem('amongu_user_ticket', JSON.stringify(updatedTicket));
-    } catch (e) {
-      console.error('Failed to save avatar preferences', e);
-    }
-    setIsAvatarModalOpen(false);
-  };
-
-  const handleConfirmWithdrawal = () => {
-    if (!ticket) return;
-    setIsSubmittingWithdraw(true);
-
-    const fullReason =
-      withdrawReason === 'Other' && customWithdrawReason.trim()
-        ? customWithdrawReason.trim()
-        : withdrawReason;
-
-    setTimeout(() => {
-      const updatedTicket: UserTicket = {
-        ...ticket,
-        withdrawalStatus: 'pending',
-        withdrawalReason: fullReason,
-        withdrawalDate: new Date().toLocaleString(),
-      };
-      setTicket(updatedTicket);
-      try {
-        localStorage.setItem('amongu_user_ticket', JSON.stringify(updatedTicket));
-      } catch (e) {
-        console.error('Failed to store withdrawal status', e);
-      }
-      setIsSubmittingWithdraw(false);
-      setIsWithdrawModalOpen(false);
-      setWithdrawFeedback(
-        'Withdrawal dispatch logged! Notification sent to admin@kiet.edu for review and seat release.'
-      );
-    }, 700);
-  };
 
   const handleCancelWithdrawalRequest = () => {
     if (!ticket) return;
@@ -619,10 +395,16 @@ export default function UserDashboardPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <span className={`text-xs sm:text-sm font-mono font-bold px-3 py-1 rounded-full ${theme.userBadge}`}>
               {ticket?.email}
             </span>
+            <Link
+              href="/profile"
+              className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 font-bold shadow"
+            >
+              <span>PROFILE 👤</span>
+            </Link>
             <Link
               href="/"
               className="au-btn bg-crew-white hover:bg-gray-200 text-black font-display text-xs sm:text-sm py-2 px-4 rounded-full"
@@ -1051,7 +833,7 @@ export default function UserDashboardPage() {
         <div className={`au-card rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden transition-all duration-500 ${theme.welcomeCard}`}>
           <div className="flex items-center gap-6">
             {/* Dynamic Avatar with Hat & Muffler */}
-            <div className="shrink-0 float-slow relative group cursor-pointer" onClick={() => setIsAvatarModalOpen(true)}>
+            <div className="shrink-0 float-slow relative">
               <CrewmateAvatarView
                 color={isImpostor ? '#ef4444' : currentAvatarColor}
                 hat={currentAvatarHat}
@@ -1059,11 +841,6 @@ export default function UserDashboardPage() {
                 width={95}
                 height={125}
               />
-              <span className={`absolute -bottom-2 -right-2 text-black text-[10px] font-black px-2 py-0.5 rounded-full border border-black shadow ${
-                isImpostor ? 'bg-red-400' : 'bg-crew-cyan'
-              }`}>
-                EDIT ✏️
-              </span>
             </div>
 
             <div>
@@ -1083,29 +860,12 @@ export default function UserDashboardPage() {
                 Your drop-ship seat is confirmed for <span className={isImpostor ? 'text-red-400 font-bold' : 'text-crew-cyan font-bold'}>AmongU</span> at KIET Deemed to be University.
               </p>
               <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => setIsAvatarModalOpen(true)}
-                  className={`au-btn font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 cursor-pointer ${
-                    isImpostor
-                      ? 'bg-red-600 hover:bg-red-500 text-white'
-                      : 'bg-crew-cyan hover:bg-cyan-300 text-black'
-                  }`}
+                <Link
+                  href="/profile"
+                  className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xs py-1.5 px-4 rounded-full flex items-center gap-1.5 cursor-pointer font-bold shadow"
                 >
-                  <span>CUSTOMIZE AVATAR</span>
-                  <span>🎨</span>
-                </button>
-                <button
-                  onClick={() => setIsWithdrawModalOpen(true)}
-                  disabled={isWithdrawalPending}
-                  className={`au-btn text-xs py-1.5 px-3 rounded-full font-display flex items-center gap-1 cursor-pointer ${
-                    isWithdrawalPending
-                      ? 'bg-gray-800 text-gray-500 cursor-not-allowed border-gray-700'
-                      : 'bg-red-950/80 hover:bg-red-900 text-red-200 border-crew-red'
-                  }`}
-                >
-                  <span>WITHDRAW</span>
-                  <span>🚫</span>
-                </button>
+                  <span>PROFILE &amp; AVATAR 👤⚙️</span>
+                </Link>
               </div>
             </div>
           </div>
@@ -1424,207 +1184,6 @@ export default function UserDashboardPage() {
           </div>
         </div>
       </main>
-
-      {/* 🎨 MODAL 1: AMONG US AVATAR CUSTOMIZER */}
-      {isAvatarModalOpen && (
-        <div
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsAvatarModalOpen(false);
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
-        >
-          <div className="au-card bg-gray-900 w-full max-w-xl rounded-3xl p-6 sm:p-8 relative my-8 animate-[float_0.3s_ease-out] border-4 border-black">
-            <button
-              onClick={() => setIsAvatarModalOpen(false)}
-              className="absolute -top-4 -right-4 w-11 h-11 bg-crew-red au-border rounded-full text-white font-display text-lg hover:bg-red-500 hover:scale-110 transition-transform flex items-center justify-center shadow-lg"
-            >
-              ✕
-            </button>
-
-            <div className="text-center mb-6">
-              <span className="text-3xl">🎨</span>
-              <h3 className="font-display text-3xl text-crew-cyan mt-1">CREWMATE WARDROBE</h3>
-              <p className="text-gray-400 text-xs font-bold">Customize your spacesuit color, headwear, and neck scarf.</p>
-            </div>
-
-            {/* Live Interactive Preview Box */}
-            <div className="bg-black/70 au-border rounded-2xl p-4 flex flex-col items-center justify-center mb-6 shadow-inner">
-              <div className="float-slow">
-                <CrewmateAvatarView
-                  color={selectedColor}
-                  hat={selectedHat}
-                  muffler={selectedMuffler}
-                  width={130}
-                  height={160}
-                />
-              </div>
-              <span className="text-xs font-mono font-bold text-gray-400 mt-2">
-                Live Preview &bull; {AVATAR_COLORS.find((c) => c.hex === selectedColor)?.name} Suit
-              </span>
-            </div>
-
-            {/* 1. Suit Colors Selector */}
-            <div className="space-y-2 mb-5">
-              <label className="text-xs font-display text-gray-300 block">1. SPACESUIT COLOR</label>
-              <div className="grid grid-cols-6 sm:grid-cols-6 gap-2.5">
-                {AVATAR_COLORS.map((c) => (
-                  <button
-                    key={c.hex}
-                    type="button"
-                    onClick={() => setSelectedColor(c.hex)}
-                    style={{ backgroundColor: c.hex }}
-                    className={`h-9 rounded-xl border-2 transition-all flex items-center justify-center cursor-pointer ${
-                      selectedColor === c.hex
-                        ? 'border-white scale-110 shadow-[0_0_10px_white]'
-                        : 'border-black opacity-80 hover:opacity-100'
-                    }`}
-                    title={c.name}
-                  >
-                    {selectedColor === c.hex && <span className="text-xs font-black text-black">✓</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 2. Hat Selector */}
-            <div className="space-y-2 mb-5">
-              <label className="text-xs font-display text-gray-300 block">2. HEADWEAR &amp; HATS</label>
-              <div className="grid grid-cols-4 gap-2">
-                {AVATAR_HATS.map((h) => (
-                  <button
-                    key={h.id}
-                    type="button"
-                    onClick={() => setSelectedHat(h.id)}
-                    className={`p-2 rounded-xl text-xs font-bold border-2 transition-all flex flex-col items-center gap-1 cursor-pointer ${
-                      selectedHat === h.id
-                        ? 'bg-crew-cyan/20 border-crew-cyan text-white shadow-[0_0_10px_rgba(56,254,220,0.5)]'
-                        : 'bg-black/60 border-gray-800 text-gray-400 hover:border-gray-700'
-                    }`}
-                  >
-                    <span className="text-lg">{h.emoji}</span>
-                    <span className="text-[11px] truncate w-full text-center">{h.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 3. Muffler / Neckwear Selector */}
-            <div className="space-y-2 mb-6">
-              <label className="text-xs font-display text-gray-300 block">3. MUFFLERS &amp; ACCESSORIES</label>
-              <div className="grid grid-cols-4 gap-2">
-                {AVATAR_MUFFLERS.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setSelectedMuffler(m.id)}
-                    className={`p-2 rounded-xl text-xs font-bold border-2 transition-all flex flex-col items-center gap-1 cursor-pointer ${
-                      selectedMuffler === m.id
-                        ? 'bg-crew-lime/20 border-crew-lime text-white shadow-[0_0_10px_rgba(80,239,57,0.5)]'
-                        : 'bg-black/60 border-gray-800 text-gray-400 hover:border-gray-700'
-                    }`}
-                  >
-                    <span className="text-lg">{m.emoji}</span>
-                    <span className="text-[11px] truncate w-full text-center">{m.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleSaveAvatar}
-              className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-lg py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>EQUIP &amp; SAVE AVATAR</span>
-              <span>💾</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 🚫 MODAL 2: WITHDRAW REGISTRATION CONFIRMATION */}
-      {isWithdrawModalOpen && (
-        <div
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setIsWithdrawModalOpen(false);
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
-        >
-          <div className="au-card bg-gray-900 w-full max-w-lg rounded-3xl p-6 sm:p-8 relative my-8 border-4 border-crew-red">
-            <button
-              onClick={() => setIsWithdrawModalOpen(false)}
-              className="absolute -top-4 -right-4 w-11 h-11 bg-gray-800 au-border rounded-full text-white font-display text-lg hover:bg-gray-700 flex items-center justify-center"
-            >
-              ✕
-            </button>
-
-            <div className="text-center mb-5">
-              <div className="w-16 h-16 bg-red-950/80 border-2 border-crew-red mx-auto rounded-full flex items-center justify-center mb-2 shadow-[0_0_15px_#c51111]">
-                <span className="text-3xl">⚠️</span>
-              </div>
-              <h3 className="font-display text-2xl text-crew-red">WITHDRAW REGISTRATION</h3>
-              <p className="text-gray-300 text-xs font-bold mt-1">
-                Request seat withdrawal for cadet <span className="text-white">{ticket?.name}</span> ({ticket?.collegeId}).
-              </p>
-            </div>
-
-            <div className="bg-black/70 au-border rounded-xl p-4 text-xs text-gray-300 space-y-2 mb-4">
-              <p className="font-bold text-amber-300">Important Advisory:</p>
-              <p>
-                1. Clicking confirm will log a formal withdrawal dispatch from your KIET college email (<span className="text-crew-cyan font-mono">{ticket?.email}</span>) to the admin organizer mailbox.
-              </p>
-              <p>
-                2. Once the administrators review and approve this withdrawal from the admin console, your registration entry and allocated ticket will be decommissioned.
-              </p>
-            </div>
-
-            <div className="space-y-3 mb-5">
-              <label className="text-xs font-bold text-gray-400 block">Reason for Withdrawal:</label>
-              <select
-                value={withdrawReason}
-                onChange={(e) => setWithdrawReason(e.target.value)}
-                className="w-full bg-black au-border rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-crew-cyan"
-              >
-                <option>Schedule Conflict</option>
-                <option>Health or Medical Emergency</option>
-                <option>Academic Exam or Assignment Due</option>
-                <option>Team Member Unavailable</option>
-                <option>Other</option>
-              </select>
-
-              {withdrawReason === 'Other' && (
-                <textarea
-                  rows={2}
-                  required
-                  value={customWithdrawReason}
-                  onChange={(e) => setCustomWithdrawReason(e.target.value)}
-                  placeholder="Please specify your reason for withdrawal..."
-                  className="w-full bg-black au-border rounded-xl p-3 text-xs text-white focus:outline-none focus:border-crew-cyan"
-                />
-              )}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setIsWithdrawModalOpen(false)}
-                className="w-1/2 au-btn bg-gray-800 hover:bg-gray-700 text-white font-display text-sm py-3 rounded-xl cursor-pointer"
-              >
-                KEEP REGISTRATION
-              </button>
-              <button
-                type="button"
-                disabled={isSubmittingWithdraw}
-                onClick={handleConfirmWithdrawal}
-                className="w-1/2 au-btn bg-crew-red hover:bg-red-500 text-white font-display text-sm py-3 rounded-xl transition-all cursor-pointer"
-              >
-                {isSubmittingWithdraw ? 'TRANSMITTING...' : 'CONFIRM WITHDRAW'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-

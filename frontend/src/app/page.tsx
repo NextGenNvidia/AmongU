@@ -24,7 +24,17 @@ export default function AmongUHomePage() {
   });
 
   useEffect(() => {
-    const target = new Date('2026-10-28T09:00:00+05:30').getTime();
+    let target = new Date('2026-10-28T09:00:00+05:30').getTime();
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    fetch(`${apiUrl}/api/event/config`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.config?.eventStartDate) {
+          target = new Date(data.config.eventStartDate).getTime();
+        }
+      })
+      .catch(() => {});
 
     const updateTimer = () => {
       const now = Date.now();
@@ -194,20 +204,37 @@ export default function AmongUHomePage() {
               </a>
               
               {firebaseUser ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-crew-cyan font-bold bg-black/60 px-3 py-1 rounded-full border border-gray-700 font-mono">
+                <div className="flex items-center gap-2.5">
+                  <span className="hidden xl:inline text-xs text-crew-cyan font-bold bg-black/60 px-3 py-1 rounded-full border border-gray-700 font-mono">
                     {firebaseUser.email}
                   </span>
-                  <Link
-                    href={isRegistered || (typeof window !== 'undefined' && localStorage.getItem('amongu_user_ticket')) ? '/dashboard' : '/register'}
-                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-sm py-2 px-4 rounded-full flex items-center gap-1.5 transition-all"
-                  >
-                    <span>{isRegistered || (typeof window !== 'undefined' && localStorage.getItem('amongu_user_ticket')) ? 'DASHBOARD' : 'REGISTER'}</span>
-                  </Link>
+                  {isRegistered || profile?.hasRegistered ? (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 transition-all"
+                      >
+                        <span>DASHBOARD</span>
+                      </Link>
+                      <Link
+                        href="/profile"
+                        className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 transition-all shadow-[0_0_10px_rgba(80,239,57,0.5)] font-bold"
+                      >
+                        <span>PROFILE 👤</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <Link
+                      href="/portal/cadet-clearance-7b92"
+                      className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-sm py-2 px-4 rounded-full flex items-center gap-1.5 transition-all"
+                    >
+                      <span>REGISTER</span>
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={() => logout()}
-                    className="text-xs text-gray-400 hover:text-crew-red font-bold underline cursor-pointer"
+                    className="text-xs text-gray-400 hover:text-crew-red font-bold underline cursor-pointer ml-1"
                   >
                     Logout
                   </button>
@@ -222,14 +249,31 @@ export default function AmongUHomePage() {
                 </button>
               )}
             </div>
-            <div className="md:hidden flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleRegisterClick}
-                className="au-btn bg-crew-lime text-black font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>{firebaseUser ? (isRegistered ? 'DASHBOARD' : 'REGISTER') : 'REGISTER'}</span>
-              </button>
+            <div className="md:hidden flex items-center gap-2">
+              {firebaseUser && (isRegistered || profile?.hasRegistered) ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="au-btn bg-crew-cyan text-black font-display text-xs py-1.5 px-2.5 rounded-full"
+                  >
+                    <span>DASHBOARD</span>
+                  </Link>
+                  <Link
+                    href="/profile"
+                    className="au-btn bg-crew-lime text-black font-display text-xs py-1.5 px-2.5 rounded-full font-bold"
+                  >
+                    <span>PROFILE</span>
+                  </Link>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleRegisterClick}
+                  className="au-btn bg-crew-lime text-black font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>REGISTER</span>
+                </button>
+              )}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 id="mobile-menu-btn"
@@ -289,8 +333,18 @@ export default function AmongUHomePage() {
                 }}
                 className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 shadow-[0_0_12px_rgba(80,239,57,0.8)] cursor-pointer"
               >
-                <span>{firebaseUser ? (isRegistered ? 'MISSION DASHBOARD' : 'REGISTER') : 'REGISTER'}</span>
+                <span>{firebaseUser ? (isRegistered || profile?.hasRegistered ? 'MISSION DASHBOARD' : 'REGISTER') : 'REGISTER'}</span>
               </button>
+
+              {firebaseUser && (isRegistered || profile?.hasRegistered) && (
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 font-bold cursor-pointer"
+                >
+                  <span>CADET PROFILE 👤</span>
+                </Link>
+              )}
             </div>
           </div>
         )}
