@@ -83,7 +83,7 @@ export default function RefundPolicyPage() {
                 ⏱️ Resolution Timeline: 5 to 7 Business Days
               </p>
               <p className="leading-relaxed">
-                Approved refunds are initiated via our RBI-authorized payment aggregator (Razorpay / Instamojo / Cashfree) directly to the original source method (Bank Account / UPI / Card) within <strong>5 to 7 working days</strong>, adhering to standard banking clearing cycles.
+                Approved refunds are initiated via our authorized payment processing partner directly to the original source payment method (Bank Account / UPI / Card) within <strong>5 to 7 working days</strong>, adhering to standard banking clearing cycles.
               </p>
             </div>
           </section>

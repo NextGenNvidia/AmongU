@@ -54,16 +54,16 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-sm text-gray-300 pl-2">
               <li>
-                <strong className="text-white">Authentication Data:</strong> Full Name, Profile Picture, and official institutional email address (ending strictly with <code>@kiet.edu</code>) provided via Google OAuth authentication.
+                <strong className="text-white">Account &amp; Profile Information:</strong> Full Name, Profile Picture, and institutional email address (ending with <code>@kiet.edu</code>) provided during sign-in.
               </li>
               <li>
-                <strong className="text-white">Academic &amp; Student Credentials:</strong> College Roll/Registration ID (15-digit), Academic Year (Year 1 or Year 2), Department / Branch of study, and Section.
+                <strong className="text-white">Academic Credentials:</strong> College Roll / Student Registration ID, Academic Year, Department / Branch of study, and Section.
               </li>
               <li>
-                <strong className="text-white">Contact Information:</strong> Active WhatsApp phone number for critical emergency briefings, schedule broadcasts, and team coordination.
+                <strong className="text-white">Contact Information:</strong> Contact phone number for event alerts, schedule updates, and team coordination.
               </li>
               <li>
-                <strong className="text-white">Payment &amp; Transaction Details:</strong> Payment transaction identifier (Transaction ID / Payment ID / UTR), payment timestamp, and transaction status. We do <strong>NOT</strong> collect or store sensitive financial card numbers, CVVs, or bank netbanking credentials; all payment processing is handled securely by certified, RBI-licensed payment aggregators.
+                <strong className="text-white">Payment Transaction Details:</strong> Order identifier, transaction timestamp, and payment confirmation status. We do <strong>NOT</strong> store or have access to sensitive card numbers, CVVs, UPI PINs, or banking credentials; all transactions are processed securely through certified third-party payment gateways.
               </li>
             </ul>
           </section>
@@ -84,33 +84,28 @@ export default function PrivacyPolicyPage() {
 
           {/* Section 4 */}
           <section className="space-y-3">
-            <h2 className="font-display text-xl text-crew-cyan">4. DATA SECURITY &amp; STORAGE</h2>
+            <h2 className="font-display text-xl text-crew-cyan">4. DATA SECURITY &amp; RETENTION</h2>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Participant data is stored on encrypted, access-restricted database infrastructure (MongoDB Atlas) with strict role-based access control. Google authentication is verified using industry-standard Firebase Authentication SDKs. We do not sell, rent, or trade student data to third parties or marketing advertisers.
+              We implement industry-standard administrative, physical, and technical safeguards to protect your personal data against unauthorized access, alteration, disclosure, or destruction. Access to participant records is strictly restricted to authorized event administrators. We retain registration data only for the duration necessary to conduct the event, fulfill academic verification, and issue certificates. We do not sell, rent, or trade participant data to any commercial third parties or advertisers.
             </p>
           </section>
 
           {/* Section 5 */}
           <section className="space-y-3">
-            <h2 className="font-display text-xl text-crew-cyan">5. THIRD-PARTY SERVICES</h2>
+            <h2 className="font-display text-xl text-crew-cyan">5. THIRD-PARTY SERVICE PROVIDERS</h2>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Our website uses trusted third-party providers for infrastructure:
+              We may utilize trusted third-party service providers to facilitate platform functionality, including secure payment processing, identity verification, and transactional notifications. These third-party entities are bound by confidentiality obligations and are only permitted to process data in accordance with our instructions and applicable privacy regulations.
             </p>
-            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300 pl-2">
-              <li><strong>Google OAuth &amp; Firebase:</strong> Identity validation and authentication.</li>
-              <li><strong>Payment Aggregators (Razorpay / Instamojo / Cashfree / UPI):</strong> End-to-end encrypted payment processing.</li>
-              <li><strong>Nodemailer / Google SMTP:</strong> Automated transmission of OTPs and confirmation tickets.</li>
-            </ul>
           </section>
 
           {/* Section 6 */}
           <section className="space-y-3">
             <h2 className="font-display text-xl text-crew-cyan">6. CONTACT FOR PRIVACY INQUIRIES</h2>
             <p className="text-sm text-gray-300 leading-relaxed">
-              If you have any questions or request data deletion regarding your account records, please contact our organizing deck at:
+              If you have any questions or concerns regarding this Privacy Policy or wish to review your registration information, please contact the organizing team:
             </p>
             <div className="bg-black/60 border border-gray-800 rounded-2xl p-4 text-xs font-mono text-gray-300 space-y-1">
-              <p><strong className="text-white">Event:</strong> AmongU Hackathon 2026</p>
+              <p><strong className="text-white">Event:</strong> AmongU Hackathon</p>
               <p><strong className="text-white">Institution:</strong> KIET Deemed to be University, Ghaziabad, Delhi-NCR, India</p>
               <p><strong className="text-white">Official Email:</strong> <a href="mailto:amongukiet@gmail.com" className="text-crew-cyan underline">amongukiet@gmail.com</a></p>
             </div>
