@@ -176,7 +176,10 @@ export const getMyStatus = async (req: Request, res: Response): Promise<void> =>
     }
 
     const registration = await Registration.findOne({
-      firebaseUid: req.user.uid,
+      $or: [
+        { firebaseUid: req.user.uid },
+        { email: req.user.email?.toLowerCase() },
+      ],
     }).sort({ createdAt: -1 });
 
     if (!registration) {

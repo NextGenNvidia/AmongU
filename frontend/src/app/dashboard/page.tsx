@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { teamService } from '../../services/team.service';
 import TeamChatInterface from '../../components/dashboard/TeamChatInterface';
+import { useAuth } from '../../hooks/useAuth';
+import { registrationService } from '../../services/registration.service';
 
 interface UserTicket {
   name: string;
@@ -260,201 +262,139 @@ export default function UserDashboardPage() {
   const [round2Submitted, setRound2Submitted] = useState(false);
   const [liveTimerSeconds, setLiveTimerSeconds] = useState<number>(4472);
 
+  const { firebaseUser, profile, isRegistered, loading: authLoading } = useAuth();
+
   useEffect(() => {
-    // Fail-safe timer ensures the dashboard never gets stuck on the loading buffer screen
-    const safetyTimer = setTimeout(() => {
-      setLoading(false);
-    }, 300);
+    if (authLoading) return;
 
-    let syncTeamData = () => {};
+    // 1. Must be logged in with KIET Google account
+    if (!firebaseUser) {
+      router.replace('/');
+      return;
+    }
 
-    try {
-      // Read saved registration ticket from localStorage
-      const saved = localStorage.getItem('amongu_user_ticket');
-      let candidateCollegeId = '210029012000001';
+    // 2. Strict Registration Check: if user has NOT registered, send them to registration
+    if (!profile?.hasRegistered && !isRegistered) {
+      console.log('Cadet has not registered yet. Redirecting to clearance portal...');
+      router.replace('/portal/cadet-clearance-7b92');
+      return;
+    }
 
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          setTicket(parsed);
-          candidateCollegeId = parsed.collegeId;
-          setSelectedColor(parsed.avatarColor ? parsed.avatarColor : '#c51111');
-          setSelectedHat(parsed.avatarHat ? parsed.avatarHat : 'none');
-          setSelectedMuffler(parsed.avatarMuffler ? parsed.avatarMuffler : 'none');
-          if (parsed.assignedRole) setAssignedRole(parsed.assignedRole);
-        } catch (e) {
-          console.error('Error reading ticket:', e);
+    // 3. Load REAL user registration from backend
+    const loadRealRegistration = async () => {
+      try {
+        const res = await registrationService.getMyStatus();
+        if (res.success && res.registration) {
+          const reg = res.registration;
+          const realTicket: UserTicket = {
+            name: reg.name || firebaseUser.displayName || 'Cadet',
+            collegeId: reg.collegeId,
+            year: String(reg.year || '1'),
+            branch: reg.branch,
+            section: reg.section,
+            phone: reg.phone,
+            email: reg.email || (firebaseUser.email as string),
+            track: reg.notes?.includes('Track: ') ? reg.notes.split('Track: ')[1] : 'Web Development',
+            paymentId: reg.razorpayPaymentId || 'CONFIRMED',
+            amount: reg.amount || 55,
+            registeredAt: new Date(reg.createdAt).toLocaleString(),
+            isEmailVerified: true,
+            avatarColor: '#c51111',
+            avatarHat: 'none',
+            avatarMuffler: 'none',
+            withdrawalStatus: 'none',
+            assignedRole: (reg.assignedRole as any) || 'unassigned',
+            assignedTeamId: reg.assignedTeamId,
+          };
+          setTicket(realTicket);
+          setSelectedColor(realTicket.avatarColor as string);
+          localStorage.setItem('amongu_user_ticket', JSON.stringify(realTicket));
+        } else {
+          // If no registration record in MongoDB, bounce to registration
+          router.replace('/portal/cadet-clearance-7b92');
+          return;
         }
-      } else {
-        // Default demo participant if accessed directly
-        const defaultTicket: UserTicket = {
-          name: 'Cadet Explorer',
-          collegeId: '210029012000001',
-          year: '1',
-          branch: 'CSE',
-          section: 'A',
-          phone: '9876543210',
-          email: 'cadet.explorer@kiet.edu',
-          track: 'Web Development',
-          paymentId: 'pay_demo_test123',
-          amount: 55,
-          registeredAt: new Date().toLocaleString(),
-          isEmailVerified: true,
-          avatarColor: '#c51111',
-          avatarHat: 'none',
-          avatarMuffler: 'none',
-          withdrawalStatus: 'none',
-          assignedRole: 'unassigned',
-        };
-        setTicket(defaultTicket);
-        setSelectedColor(defaultTicket.avatarColor as string);
+      } catch (err) {
+        console.warn('Error fetching registration status:', err);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // Sync admin broadcast
-      const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
-      if (broadcastStored && broadcastStored.length > 0) {
-        setAdminBroadcast(broadcastStored);
+    loadRealRegistration();
+
+    // 4. Sync admin broadcast announcement
+    const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
+    if (broadcastStored && broadcastStored.length > 0) {
+      setAdminBroadcast(broadcastStored);
+    }
+
+    // 5. Sync countdown timer
+    const timerStored = localStorage.getItem('amongu_timer_remaining_seconds');
+    if (timerStored) {
+      const parsedTimer = parseInt(timerStored, 10);
+      if (!isNaN(parsedTimer) && parsedTimer > 0) {
+        setLiveTimerSeconds(parsedTimer);
       }
+    }
 
-      // Sync countdown timer
-      const timerStored = localStorage.getItem('amongu_timer_remaining_seconds');
-      if (timerStored) {
-        const parsedTimer = parseInt(timerStored, 10);
-        if (!isNaN(parsedTimer) && parsedTimer > 0) {
-          setLiveTimerSeconds(parsedTimer);
-        }
-      }
-
-      // Sync team and role assignment from teams data and user ticket
-      syncTeamData = () => {
-        try {
-          // Re-read latest ticket in case it was updated by admin
-          let activeCollegeId = candidateCollegeId;
-          let activeEmail = '';
-          let activeAssignedTeamId = '';
-
-          const latestTicketRaw = localStorage.getItem('amongu_user_ticket');
-          if (latestTicketRaw) {
-            try {
-              const parsed = JSON.parse(latestTicketRaw);
-              if (parsed.collegeId) activeCollegeId = parsed.collegeId;
-              if (parsed.email) activeEmail = parsed.email;
-              if (parsed.assignedTeamId) activeAssignedTeamId = parsed.assignedTeamId;
-              if (parsed.assignedRole && parsed.assignedRole !== 'unassigned') {
-                setAssignedRole(parsed.assignedRole);
+    // 6. Sync REAL team data only (no mock Red Saboteurs)
+    const syncTeamData = () => {
+      try {
+        const teamsRaw = localStorage.getItem('amongu_teams_data');
+        if (teamsRaw && firebaseUser?.email) {
+          const parsedTeams = JSON.parse(teamsRaw);
+          if (Array.isArray(parsedTeams) && parsedTeams.length > 0) {
+            const userEmail = (firebaseUser.email || '').toLowerCase();
+            const matchedTeam = parsedTeams.find((t: any) =>
+              t.members?.some((m: any) => m.email?.toLowerCase() === userEmail)
+            );
+            if (matchedTeam) {
+              setAssignedTeam(matchedTeam);
+              const myMember = matchedTeam.members.find((m: any) => m.email?.toLowerCase() === userEmail);
+              if (myMember?.role) {
+                setAssignedRole(myMember.role);
               }
-            } catch {
-              // ignore
-            }
-          }
-
-          const teamsRaw = localStorage.getItem('amongu_teams_data');
-          if (teamsRaw) {
-            try {
-              const parsedTeams = JSON.parse(teamsRaw);
-              if (Array.isArray(parsedTeams) && parsedTeams.length > 0) {
-                let matchedTeam: any = null;
-                let matchedMember: any = null;
-
-                for (const t of parsedTeams) {
-                  const found = t.members?.find(
-                    (m: any) =>
-                      (activeCollegeId && m.collegeId === activeCollegeId) ||
-                      (activeEmail && m.email?.toLowerCase() === activeEmail.toLowerCase()) ||
-                      (activeAssignedTeamId && t.id === activeAssignedTeamId)
-                  );
-                  if (found) {
-                    matchedTeam = t;
-                    matchedMember = found;
-                    break;
-                  }
-                }
-
-                // Fallback for demo testing if teams are published
-                if (!matchedTeam && parsedTeams.length > 0) {
-                  matchedTeam = parsedTeams[0];
-                  matchedMember = matchedTeam.members?.[0];
-                }
-
-                if (matchedTeam) {
-                  setAssignedTeam(matchedTeam);
-                  if (matchedMember?.role) {
-                    setAssignedRole(matchedMember.role);
-                  }
-                }
-              }
-            } catch {
-              // ignore
+            } else {
+              setAssignedTeam(null);
             }
           } else {
-            // Default demo squad for testing when teams haven't been generated yet
-            const defaultDemoSquad = {
-              id: 'TEAM-01',
-              name: 'Red Saboteurs',
-              track: 'Web Development',
-              tableNumber: 3,
-              members: [
-                { name: 'Cadet Explorer', collegeId: '210029012000001', branch: 'CSE', year: '1', section: 'A', suitColor: '#06B6D4', isPresent: true, role: 'crewmate' },
-                { name: 'Aarav Sharma', collegeId: '2100290120002', branch: 'CSE', year: '1', section: 'A', suitColor: '#EF4444', isPresent: true, role: 'crewmate' },
-                { name: 'Priya Verma', collegeId: '2100290120003', branch: 'ECE', year: '2', section: 'B', suitColor: '#84CC16', isPresent: true, role: 'crewmate' },
-                { name: 'Rohan Gupta', collegeId: '2100290120004', branch: 'IT', year: '2', section: 'A', suitColor: '#EAB308', isPresent: true, role: 'crewmate' },
-              ],
-            };
-            setAssignedTeam(defaultDemoSquad);
+            setAssignedTeam(null);
           }
-
-          // Check admin broadcast announcement
-          const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
-          if (broadcastStored && broadcastStored.length > 0) {
-            setAdminBroadcast(broadcastStored);
-          }
-        } catch (err) {
-          console.warn('Dashboard sync warning:', err);
+        } else {
+          setAssignedTeam(null);
         }
-      };
+      } catch (err) {
+        console.warn('Dashboard sync warning:', err);
+      }
+    };
 
-      syncTeamData();
+    syncTeamData();
 
-      // Direct MongoDB backend sync for squad & secret role (non-blocking)
-      const syncBackendSquad = async () => {
-        try {
-          const res = await teamService.getMyTeam();
-          if (res.success && res.team) {
-            setAssignedTeam(res.team as any);
-            if (res.myRole) {
-              setAssignedRole(res.myRole);
-            }
+    // Backend sync for squad & role
+    const syncBackendSquad = async () => {
+      try {
+        const res = await teamService.getMyTeam();
+        if (res.success && res.team) {
+          setAssignedTeam(res.team as any);
+          if (res.myRole) {
+            setAssignedRole(res.myRole);
           }
-        } catch {
-          // Fallback keeps local storage squad
         }
-      };
-      syncBackendSquad();
+      } catch {
+        // No squad assigned yet
+      }
+    };
+    syncBackendSquad();
 
-      // 1.5s real-time heartbeat: immediately reflects admin role assignments
-      const syncInterval = setInterval(syncTeamData, 1500);
+    const syncInterval = setInterval(syncTeamData, 2000);
+    window.addEventListener('storage', syncTeamData);
 
-      window.addEventListener('storage', syncTeamData);
-      window.addEventListener('focus', syncTeamData);
-      window.addEventListener('visibilitychange', syncTeamData);
-      window.addEventListener('amongu_teams_published_event', syncTeamData);
-      window.addEventListener('amongu_role_updated', syncTeamData);
-
-      return () => {
-        clearTimeout(safetyTimer);
-        clearInterval(syncInterval);
-        window.removeEventListener('storage', syncTeamData);
-        window.removeEventListener('focus', syncTeamData);
-        window.removeEventListener('visibilitychange', syncTeamData);
-        window.removeEventListener('amongu_teams_published_event', syncTeamData);
-        window.removeEventListener('amongu_role_updated', syncTeamData);
-      };
-    } catch (err) {
-      console.warn('Dashboard sync initialization warning:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('storage', syncTeamData);
+    };
+  }, [firebaseUser, profile, isRegistered, authLoading, router]);
 
   const handleSaveAvatar = () => {
     if (!ticket) return;
@@ -870,7 +810,7 @@ export default function UserDashboardPage() {
         )}
 
         {/* SQUAD / TEAM ASSIGNMENT MATRIX */}
-        {assignedTeam && (
+        {assignedTeam ? (
           <div className={`au-card rounded-3xl p-5 sm:p-6 space-y-5 relative overflow-hidden transition-all duration-500 ${theme.squadCard}`}>
             {/* Ambient Corner Glow */}
             <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none ${
@@ -1049,6 +989,21 @@ export default function UserDashboardPage() {
                 📋 COPY TEAM INFO
               </button>
             </div>
+          </div>
+        ) : (
+          <div className="au-card bg-gray-900/90 border-2 border-gray-800 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
+            <div className="w-16 h-16 bg-crew-cyan/20 border-2 border-crew-cyan rounded-full flex items-center justify-center mx-auto text-3xl">
+              🚀
+            </div>
+            <div className="max-w-md mx-auto space-y-2">
+              <h2 className="font-display text-2xl text-white">SQUAD ALLOCATION IN PROGRESS</h2>
+              <p className="text-gray-400 text-xs sm:text-sm font-mono leading-relaxed">
+                The Organizing Command Deck is balancing multi-disciplinary squads. Your assigned teammates, venue table number, and secret role will appear here as soon as Round 1 begins.
+              </p>
+            </div>
+            <span className="inline-block px-3 py-1 bg-black/60 border border-gray-700 rounded-full text-xs font-mono text-crew-lime font-bold">
+              ✓ Registration Confirmed • Stand by for team release
+            </span>
           </div>
         )}
 
