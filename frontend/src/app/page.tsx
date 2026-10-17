@@ -15,6 +15,33 @@ export default function AmongUHomePage() {
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [modalAuthError, setModalAuthError] = useState<string | null>(null);
 
+  // Countdown to October 28, 2026 (09:00 AM IST)
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  useEffect(() => {
+    const target = new Date('2026-10-28T09:00:00+05:30').getTime();
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const diff = Math.max(0, target - now);
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleRegisterClick = () => {
     if (!firebaseUser) {
       setModalAuthError(null);
@@ -321,9 +348,37 @@ export default function AmongUHomePage() {
               A Hackathon of Code, Creativity &amp; Sabotage
             </p>
 
-            <p className="text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto font-bold mb-8 bg-black/50 p-4 rounded-xl au-border">
-              November 2, 2026 • KIET Deemed to be University
+            <p className="text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto font-bold mb-6 bg-black/50 p-4 rounded-xl au-border">
+              October 28, 2026 • KIET Deemed to be University
             </p>
+
+            {/* Live Event Countdown to October 28, 2026 */}
+            <div className="mb-8 max-w-xl mx-auto w-full px-2">
+              <div className="bg-black/80 au-border rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(56,254,220,0.25)] border-2 border-crew-cyan">
+                <div className="flex items-center justify-center gap-2 text-crew-cyan font-mono text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-crew-lime animate-ping"></span>
+                  <span>MISSION LIFTOFF COUNTDOWN</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2 sm:gap-4 text-center">
+                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
+                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-lime">{timeLeft.days}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Days</div>
+                  </div>
+                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
+                    <div className="font-mono text-2xl sm:text-4xl font-black text-white">{timeLeft.hours.toString().padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Hours</div>
+                  </div>
+                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
+                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-cyan">{timeLeft.minutes.toString().padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Mins</div>
+                  </div>
+                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
+                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-yellow">{timeLeft.seconds.toString().padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Secs</div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-6">
               <button

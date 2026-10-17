@@ -262,6 +262,36 @@ export default function UserDashboardPage() {
   const [round2Submitted, setRound2Submitted] = useState(false);
   const [liveTimerSeconds, setLiveTimerSeconds] = useState<number>(4472);
 
+  // Target Event Countdown: October 28, 2026 (09:00 AM IST)
+  const [eventCountdown, setEventCountdown] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isPast: boolean;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
+
+  useEffect(() => {
+    const target = new Date('2026-10-28T09:00:00+05:30').getTime();
+    const updateCountdown = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        setEventCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true });
+      } else {
+        setEventCountdown({
+          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((diff / (1000 * 60)) % 60),
+          seconds: Math.floor((diff / 1000) % 60),
+          isPast: false,
+        });
+      }
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const { firebaseUser, profile, isRegistered, loading: authLoading } = useAuth();
 
   useEffect(() => {
@@ -1115,7 +1145,7 @@ export default function UserDashboardPage() {
             }`}>
               <span className={`w-2.5 h-2.5 rounded-full ${isImpostor ? 'bg-red-500' : 'bg-crew-lime'} animate-ping`}></span>
               <span className={`font-display text-xs ${isImpostor ? 'text-red-400' : 'text-crew-lime'}`}>
-                ROUND 1 IN PROGRESS
+                {!eventCountdown.isPast ? 'COUNTDOWN TO OCT 28' : 'ROUND 1 IN PROGRESS'}
               </span>
             </div>
           </div>
@@ -1129,26 +1159,38 @@ export default function UserDashboardPage() {
                 <span className={`text-xs px-2.5 py-0.5 rounded-full font-display ${
                   isImpostor ? 'bg-red-600 text-white' : 'bg-crew-lime text-black'
                 }`}>
-                  ACTIVE ROUND
+                  {!eventCountdown.isPast ? 'MISSION COUNTDOWN' : 'ACTIVE ROUND'}
                 </span>
-                <span className="text-gray-400 font-mono text-xs">Duration: 1h 15m</span>
+                <span className="text-gray-400 font-mono text-xs">
+                  {!eventCountdown.isPast ? 'Liftoff: October 28, 2026 (09:00 AM IST)' : 'Duration: 1h 15m'}
+                </span>
               </div>
-              <h3 className="font-display text-2xl text-white">ROUND 1: THE INFILTRATION &amp; ARCHITECTURE</h3>
+              <h3 className="font-display text-2xl text-white">
+                {!eventCountdown.isPast ? 'COUNTDOWN TO EVENT LIFTOFF (OCTOBER 28, 2026)' : 'ROUND 1: THE INFILTRATION & ARCHITECTURE'}
+              </h3>
               <p className="text-gray-300 text-sm font-bold max-w-2xl">
-                Teams unlock their problem statement within the track, spin up shared repositories, and establish system architecture. Stay alert: one crewmate is secretly designated the Impostor.
+                {!eventCountdown.isPast
+                  ? 'All cadet systems calibrated. Squad allocations, problem statements, and live challenges unlock on October 28, 2026. Keep your transmission channels open.'
+                  : 'Teams unlock their problem statement within the track, spin up shared repositories, and establish system architecture. Stay alert: one crewmate is secretly designated the Impostor.'}
               </p>
             </div>
 
             <div className={`au-border p-4 rounded-xl text-center shrink-0 ${
               isImpostor ? 'bg-red-950/50 border-red-800' : 'bg-gray-900'
             }`}>
-              <span className="text-[11px] text-gray-400 font-bold uppercase block">Chrono Remaining</span>
-              <span className={`font-mono font-bold text-2xl ${theme.roundTimerText}`}>
-                {Math.floor(liveTimerSeconds / 3600) > 0
-                  ? `${Math.floor(liveTimerSeconds / 3600).toString().padStart(2, '0')}:${Math.floor((liveTimerSeconds % 3600) / 60).toString().padStart(2, '0')}:${(liveTimerSeconds % 60).toString().padStart(2, '0')}`
-                  : `${Math.floor((liveTimerSeconds % 3600) / 60).toString().padStart(2, '0')}:${(liveTimerSeconds % 60).toString().padStart(2, '0')}`}
+              <span className="text-[11px] text-gray-400 font-bold uppercase block">
+                {!eventCountdown.isPast ? 'Liftoff Chrono' : 'Chrono Remaining'}
               </span>
-              <span className="text-[10px] text-gray-500 block mt-0.5">Admin Central Time Sync</span>
+              <span className={`font-mono font-bold text-2xl ${theme.roundTimerText}`}>
+                {!eventCountdown.isPast
+                  ? `${eventCountdown.days}d ${eventCountdown.hours.toString().padStart(2, '0')}h ${eventCountdown.minutes.toString().padStart(2, '0')}m ${eventCountdown.seconds.toString().padStart(2, '0')}s`
+                  : Math.floor(liveTimerSeconds / 3600) > 0
+                    ? `${Math.floor(liveTimerSeconds / 3600).toString().padStart(2, '0')}:${Math.floor((liveTimerSeconds % 3600) / 60).toString().padStart(2, '0')}:${(liveTimerSeconds % 60).toString().padStart(2, '0')}`
+                    : `${Math.floor((liveTimerSeconds % 3600) / 60).toString().padStart(2, '0')}:${(liveTimerSeconds % 60).toString().padStart(2, '0')}`}
+              </span>
+              <span className="text-[10px] text-gray-500 block mt-0.5">
+                {!eventCountdown.isPast ? 'Synced to October 28, 2026' : 'Admin Central Time Sync'}
+              </span>
             </div>
           </div>
 
@@ -1363,7 +1405,7 @@ export default function UserDashboardPage() {
               <ul className="text-sm font-bold text-gray-300 space-y-2.5">
                 <li className="flex items-center justify-between border-b border-gray-800 pb-1.5">
                   <span className="text-gray-400">Date:</span>
-                  <span className="text-white">November 2, 2026</span>
+                  <span className="text-white">October 28, 2026</span>
                 </li>
                 <li className="flex items-center justify-between border-b border-gray-800 pb-1.5">
                   <span className="text-gray-400">Duration:</span>
