@@ -119,10 +119,10 @@ class MailService {
   }
 
   /**
-   * Dispatch official boarding ticket confirmation email upon payment
+   * Dispatch clean registration confirmation email upon payment
    */
   async sendTicketEmail(toEmail: string, ticket: any): Promise<boolean> {
-    const subject = `🎉 [AmongU Ticket Confirmed] Welcome Aboard, Cadet ${ticket.name}!`;
+    const subject = `Registration Confirmed - AmongU Hackathon (${ticket.name})`;
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -131,49 +131,56 @@ class MailService {
       <meta charset="utf-8">
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0e14; color: #f3f4f6; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #111827; border: 3px solid #000; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .header { background: #117f2d; padding: 25px 20px; text-align: center; border-bottom: 3px solid #000; }
-        .header h1 { margin: 0; font-size: 26px; color: #ffffff; letter-spacing: 2px; }
-        .badge { display: inline-block; background: #000; color: #50ef39; font-weight: bold; font-size: 12px; padding: 4px 14px; border-radius: 9999px; margin-top: 8px; border: 1px solid #50ef39; }
-        .ticket-body { padding: 30px 25px; }
-        .ticket-card { background: #000000; border: 2px solid #50ef39; border-radius: 12px; padding: 20px; margin: 20px 0; }
-        .ticket-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #374151; font-size: 13px; }
-        .ticket-label { color: #9ca3af; font-weight: bold; }
-        .ticket-value { color: #ffffff; font-weight: bold; }
-        .footer { background: #0b0e14; padding: 20px; text-align: center; border-top: 2px solid #1f2937; font-size: 11px; color: #6b7280; }
+        .container { max-width: 560px; margin: 0 auto; background: #111827; border: 2px solid #374151; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .header { background: #1f2937; padding: 20px; text-align: center; border-bottom: 2px solid #374151; }
+        .header h1 { margin: 0; font-size: 22px; color: #ffffff; letter-spacing: 1px; }
+        .badge { display: inline-block; background: #064e3b; color: #34d399; font-weight: bold; font-size: 12px; padding: 4px 12px; border-radius: 9999px; margin-top: 6px; border: 1px solid #059669; }
+        .body-content { padding: 25px 20px; }
+        .summary-card { background: #000000; border: 1px solid #374151; border-radius: 10px; padding: 18px; margin: 18px 0; }
+        .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; font-size: 13px; }
+        .row:last-child { border-bottom: none; }
+        .label { color: #9ca3af; }
+        .val { color: #ffffff; font-weight: bold; }
+        .btn { display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px; padding: 12px 24px; border-radius: 8px; margin-top: 15px; }
+        .footer { background: #0b0e14; padding: 16px; text-align: center; border-top: 1px solid #1f2937; font-size: 11px; color: #6b7280; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h1>OFFICIAL BOARDING PASS</h1>
-          <span class="badge">CONFIRMED SEAT • ₹55 PAID</span>
+          <h1>AmongU Hackathon 2026</h1>
+          <span class="badge">REGISTRATION CONFIRMED • ₹55 PAID</span>
         </div>
-        <div class="ticket-body">
-          <p style="color: #38fedc; font-size: 16px; font-weight: bold; margin-top: 0;">
-            Congratulations, Cadet ${ticket.name}!
+        <div class="body-content">
+          <p style="color: #ffffff; font-size: 16px; font-weight: bold; margin-top: 0;">
+            Hello ${ticket.name},
           </p>
-          <p style="color: #d1d5db; font-size: 13px; line-height: 1.6;">
-            Your registration fee has been successfully cleared and your seat on the spacecraft is officially locked.
+          <p style="color: #d1d5db; font-size: 14px; line-height: 1.6;">
+            Your registration and payment for <strong>AmongU Hackathon</strong> have been successfully confirmed.
           </p>
           
-          <div class="ticket-card">
-            <div class="ticket-row"><span class="ticket-label">Event:</span><span class="ticket-value">AmongU Hackathon 2026</span></div>
-            <div class="ticket-row"><span class="ticket-label">Cadet Name:</span><span class="ticket-value">${ticket.name}</span></div>
-            <div class="ticket-row"><span class="ticket-label">College ID:</span><span class="ticket-value">${ticket.collegeId}</span></div>
-            <div class="ticket-row"><span class="ticket-label">Email:</span><span class="ticket-value">${toEmail}</span></div>
-            <div class="ticket-row"><span class="ticket-label">Branch &amp; Year:</span><span class="ticket-value">${ticket.branch} (Year ${ticket.year}, Sec ${ticket.section})</span></div>
-            <div class="ticket-row"><span class="ticket-label">Chosen Track:</span><span class="ticket-value">${ticket.track || 'Web Development'}</span></div>
-            <div class="ticket-row"><span class="ticket-label">Payment ID:</span><span class="ticket-value" style="color: #50ef39;">${ticket.paymentId || 'PAID_VERIFIED'}</span></div>
-            <div class="ticket-row" style="border-bottom: none;"><span class="ticket-label">Venue Date:</span><span class="ticket-value">November 2, 2026 • KIET University</span></div>
+          <div class="summary-card">
+            <div class="row"><span class="label">Participant Name:</span><span class="val">${ticket.name}</span></div>
+            <div class="row"><span class="label">College ID:</span><span class="val">${ticket.collegeId}</span></div>
+            <div class="row"><span class="label">Email Address:</span><span class="val">${toEmail}</span></div>
+            <div class="row"><span class="label">Department:</span><span class="val">${ticket.branch} (Year ${ticket.year}, Sec ${ticket.section})</span></div>
+            <div class="row"><span class="label">Chosen Track:</span><span class="val">${ticket.track || 'Web Development'}</span></div>
+            <div class="row"><span class="label">Payment ID:</span><span class="val" style="color: #34d399;">${ticket.paymentId || 'CONFIRMED'}</span></div>
+            <div class="row"><span class="label">Fee Paid:</span><span class="val">₹55.00 (INR)</span></div>
           </div>
 
-          <p style="color: #9ca3af; font-size: 12px; line-height: 1.6;">
-            💡 You can access your dynamic avatar and team allocations on your <a href="http://localhost:3000/dashboard" style="color: #38fedc; text-decoration: underline;">Mission Dashboard</a> anytime.
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="https://amongu.vercel.app/dashboard" class="btn" style="color: #ffffff;">
+              Go to Your Dashboard →
+            </a>
+          </div>
+
+          <p style="color: #9ca3af; font-size: 12px; line-height: 1.6; text-align: center;">
+            You can sign in anytime to view your team allocations, event schedule, and announcements.
           </p>
         </div>
         <div class="footer">
-          AmongU Hackathon 2026 • KIET Deemed to be University
+          AmongU Hackathon • KIET Deemed to be University, Ghaziabad
         </div>
       </div>
     </body>

@@ -394,9 +394,9 @@ export default function CadetClearancePortalPage() {
           {autoConfirmingPayment ? (
             <div className="au-card bg-gray-900 rounded-3xl p-8 text-center border-4 border-black">
               <div className="w-16 h-16 border-4 border-crew-lime border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <h2 className="font-display text-2xl text-crew-lime">PAYMENT DETECTED!</h2>
+              <h2 className="font-display text-2xl text-crew-lime">PAYMENT CONFIRMED!</h2>
               <p className="text-gray-300 text-sm mt-2">
-                Locking your seat in MongoDB and dispatching your QR Boarding Pass...
+                Recording your registration and taking you to your Mission Dashboard...
               </p>
             </div>
           ) : authLoading ? (
@@ -833,7 +833,7 @@ export default function CadetClearancePortalPage() {
                   </div>
 
                   <div className="bg-black/40 border border-gray-800 rounded-xl p-3 text-xs text-gray-400 text-center">
-                    🔒 Official checkout will open securely via Razorpay. After successful payment, your browser will return here automatically to receive your official QR Boarding Pass.
+                    🔒 Official checkout will open securely via Razorpay. After successful payment, your browser will return here automatically and take you straight to your Mission Dashboard.
                   </div>
 
                   <button
