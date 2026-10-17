@@ -7,7 +7,7 @@ interface ShhhIntroAnimationProps {
 }
 
 export default function ShhhIntroAnimation({ onComplete }: ShhhIntroAnimationProps) {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const [isFading, setIsFading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -23,7 +23,33 @@ export default function ShhhIntroAnimation({ onComplete }: ShhhIntroAnimationPro
     }, 600);
   }, [onComplete]);
 
+  // Only show once when the page loads for the first time
   useEffect(() => {
+    try {
+      const alreadySeen =
+        sessionStorage.getItem('amongu_intro_seen') ||
+        localStorage.getItem('amongu_intro_seen');
+      if (alreadySeen) {
+        onComplete?.();
+        return;
+      }
+    } catch {
+      // ignore storage errors
+    }
+
+    // First time viewing: activate splash screen and set flag
+    setIsVisible(true);
+    try {
+      sessionStorage.setItem('amongu_intro_seen', 'true');
+      localStorage.setItem('amongu_intro_seen', 'true');
+    } catch {
+      // ignore
+    }
+  }, [onComplete]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
     const video = videoRef.current;
     const audio = audioRef.current;
     if (!video) return;
@@ -39,7 +65,7 @@ export default function ShhhIntroAnimation({ onComplete }: ShhhIntroAnimationPro
       video.play().catch(() => {});
     });
 
-    // 2. Play shhh.mp3 by default on load/reload
+    // 2. Play shhh.mp3 by default on load
     const playAudio = () => {
       if (!audio) return;
       audio.muted = false;
@@ -54,7 +80,7 @@ export default function ShhhIntroAnimation({ onComplete }: ShhhIntroAnimationPro
     playAudio();
 
     // 3. Fallback: If browser autoplay policy delays audio on initial paint,
-    // trigger audio immediately on ANY subtle interaction (move, touch, key, click)
+    // trigger audio immediately on ANY subtle interaction
     const unlockAudio = () => {
       playAudio();
     };
@@ -62,16 +88,16 @@ export default function ShhhIntroAnimation({ onComplete }: ShhhIntroAnimationPro
     const interactionEvents = ['pointerdown', 'pointermove', 'touchstart', 'keydown', 'wheel', 'click', 'focus'];
     interactionEvents.forEach((evt) => window.addEventListener(evt, unlockAudio, { once: true, passive: true }));
 
-    // 4. Fallback timer so intro never hangs (video is 3.3s, timer 4.5s)
+    // 4. Safety timer so intro never hangs (video is 3.3s, timer 4.2s)
     const safetyTimer = setTimeout(() => {
       completeIntro();
-    }, 4500);
+    }, 4200);
 
     return () => {
       clearTimeout(safetyTimer);
       interactionEvents.forEach((evt) => window.removeEventListener(evt, unlockAudio));
     };
-  }, [completeIntro]);
+  }, [isVisible, completeIntro]);
 
   if (!isVisible) return null;
 
@@ -81,21 +107,7 @@ export default function ShhhIntroAnimation({ onComplete }: ShhhIntroAnimationPro
         isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      {/* Top bar controls: Skip button */}
-      <div className="absolute top-6 right-6 z-20">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            completeIntro();
-          }}
-          className="px-4 py-2 text-xs font-mono tracking-widest text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full border border-white/20 transition-all shadow-lg active:scale-95"
-        >
-          SKIP ⏩
-        </button>
-      </div>
-
-      {/* Video Container */}
+      {/* Video Container (Skip button removed per user specification) */}
       <div className="relative w-full h-full max-w-5xl max-h-screen flex items-center justify-center p-4">
         <video
           ref={videoRef}
@@ -116,7 +128,7 @@ export default function ShhhIntroAnimation({ onComplete }: ShhhIntroAnimationPro
         </video>
       </div>
 
-      {/* Synchronized Auxiliary Audio element - plays by default */}
+      {/* Synchronized Auxiliary Audio element */}
       <audio
         ref={audioRef}
         src="/audio/shhh.mp3"
