@@ -34,11 +34,13 @@ export interface VenueCheckInPayload {
   collegeId?: string;
   email?: string;
   uid?: string;
+  token?: string;
 }
 
 export interface VenueCheckInResponse {
   success: boolean;
   alreadyCheckedIn?: boolean;
+  isExpiredToken?: boolean;
   message: string;
   registration?: RegistrationRecord;
 }
@@ -82,5 +84,8 @@ export interface ConfirmedTicket extends RegistrationData {
   avatarMuffler?: string;
   withdrawalStatus?: string;
   assignedRole?: string;
+  isPresent?: boolean;
+  assignedTeamId?: string;
+  assignedTeamName?: string;
 }
 

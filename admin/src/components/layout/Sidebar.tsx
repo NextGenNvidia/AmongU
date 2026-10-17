@@ -3,8 +3,8 @@
 import React from 'react';
 
 interface SidebarProps {
-  currentTab?: 'users' | 'settings' | 'teams';
-  onSelectTab?: (tab: 'users' | 'settings' | 'teams') => void;
+  currentTab?: 'users' | 'settings' | 'teams' | 'venue-qr';
+  onSelectTab?: (tab: 'users' | 'settings' | 'teams' | 'venue-qr') => void;
   onLogout: () => void;
   totalUsersCount: number;
 }
@@ -89,13 +89,34 @@ export default function Sidebar({
           </span>
         </button>
 
-        {/* 3. EVENT SCHEDULE & SETTINGS TAB */}
+        {/* 3. VENUE ATTENDANCE QR TAB */}
+        <button
+          type="button"
+          onClick={() => onSelectTab?.('venue-qr')}
+          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-display tracking-wide transition-all text-left cursor-pointer ${
+            currentTab === 'venue-qr'
+              ? 'bg-crew-lime text-black shadow-[0_0_15px_rgba(80,239,57,0.4)] border border-crew-lime font-bold'
+              : 'text-gray-400 hover:text-white hover:bg-gray-900 border border-transparent'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+            </svg>
+            <span>Venue QR Pass</span>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-black/60 text-crew-lime">
+            Live QR
+          </span>
+        </button>
+
+        {/* 4. EVENT SCHEDULE & SETTINGS TAB */}
         <button
           type="button"
           onClick={() => onSelectTab?.('settings')}
           className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-display tracking-wide transition-all text-left cursor-pointer ${
             currentTab === 'settings'
-              ? 'bg-crew-lime text-black shadow-[0_0_15px_rgba(80,239,57,0.4)] border border-crew-lime font-bold'
+              ? 'bg-amber-400 text-black shadow-[0_0_15px_rgba(251,191,36,0.4)] border border-amber-400 font-bold'
               : 'text-gray-400 hover:text-white hover:bg-gray-900 border border-transparent'
           }`}
         >
@@ -105,7 +126,7 @@ export default function Sidebar({
             </svg>
             <span>Event Schedule</span>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-black/60 text-crew-lime">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-black/60 text-amber-400">
             Timers
           </span>
         </button>

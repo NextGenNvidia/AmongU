@@ -539,6 +539,7 @@ export const getAdminTeamsOverview = async (_req: Request, res: Response): Promi
       success: true,
       teams,
       unassignedCandidates,
+      unassignedMembers: unassignedCandidates,
       totalRegistered: allPaidRegistrations.length,
       assignedCount: assignedCollegeIds.size,
       unassignedCount: unassignedCandidates.length,

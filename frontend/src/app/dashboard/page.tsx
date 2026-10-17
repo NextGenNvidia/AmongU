@@ -153,6 +153,8 @@ export default function UserDashboardPage() {
             withdrawalDate: storedWithdrawalDate,
             assignedRole: (reg.assignedRole as any) || 'unassigned',
             assignedTeamId: reg.assignedTeamId,
+            assignedTeamName: reg.assignedTeamName,
+            isPresent: !!reg.isPresent,
           };
           setTicket(realTicket);
           localStorage.setItem('amongu_user_ticket', JSON.stringify(realTicket));
@@ -622,6 +624,132 @@ export default function UserDashboardPage() {
           </div>
         )}
 
+        {/* VENUE ATTENDANCE & ONBOARDING HERO CARD */}
+        {ticket?.isPresent ? (
+          <div className="rounded-3xl p-5 sm:p-7 border-2 border-crew-lime bg-gradient-to-r from-[#031c0c] via-black to-[#052b14] shadow-[0_0_40px_rgba(34,197,94,0.25)] space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-green-900/60 pb-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-green-950/80 border border-crew-lime flex items-center justify-center text-2xl shadow">
+                  📍
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-crew-lime animate-ping" />
+                    <span className="text-xs font-mono font-black text-crew-lime uppercase tracking-wider">
+                      VENUE ATTENDANCE CONFIRMED • ARENA PASS ACTIVE
+                    </span>
+                  </div>
+                  <h2 className="font-display text-2xl sm:text-3xl text-white tracking-tight mt-0.5">
+                    WELCOME ONBOARD, {ticket?.name?.toUpperCase()}!
+                  </h2>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3.5 py-1.5 rounded-xl bg-green-950 border border-crew-lime text-crew-lime font-mono font-bold text-xs flex items-center gap-2 shadow">
+                  <span className="text-sm">✓</span> PRESENT AT VENUE
+                </span>
+              </div>
+            </div>
+
+            <p className="text-green-100/90 text-xs sm:text-sm font-mono font-semibold">
+              Your physical presence at the KIET Deemed to be University arena has been logged by Mission Control. You are in the active squad draft pool for live squad formation and round challenges.
+            </p>
+
+            {/* Live Squad / Teammate Pairing Status */}
+            {assignedTeam ? (
+              <div className="bg-black/70 rounded-2xl p-4 border border-crew-lime/50 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">👥</span>
+                    <span className="font-display text-white text-base">
+                      PAIRED IN: <span className="text-crew-yellow font-black">{assignedTeam.name}</span> ({assignedTeam.id})
+                    </span>
+                  </div>
+                  <span className="text-xs font-mono font-bold text-crew-lime bg-green-950/80 px-3 py-1 rounded-lg border border-crew-lime/40">
+                    VENUE TABLE #{assignedTeam.tableNumber || assignedTeam.id.slice(-2)}
+                  </span>
+                </div>
+
+                {assignedTeam.members && assignedTeam.members.length > 0 && (
+                  <div>
+                    <span className="text-[11px] font-mono text-gray-400 uppercase tracking-wider block mb-2">
+                      Your Assigned Teammates:
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+                      {assignedTeam.members.map((m: any, idx: number) => {
+                        const isMe = (ticket && m.collegeId === ticket.collegeId) || (ticket && m.email?.toLowerCase() === ticket.email?.toLowerCase());
+                        return (
+                          <div
+                            key={m.collegeId || idx}
+                            className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-mono ${
+                              isMe ? 'bg-cyan-950/70 border-crew-cyan text-crew-cyan font-bold' : 'bg-gray-900 border-gray-800 text-gray-200'
+                            }`}
+                          >
+                            <span className="text-base">{isMe ? '⭐' : '👤'}</span>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-bold">{m.name} {isMe ? '(You)' : ''}</p>
+                              <p className="text-[10px] text-gray-400 truncate">{m.collegeId}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-1 flex items-center justify-end">
+                  <Link
+                    href="/squad"
+                    className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs py-2 px-4 rounded-xl flex items-center gap-1.5 font-bold shadow"
+                  >
+                    <span>OPEN FULL SQUAD TERMINAL &amp; COMMS 👥 →</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-black/60 rounded-2xl p-4 border border-yellow-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl animate-spin">⚙️</span>
+                  <div>
+                    <span className="text-xs font-mono font-bold text-crew-yellow uppercase tracking-wider">
+                      SQUAD ALLOCATION IN PROGRESS
+                    </span>
+                    <p className="text-xs text-gray-300 font-mono mt-0.5">
+                      Mission Control is drafting 4-cadet crews from verified present attendees. Your squad and table assignment will appear here and in the Squad tab shortly.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/squad"
+                  className="au-btn bg-gray-800 hover:bg-gray-700 text-white font-mono text-xs py-2 px-3.5 rounded-xl shrink-0 font-bold border border-gray-600"
+                >
+                  VIEW SQUAD DECK
+                </Link>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl p-3.5 sm:p-4 border border-yellow-700/60 bg-yellow-950/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📱</span>
+              <div>
+                <span className="text-xs font-mono font-bold text-crew-yellow uppercase tracking-wider">
+                  VENUE ATTENDANCE PENDING
+                </span>
+                <p className="text-xs text-gray-300 font-mono mt-0.5">
+                  Scan the Venue QR code displayed on the entry screen to log your presence and unlock live squad pairing.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/checkin"
+              className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-mono text-xs py-1.5 px-3.5 rounded-xl font-bold shrink-0 shadow"
+            >
+              SCAN / ENTER PASS
+            </Link>
+          </div>
+        )}
+
         {/* Welcome Banner + Live Avatar Preview */}
         <div className={`au-card rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden transition-all duration-500 ${theme.welcomeCard}`}>
           <div className="flex items-center gap-6">
@@ -648,6 +776,11 @@ export default function UserDashboardPage() {
                     ? '🛡️ VERIFIED CREWMATE'
                     : 'VERIFIED CREWMATE'}
                 </span>
+                {ticket?.isPresent && (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-crew-lime text-black font-mono font-black border border-black shadow">
+                    ✓ PRESENT AT VENUE
+                  </span>
+                )}
               </div>
               <p className="text-gray-300 font-bold text-sm sm:text-base mt-2">
                 Your drop-ship seat is confirmed for <span className={isImpostor ? 'text-red-400 font-bold' : 'text-crew-cyan font-bold'}>AmongU</span> at KIET Deemed to be University.

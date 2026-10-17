@@ -4,6 +4,7 @@ import { env } from '../config/env';
 import { razorpayInstance } from '../config/razorpay';
 import { Registration } from '../models/Registration';
 import { User } from '../models/User';
+import { EventConfig } from '../models/EventConfig';
 import { mailService } from '../services/mail.service';
 
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
@@ -254,15 +255,29 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
 
 export const venueCheckIn = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { collegeId, email, uid } = req.body;
+    const { collegeId, email, uid, token } = req.body;
     const targetUid = req.user?.uid || uid;
+    const targetEmail = (req.user?.email || email || '').toLowerCase().trim();
+
+    // 1. If a security token is provided, validate it against active QR session token
+    if (token) {
+      const config = await EventConfig.findOne({ key: 'main_event' });
+      if (config && config.activeCheckInToken && config.activeCheckInToken !== token) {
+        res.status(400).json({
+          success: false,
+          isExpiredToken: true,
+          message: 'This Venue Check-in QR pass has expired. Please scan the current QR code on the organizer screen.',
+        });
+        return;
+      }
+    }
 
     const queries: any[] = [];
     if (collegeId && typeof collegeId === 'string' && collegeId.trim()) {
       queries.push({ collegeId: new RegExp(`^${collegeId.trim()}$`, 'i') });
     }
-    if (email && typeof email === 'string' && email.trim()) {
-      queries.push({ email: email.trim().toLowerCase() });
+    if (targetEmail) {
+      queries.push({ email: targetEmail });
     }
     if (targetUid && typeof targetUid === 'string' && targetUid.trim()) {
       queries.push({ firebaseUid: targetUid.trim() });
@@ -271,7 +286,7 @@ export const venueCheckIn = async (req: Request, res: Response): Promise<void> =
     if (queries.length === 0) {
       res.status(400).json({
         success: false,
-        message: 'Please provide your College ID or registered Email address to check in.',
+        message: 'Please sign in or provide your College ID / registered Email address to check in.',
       });
       return;
     }

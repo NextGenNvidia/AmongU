@@ -8,6 +8,8 @@ export interface IEventConfig extends Document {
   registrationOpen: boolean;
   registrationFeeINR: number;
   prizePool: string;
+  activeCheckInToken?: string;
+  checkInTokenUpdatedAt?: Date;
   updatedAt: Date;
   createdAt: Date;
 }
@@ -48,6 +50,15 @@ const eventConfigSchema = new Schema<IEventConfig>(
       type: String,
       default: '₹10,000',
       trim: true,
+    },
+    activeCheckInToken: {
+      type: String,
+      default: 'venue_pass_init',
+      trim: true,
+    },
+    checkInTokenUpdatedAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   {

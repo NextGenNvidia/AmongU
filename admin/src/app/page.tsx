@@ -6,6 +6,7 @@ import Sidebar from '../components/layout/Sidebar';
 import UsersRoster from '../components/users/UsersRoster';
 import EventSettings from '../components/settings/EventSettings';
 import TeamsManager from '../components/teams/TeamsManager';
+import VenueQRPass from '../components/venue/VenueQRPass';
 import { adminService } from '../services/admin.service';
 import { LoggedInUserRecord } from '../types';
 
@@ -13,7 +14,7 @@ export default function AdminDashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'users' | 'settings' | 'teams'>('users');
+  const [currentTab, setCurrentTab] = useState<'users' | 'settings' | 'teams' | 'venue-qr'>('users');
 
   // Users State
   const [users, setUsers] = useState<LoggedInUserRecord[]>([]);
@@ -152,11 +153,29 @@ export default function AdminDashboardPage() {
 
             <button
               onClick={() => {
+                setCurrentTab('venue-qr');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-display text-sm ${
+                currentTab === 'venue-qr' ? 'bg-crew-lime text-black font-bold' : 'bg-gray-900 text-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+                <span>Venue QR Pass</span>
+              </div>
+              <span className="text-xs font-mono text-crew-lime">Live QR</span>
+            </button>
+
+            <button
+              onClick={() => {
                 setCurrentTab('settings');
                 setMobileMenuOpen(false);
               }}
               className={`w-full flex items-center justify-between p-3 rounded-xl font-display text-sm ${
-                currentTab === 'settings' ? 'bg-crew-lime text-black font-bold' : 'bg-gray-900 text-gray-300'
+                currentTab === 'settings' ? 'bg-amber-400 text-black font-bold' : 'bg-gray-900 text-gray-300'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -165,7 +184,7 @@ export default function AdminDashboardPage() {
                 </svg>
                 <span>Event Schedule</span>
               </div>
-              <span className="text-xs font-mono text-crew-lime">Timers</span>
+              <span className="text-xs font-mono text-amber-400">Timers</span>
             </button>
 
             <button
@@ -191,6 +210,8 @@ export default function AdminDashboardPage() {
             />
           ) : currentTab === 'teams' ? (
             <TeamsManager />
+          ) : currentTab === 'venue-qr' ? (
+            <VenueQRPass onCheckInUpdate={loadUsers} />
           ) : (
             <EventSettings />
           )}

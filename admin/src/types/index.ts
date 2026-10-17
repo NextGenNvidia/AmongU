@@ -44,6 +44,7 @@ export interface TeamMember {
   section: string;
   role: 'crewmate' | 'impostor';
   suitColor: string;
+  isPresent?: boolean;
 }
 
 export interface TeamRecord {

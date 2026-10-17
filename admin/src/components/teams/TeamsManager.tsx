@@ -53,6 +53,7 @@ interface UnassignedCandidate {
   section: string;
   phone?: string;
   registeredAt?: string;
+  isPresent?: boolean;
 }
 
 export default function TeamsManager() {
@@ -64,6 +65,7 @@ export default function TeamsManager() {
   const [teams, setTeams] = useState<TeamRecord[]>([]);
   const [unassigned, setUnassigned] = useState<UnassignedCandidate[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [filterPresentOnly, setFilterPresentOnly] = useState<boolean>(false);
 
   // Drag and drop state
   const [draggedCadet, setDraggedCadet] = useState<{
@@ -80,7 +82,8 @@ export default function TeamsManager() {
       const res = await adminService.getTeamsOverview();
       if (res && res.success) {
         setTeams(res.teams || []);
-        setUnassigned(res.unassignedMembers || []);
+        const rawUnassigned = res.unassignedMembers || (res as any).unassignedCandidates || [];
+        setUnassigned(rawUnassigned);
         setHasUnsavedChanges(false);
       }
     } catch (err: any) {
@@ -113,6 +116,7 @@ export default function TeamsManager() {
           branch: m.branch,
           year: m.year,
           section: m.section,
+          isPresent: m.isPresent,
         });
       });
     });
@@ -122,11 +126,24 @@ export default function TeamsManager() {
       return;
     }
 
+    let poolToSquad = allCandidates;
+    let excludedAbsent: UnassignedCandidate[] = [];
+
+    if (filterPresentOnly) {
+      poolToSquad = allCandidates.filter((c) => c.isPresent);
+      excludedAbsent = allCandidates.filter((c) => !c.isPresent);
+
+      if (poolToSquad.length === 0) {
+        alert('No cadets marked as PRESENT at the venue yet. Scan the Venue QR Pass first or uncheck "Present Cadets Only".');
+        return;
+      }
+    }
+
     // Shuffle candidates randomly for fair and exciting distribution
-    const shuffled = [...allCandidates].sort(() => Math.random() - 0.5);
+    const shuffled = [...poolToSquad].sort(() => Math.random() - 0.5);
 
     const newTeams: TeamRecord[] = [];
-    const remainingUnassigned: UnassignedCandidate[] = [];
+    const remainingUnassigned: UnassignedCandidate[] = [...excludedAbsent];
 
     let teamCounter = 1;
     for (let i = 0; i < shuffled.length; i += 4) {
@@ -399,6 +416,9 @@ export default function TeamsManager() {
 
   const totalAssigned = teams.reduce((acc, t) => acc + t.members.length, 0);
   const totalCadets = totalAssigned + unassigned.length;
+  const presentCadetsCount =
+    teams.reduce((acc, t) => acc + t.members.filter((m) => m.isPresent).length, 0) +
+    unassigned.filter((u) => u.isPresent).length;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -415,7 +435,7 @@ export default function TeamsManager() {
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-gray-400 font-mono mt-1">
-              Assemble 4-cadet squads with 1-click. Slide remaining or custom members into any team. Appoint secret Impostors visible only to the chosen cadet.
+              Assemble 4-cadet squads with 1-click. Filter by venue attendance. Slide members into any team. Appoint secret Impostors visible only to the chosen cadet.
             </p>
           </div>
 
@@ -424,6 +444,10 @@ export default function TeamsManager() {
             <div className="bg-black/60 border border-gray-800 rounded-xl px-3.5 py-2">
               <span className="text-[10px] text-gray-400 block uppercase">Total Registered</span>
               <span className="text-lg font-bold text-white">{totalCadets}</span>
+            </div>
+            <div className="bg-black/60 border border-crew-lime/40 rounded-xl px-3.5 py-2">
+              <span className="text-[10px] text-crew-lime block uppercase">Present at Venue</span>
+              <span className="text-lg font-bold text-crew-lime">{presentCadetsCount}</span>
             </div>
             <div className="bg-black/60 border border-crew-cyan/40 rounded-xl px-3.5 py-2">
               <span className="text-[10px] text-crew-cyan block uppercase">In Squads</span>
@@ -454,6 +478,19 @@ export default function TeamsManager() {
               </svg>
               <span>1-CLICK AUTO-GENERATE (TEAMS OF 4)</span>
             </button>
+
+            {/* Present Only Toggle */}
+            <label className="flex items-center gap-2 bg-black/60 border border-gray-700 hover:border-crew-lime px-3 py-2 rounded-xl cursor-pointer text-xs font-mono transition-colors select-none">
+              <input
+                type="checkbox"
+                checked={filterPresentOnly}
+                onChange={(e) => setFilterPresentOnly(e.target.checked)}
+                className="accent-crew-lime w-4 h-4 cursor-pointer"
+              />
+              <span className={filterPresentOnly ? 'text-crew-lime font-bold' : 'text-gray-300'}>
+                🎯 Present Cadets Only ({presentCadetsCount})
+              </span>
+            </label>
 
             {/* Add Squad */}
             <button
@@ -595,9 +632,20 @@ export default function TeamsManager() {
                       <p className="text-[10px] font-mono text-gray-400 truncate">{cadet.collegeId}</p>
                     </div>
                   </div>
-                  <span className="text-[9px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
-                    {cadet.branch} {cadet.year}-{cadet.section}
-                  </span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-[9px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                      {cadet.branch} {cadet.year}-{cadet.section}
+                    </span>
+                    <span
+                      className={`text-[8px] font-mono px-1 py-0.2 rounded font-bold ${
+                        cadet.isPresent
+                          ? 'bg-emerald-950 text-crew-lime border border-crew-lime/60'
+                          : 'bg-gray-800 text-gray-400 border border-gray-700'
+                      }`}
+                    >
+                      {cadet.isPresent ? '✓ PRESENT' : 'NOT HERE'}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Quick Slide Selector for Touch & Fast Assignment */}
@@ -788,6 +836,11 @@ export default function TeamsManager() {
                                     {isImpostor && (
                                       <span className="text-[9px] bg-red-950 text-crew-red border border-crew-red/60 px-1 py-0.2 rounded font-mono font-bold uppercase tracking-wider shrink-0">
                                         IMPOSTOR
+                                      </span>
+                                    )}
+                                    {member.isPresent && (
+                                      <span className="text-[8px] bg-emerald-950 text-crew-lime border border-crew-lime/60 px-1 py-0.2 rounded font-mono font-bold shrink-0">
+                                        ✓ PRESENT
                                       </span>
                                     )}
                                   </div>

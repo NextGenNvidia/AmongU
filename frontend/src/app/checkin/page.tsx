@@ -1,20 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { registrationService } from '../../services/registration.service';
 import { RegistrationRecord } from '../../types/registration';
 
-export default function CheckInPage() {
-  const { firebaseUser, profile, loading: authLoading } = useAuth();
+function CheckInContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') || '';
+
+  const { firebaseUser, loginWithGoogle, loading: authLoading } = useAuth();
 
   const [studentIdInput, setStudentIdInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [signingIn, setSigningIn] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isExpiredToken, setIsExpiredToken] = useState<boolean>(false);
   const [checkedInUser, setCheckedInUser] = useState<RegistrationRecord | null>(null);
   const [alreadyPresent, setAlreadyPresent] = useState<boolean>(false);
-  const [statusMessage, setStatusMessage] = useState<string>('');
 
   // Check if current user already has a local ticket marked present
   useEffect(() => {
@@ -25,7 +31,6 @@ export default function CheckInPage() {
         if (ticket.collegeId && ticket.isPresent) {
           setCheckedInUser(ticket);
           setAlreadyPresent(true);
-          setStatusMessage(`Welcome back! You are already checked in at the venue.`);
         } else if (ticket.collegeId && !studentIdInput) {
           setStudentIdInput(ticket.collegeId);
         }
@@ -35,19 +40,22 @@ export default function CheckInPage() {
     }
   }, []);
 
-  const handlePerformCheckIn = async (lookupData: { collegeId?: string; email?: string; uid?: string }) => {
+  const handlePerformCheckIn = async (lookupData: { collegeId?: string; email?: string; uid?: string; token?: string }) => {
     setLoading(true);
     setErrorMsg(null);
+    setIsExpiredToken(false);
 
     try {
-      const res = await registrationService.venueCheckIn(lookupData);
+      const res = await registrationService.venueCheckIn({
+        ...lookupData,
+        token: token || lookupData.token || undefined,
+      });
 
       if (res.success && res.registration) {
         setCheckedInUser(res.registration);
         setAlreadyPresent(Boolean(res.alreadyCheckedIn));
-        setStatusMessage(res.message);
 
-        // Sync with user's local ticket storage for their dashboard
+        // Sync with local user ticket
         try {
           const ticketRaw = localStorage.getItem('amongu_user_ticket');
           const ticket = ticketRaw ? JSON.parse(ticketRaw) : {};
@@ -63,362 +71,299 @@ export default function CheckInPage() {
           // ignore
         }
       } else {
+        if (res.isExpiredToken) {
+          setIsExpiredToken(true);
+        }
         setErrorMsg(res.message || 'Check-in failed. Please verify your details.');
       }
     } catch (err: any) {
-      if (err?.response?.data?.message) {
-        setErrorMsg(err.response.data.message);
-      } else {
-        // Dev / Standalone fallback mode (offline or local dev)
-        const collegeId = lookupData.collegeId?.toLowerCase().trim();
-        const email = lookupData.email?.toLowerCase().trim();
-
-        // 1. Check local user ticket
-        let foundCandidate: any = null;
-        try {
-          const ticketRaw = localStorage.getItem('amongu_user_ticket');
-          if (ticketRaw) {
-            const ticket = JSON.parse(ticketRaw);
-            if (
-              (collegeId && ticket.collegeId?.toLowerCase() === collegeId) ||
-              (email && ticket.email?.toLowerCase() === email)
-            ) {
-              foundCandidate = ticket;
-            }
-          }
-        } catch {
-          // ignore
-        }
-
-        // 2. Check seed candidates list
-        if (!foundCandidate) {
-          const seedCandidates = [
-            {
-              name: 'Aarav Sharma',
-              collegeId: '220029012001001',
-              year: '2' as const,
-              branch: 'CSE',
-              section: 'A' as const,
-              phone: '9810123456',
-              email: 'aarav.220029012@kiet.edu',
-              paymentStatus: 'success' as const,
-            },
-            {
-              name: 'Priya Verma',
-              collegeId: '230029013002014',
-              year: '1' as const,
-              branch: 'AIML',
-              section: 'B' as const,
-              phone: '9876543210',
-              email: 'priya.230029013@kiet.edu',
-              paymentStatus: 'success' as const,
-            },
-            {
-              name: 'Rohan Gupta',
-              collegeId: '220029010003055',
-              year: '2' as const,
-              branch: 'IT',
-              section: 'A' as const,
-              phone: '9123456780',
-              email: 'rohan.220029010@kiet.edu',
-              paymentStatus: 'success' as const,
-            },
-            {
-              name: 'Ananya Srivastava',
-              collegeId: '230029012004092',
-              year: '1' as const,
-              branch: 'CSE',
-              section: 'C' as const,
-              phone: '9988776655',
-              email: 'ananya.230029012@kiet.edu',
-              paymentStatus: 'pending' as const,
-            },
-          ];
-
-          foundCandidate = seedCandidates.find(
-            (c) =>
-              (collegeId && c.collegeId.toLowerCase() === collegeId) ||
-              (email && c.email.toLowerCase() === email)
-          );
-        }
-
-        if (foundCandidate) {
-          if (foundCandidate.paymentStatus !== 'success') {
-            setErrorMsg(
-              `Registration found for ${foundCandidate.name}, but payment status is "${foundCandidate.paymentStatus}". Please complete fee payment to check in.`
-            );
-          } else {
-            let attendanceMap: Record<string, boolean> = {};
-            try {
-              const mapRaw = localStorage.getItem('amongu_attendance_map');
-              if (mapRaw) attendanceMap = JSON.parse(mapRaw);
-            } catch {
-              // ignore
-            }
-
-            const wasPresent = Boolean(attendanceMap[foundCandidate.collegeId]);
-            attendanceMap[foundCandidate.collegeId] = true;
-            localStorage.setItem('amongu_attendance_map', JSON.stringify(attendanceMap));
-
-            // Sync with local user ticket if matching
-            try {
-              const ticketRaw = localStorage.getItem('amongu_user_ticket');
-              if (ticketRaw) {
-                const ticket = JSON.parse(ticketRaw);
-                if (ticket.collegeId === foundCandidate.collegeId) {
-                  ticket.isPresent = true;
-                  localStorage.setItem('amongu_user_ticket', JSON.stringify(ticket));
-                }
-              }
-            } catch {
-              // ignore
-            }
-
-            setCheckedInUser({
-              _id: foundCandidate.collegeId,
-              userId: 'u_' + foundCandidate.collegeId,
-              firebaseUid: 'f_' + foundCandidate.collegeId,
-              name: foundCandidate.name,
-              collegeId: foundCandidate.collegeId,
-              year: foundCandidate.year,
-              branch: foundCandidate.branch,
-              section: foundCandidate.section,
-              phone: foundCandidate.phone || '9876543210',
-              email: foundCandidate.email,
-              amount: 55,
-              paymentStatus: 'success',
-              paymentMethod: 'razorpay',
-              isPresent: true,
-              verifiedAt: new Date().toISOString(),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            });
-            setAlreadyPresent(wasPresent);
-            setStatusMessage(
-              wasPresent
-                ? `Participant ${foundCandidate.name} is already checked in.`
-                : `Check-in verified! Welcome to AmongU venue, ${foundCandidate.name}.`
-            );
-          }
-        } else {
-          setErrorMsg(
-            'No registration found matching the provided details. Please check your College ID or visit the registration desk.'
-          );
-        }
+      const respData = err?.response?.data;
+      if (respData?.isExpiredToken) {
+        setIsExpiredToken(true);
       }
+      setErrorMsg(respData?.message || err?.message || 'Check-in failed. Please verify your details.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  // Auto-check in if user is already logged in with Google and token is present
+  useEffect(() => {
+    if (firebaseUser && !checkedInUser && !loading && !alreadyPresent) {
+      handlePerformCheckIn({
+        email: firebaseUser.email || undefined,
+        uid: firebaseUser.uid,
+        token,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firebaseUser, token]);
+
+  const handleGoogleSignInAndCheckIn = async () => {
+    try {
+      setSigningIn(true);
+      setErrorMsg(null);
+      const user = await loginWithGoogle();
+      if (user && user.email) {
+        await handlePerformCheckIn({
+          email: user.email,
+          uid: user.firebaseUid,
+          token,
+        });
+      }
+    } catch (err: any) {
+      console.error('Google Sign-in Check-in Error:', err);
+      setErrorMsg(err?.message || 'Failed to sign in with Google. Please ensure you use your @kiet.edu account.');
+    } finally {
+      setSigningIn(false);
+    }
+  };
+
+  const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!studentIdInput.trim()) {
       setErrorMsg('Please enter your College ID or KIET Email');
       return;
     }
-
-    const inputVal = studentIdInput.trim();
-    if (inputVal.includes('@')) {
-      handlePerformCheckIn({ email: inputVal });
+    const val = studentIdInput.trim();
+    if (val.includes('@')) {
+      handlePerformCheckIn({ email: val, token });
     } else {
-      handlePerformCheckIn({ collegeId: inputVal });
-    }
-  };
-
-  const handleAutoCheckInWithAuth = () => {
-    if (firebaseUser?.uid) {
-      handlePerformCheckIn({
-        uid: firebaseUser.uid,
-        email: firebaseUser.email || undefined,
-      });
+      handlePerformCheckIn({ collegeId: val, token });
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-crew-lime selection:text-black flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-space text-white selection:bg-crew-lime selection:text-black flex flex-col justify-between p-4 relative overflow-hidden font-body">
       {/* Background Ambience */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-950/20 via-black to-black pointer-events-none" />
+      <div className="stars pointer-events-none" />
+      <div className="twinkling pointer-events-none" />
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-crew-lime/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-crew-cyan/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Main Container */}
-      <div className="w-full max-w-lg relative z-10">
-        {/* Top Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-crew-lime/10 border border-crew-lime/30 text-crew-lime text-xs font-mono font-bold uppercase tracking-wider mb-3">
-            <span className="w-2 h-2 rounded-full bg-crew-lime animate-ping" />
-            VENUE MISSION ACCESS • KIET UNIVERSITY
-          </div>
-          <h1 className="font-display text-3xl sm:text-4xl text-white font-bold tracking-tight">
-            AMONG<span className="text-crew-red">U</span> VENUE CHECK-IN
-          </h1>
-          <p className="text-gray-400 font-mono text-xs sm:text-sm mt-1">
-            Confirm your presence at the event arena for squad allocation
-          </p>
+      {/* Top Navbar */}
+      <header className="relative z-50 border-b-4 border-black bg-space/90 backdrop-blur-md max-w-6xl mx-auto w-full px-4 h-20 flex items-center justify-between rounded-2xl mb-4">
+        <Link href="/" className="font-display text-2xl md:text-3xl text-white tracking-wider flex items-center gap-2">
+          <svg width="28" height="34" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M70,100 v10 a10,10 0 0,1 -20,0 v-10 h-10 v10 a10,10 0 0,1 -20,0 v-10 C10,95 10,70 10,60 v-20 C10,15 30,10 45,10 c15,0 35,5 35,30 v20 C80,70 80,95 70,100 Z"
+              fill="#50ef39"
+              stroke="#000"
+              strokeWidth="6"
+            />
+            <path
+              d="M35,30 h40 a15,15 0 0,1 15,15 v5 a15,15 0 0,1 -15,15 h-40 a15,15 0 0,1 -15,-15 v-5 a15,15 0 0,1 15,-15 Z"
+              fill="#9cdbfa"
+              stroke="#000"
+              strokeWidth="6"
+            />
+          </svg>
+          <span className="text-crew-lime font-black" style={{ textShadow: '2px 2px 0 #000, -1px -1px 0 #fff' }}>
+            AMONG
+          </span>
+          U
+        </Link>
+
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard" className="text-xs font-mono text-gray-300 hover:text-white underline">
+            Dashboard
+          </Link>
+          <Link href="/" className="text-xs font-mono text-gray-300 hover:text-white underline">
+            Home
+          </Link>
         </div>
+      </header>
 
-        {/* Success Card */}
+      {/* Main Container */}
+      <main className="w-full max-w-lg mx-auto relative z-10 my-auto">
+        {/* State 1: Checked In Successfully */}
         {checkedInUser ? (
-          <div className="bg-gray-950 border-2 border-crew-lime rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(50,205,50,0.25)] relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-crew-lime text-black font-mono font-extrabold text-[10px] uppercase px-4 py-1 rounded-bl-xl tracking-wider">
-              {alreadyPresent ? 'ALREADY PRESENT' : 'VERIFIED PRESENT'}
-            </div>
-
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-crew-lime/20 border-2 border-crew-lime flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(50,205,50,0.3)]">
-                ✅
-              </div>
-              <div>
-                <span className="text-xs font-mono text-crew-lime font-bold uppercase tracking-wider block">
-                  ATTENDANCE CONFIRMED
-                </span>
-                <h2 className="font-display text-2xl text-white font-bold tracking-tight">
-                  {checkedInUser.name}
-                </h2>
-                <span className="text-xs font-mono text-gray-400">
-                  ID: {checkedInUser.collegeId}
+          <div className="au-card bg-gray-950/95 border-4 border-crew-lime rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(80,239,57,0.3)] relative overflow-hidden animate-fadeIn">
+            {/* Top Pill */}
+            <div className="flex justify-center mb-5">
+              <div className="inline-flex items-center gap-2 bg-emerald-950 border border-crew-lime px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(80,239,57,0.4)]">
+                <span className="w-2.5 h-2.5 rounded-full bg-crew-lime animate-ping" />
+                <span className="font-mono text-xs font-bold text-crew-lime uppercase tracking-wider">
+                  {alreadyPresent ? 'ALREADY MARKED PRESENT' : 'ATTENDANCE CONFIRMED • SEAT LOCKED'}
                 </span>
               </div>
             </div>
 
-            {/* Candidate Details Grid */}
-            <div className="grid grid-cols-2 gap-3 bg-gray-900/80 border border-gray-800 rounded-2xl p-4 mb-6 text-xs font-mono">
-              <div>
-                <span className="text-gray-500 uppercase block text-[10px]">Department</span>
-                <span className="text-white font-bold text-sm">{checkedInUser.branch}</span>
+            {/* Cadet Greeting */}
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-crew-lime/20 border-4 border-crew-lime mx-auto rounded-3xl flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(80,239,57,0.5)]">
+                <span className="text-4xl">🎉</span>
               </div>
-              <div>
-                <span className="text-gray-500 uppercase block text-[10px]">Academic Year</span>
-                <span className="text-white font-bold text-sm">Year {checkedInUser.year}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 uppercase block text-[10px]">Section</span>
-                <span className="text-white font-bold text-sm">Section {checkedInUser.section}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 uppercase block text-[10px]">Registration Status</span>
-                <span className="text-crew-lime font-bold text-sm uppercase">VERIFIED</span>
-              </div>
-            </div>
-
-            {/* Mission Protocol Alert */}
-            <div className="bg-green-950/40 border border-crew-lime/30 rounded-2xl p-4 mb-6 text-xs font-mono text-gray-300">
-              <p className="text-crew-lime font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
-                <span>🚀 SQUAD FORMATION STATUS:</span>
-              </p>
-              <p className="text-gray-400 leading-relaxed">
-                You are registered as present in the central Monitoring Console! When Round 1 starts, you will be assigned to a 4-member random crew.
+              <h1 className="font-display text-3xl sm:text-4xl text-white tracking-wide" style={{ textShadow: '2px 2px 0 #000' }}>
+                YOU ARE <span className="text-crew-lime">PRESENT</span>!
+              </h1>
+              <p className="text-gray-300 font-mono text-xs sm:text-sm mt-1">
+                Welcome onboard, <span className="text-white font-bold">{checkedInUser.name}</span>. Your attendance is recorded in the Organizer Deck.
               </p>
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/dashboard"
-                className="flex-1 py-3 px-4 rounded-xl bg-crew-lime hover:bg-lime-400 text-black font-display font-bold text-center text-sm shadow-[0_0_20px_rgba(50,205,50,0.3)] transition-all"
+            {/* Details Box */}
+            <div className="bg-black/60 border border-gray-800 rounded-2xl p-4 mb-6 space-y-2.5 font-mono text-xs">
+              <div className="flex justify-between items-center pb-2 border-b border-gray-800">
+                <span className="text-gray-400">Cadet Name:</span>
+                <span className="text-white font-bold">{checkedInUser.name}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-gray-800">
+                <span className="text-gray-400">College ID:</span>
+                <span className="text-crew-cyan font-bold">{checkedInUser.collegeId}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-gray-800">
+                <span className="text-gray-400">Department / Sec:</span>
+                <span className="text-white">{checkedInUser.branch} (Year {checkedInUser.year}, Sec {checkedInUser.section})</span>
+              </div>
+              <div className="flex justify-between items-center pt-1">
+                <span className="text-gray-400">Squad Formation:</span>
+                <span className="text-crew-lime font-bold">READY FOR ALLOCATION</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard')}
+                className="w-full au-btn bg-crew-lime hover:bg-lime-400 text-black font-display text-lg py-4 px-6 rounded-2xl flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(80,239,57,0.8)] active:scale-[0.98] transition-all cursor-pointer font-bold"
               >
-                GO TO MY DASHBOARD →
-              </Link>
-              <Link
-                href="/"
-                className="py-3 px-4 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-300 font-mono text-xs font-bold text-center transition-all"
-              >
-                EVENT HOME
-              </Link>
+                <span>PROCEED TO DASHBOARD →</span>
+              </button>
+
+              <div className="text-center">
+                <Link href="/squad" className="text-xs font-mono text-crew-cyan hover:underline inline-flex items-center gap-1">
+                  <span>View Squad Command Deck</span>
+                  <span>→</span>
+                </Link>
+              </div>
             </div>
           </div>
-        ) : (
-          /* Check-In Form Card */
-          <div className="bg-gray-950 border border-gray-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
-            {/* Logged in shortcut */}
-            {firebaseUser && (
-              <div className="mb-6 p-4 rounded-2xl bg-cyan-950/30 border border-crew-cyan/40">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono text-crew-cyan font-bold uppercase tracking-wider">
-                    LOGGED-IN GOOGLE ACCOUNT
-                  </span>
-                  <span className="w-2 h-2 rounded-full bg-crew-cyan animate-pulse" />
-                </div>
-                <p className="text-white text-sm font-bold truncate">
-                  {profile?.name || firebaseUser.displayName || 'Participant'}
-                </p>
-                <p className="text-xs font-mono text-gray-400 truncate mb-3">
-                  {firebaseUser.email}
-                </p>
-                <button
-                  onClick={handleAutoCheckInWithAuth}
-                  disabled={loading}
-                  className="w-full py-2.5 px-4 rounded-xl bg-crew-cyan/20 hover:bg-crew-cyan text-crew-cyan hover:text-black border border-crew-cyan text-xs font-mono font-bold transition-all disabled:opacity-50"
-                >
-                  {loading ? 'VERIFYING...' : '⚡ INSTANT CHECK-IN WITH THIS ACCOUNT'}
-                </button>
+        ) : loading ? (
+          /* State 2: Verification In Progress */
+          <div className="au-card bg-gray-950/95 border-4 border-black rounded-3xl p-10 text-center">
+            <div className="w-16 h-16 border-4 border-crew-lime border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <h2 className="font-display text-2xl text-crew-lime tracking-wide">CONFIRMING ATTENDANCE...</h2>
+            <p className="text-gray-400 font-mono text-xs mt-2">Authenticating credentials with Central Mission Deck</p>
+          </div>
+        ) : !firebaseUser ? (
+          /* State 3: Not Logged in -> One-Tap Google Sign-In */
+          <div className="au-card bg-gray-950/95 border-4 border-crew-lime/50 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
+            <div className="inline-flex items-center gap-2 bg-emerald-950/80 border border-crew-lime/50 px-3.5 py-1.5 rounded-full text-crew-lime font-mono text-xs font-bold uppercase tracking-wider">
+              <span className="w-2.5 h-2.5 rounded-full bg-crew-lime animate-ping" />
+              VENUE ATTENDANCE GATEWAY
+            </div>
+
+            <div>
+              <div className="w-20 h-20 bg-crew-lime/20 border-4 border-crew-lime mx-auto rounded-3xl flex items-center justify-center mb-3 shadow-[0_0_25px_rgba(80,239,57,0.4)]">
+                <span className="text-4xl">🎟️</span>
+              </div>
+              <h1 className="font-display text-2xl sm:text-3xl text-white tracking-wide">
+                MARK YOUR <span className="text-crew-lime">PRESENCE</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-400 font-mono mt-1 leading-relaxed">
+                Sign in with your official <span className="text-white font-bold">@kiet.edu</span> Google account to confirm your seat for squad formation.
+              </p>
+            </div>
+
+            {errorMsg && (
+              <div className="p-3.5 bg-red-950/80 border border-crew-red text-red-200 rounded-xl text-xs font-mono text-left">
+                {isExpiredToken ? (
+                  <div className="space-y-1">
+                    <p className="font-bold text-crew-red uppercase">⚠️ EXPIRED QR CODE</p>
+                    <p>{errorMsg}</p>
+                  </div>
+                ) : (
+                  errorMsg
+                )}
               </div>
             )}
 
-            {/* Form */}
-            <form onSubmit={handleFormSubmit} className="space-y-4">
+            <button
+              type="button"
+              onClick={handleGoogleSignInAndCheckIn}
+              disabled={signingIn}
+              className="w-full au-btn bg-white hover:bg-gray-100 text-black font-display text-base py-3.5 px-6 rounded-2xl flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-50"
+            >
+              {signingIn ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <span>SIGNING IN...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                  </svg>
+                  <span>SIGN IN WITH KIET GOOGLE ACCOUNT</span>
+                </>
+              )}
+            </button>
+          </div>
+        ) : (
+          /* State 4: Logged in but verification error or manual College ID fallback */
+          <div className="au-card bg-gray-950/95 border-4 border-gray-800 rounded-3xl p-6 sm:p-8 space-y-6">
+            <div className="text-center">
+              <h1 className="font-display text-2xl text-white">MANUAL VENUE CHECK-IN</h1>
+              <p className="text-xs text-gray-400 font-mono mt-1">
+                Enter your College ID or registered KIET email
+              </p>
+            </div>
+
+            {errorMsg && (
+              <div className="p-3.5 bg-red-950/80 border border-crew-red text-red-200 rounded-xl text-xs font-mono">
+                {errorMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleManualSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono font-bold text-gray-300 uppercase tracking-wider mb-2">
-                  Enter College ID / University Roll No. or Email
+                <label className="text-[10px] font-mono uppercase text-gray-400 block mb-1">
+                  15-Digit College ID or @kiet.edu Email:
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. 220029012001001 or name@kiet.edu"
                   value={studentIdInput}
-                  onChange={(e) => {
-                    setStudentIdInput(e.target.value);
-                    if (errorMsg) setErrorMsg(null);
-                  }}
-                  className="w-full bg-gray-900 border-2 border-gray-800 focus:border-crew-lime rounded-2xl px-4 py-3.5 text-white font-mono text-sm placeholder-gray-600 outline-none transition-colors"
-                  disabled={loading}
-                  autoFocus
+                  onChange={(e) => setStudentIdInput(e.target.value)}
+                  placeholder="e.g. 210029012000000"
+                  className="w-full bg-black border border-gray-700 rounded-xl px-4 py-3 text-sm font-mono text-white placeholder-gray-600 outline-none focus:border-crew-lime"
                 />
-                <span className="text-[11px] font-mono text-gray-500 mt-1.5 block">
-                  Found on your KIET Student ID card or registration confirmation email.
-                </span>
               </div>
 
-              {/* Error Alert */}
-              {errorMsg && (
-                <div className="p-3.5 bg-red-950/50 border border-red-500/50 rounded-xl text-red-400 text-xs font-mono leading-relaxed">
-                  ⚠️ {errorMsg}
-                </div>
-              )}
-
-              {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || !studentIdInput.trim()}
-                className="w-full py-3.5 px-6 rounded-2xl bg-crew-lime hover:bg-lime-400 text-black font-display font-bold text-sm tracking-wide transition-all shadow-[0_0_25px_rgba(50,205,50,0.25)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={loading}
+                className="w-full au-btn bg-crew-lime hover:bg-lime-400 text-black font-display font-bold py-3.5 rounded-xl cursor-pointer"
               >
-                {loading ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                    <span>VERIFYING ATTENDANCE...</span>
-                  </>
-                ) : (
-                  <span>CONFIRM VENUE ATTENDANCE →</span>
-                )}
+                {loading ? 'CHECKING IN...' : 'CONFIRM ATTENDANCE →'}
               </button>
             </form>
-
-            {/* Assistance Footer */}
-            <div className="mt-6 pt-5 border-t border-gray-900 text-center text-xs font-mono text-gray-500 flex flex-col gap-2">
-              <p>Having trouble checking in? Visit the Chief Organizer Desk at the entrance.</p>
-              <div className="flex justify-center gap-4 text-gray-400">
-                <Link href="/" className="hover:text-crew-lime underline">
-                  Back to Home
-                </Link>
-                <span>•</span>
-                <Link href="/dashboard" className="hover:text-crew-cyan underline">
-                  Candidate Dashboard
-                </Link>
-              </div>
-            </div>
           </div>
         )}
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t-4 border-black bg-space/90 p-4 text-center text-xs text-gray-500 max-w-6xl mx-auto w-full rounded-2xl mt-4">
+        AmongU Hackathon • Organized by College Tech Society • KIET Deemed to be University
+      </footer>
     </div>
+  );
+}
+
+export default function CheckInPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-space flex items-center justify-center text-crew-lime font-display text-xl">
+          Loading Venue Check-In...
+        </div>
+      }
+    >
+      <CheckInContent />
+    </Suspense>
   );
 }

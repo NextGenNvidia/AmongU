@@ -12,6 +12,7 @@ import {
   deleteUserCompletely,
   getEventConfig,
   updateEventConfig,
+  generateCheckInToken,
 } from '../controllers/admin.controller';
 import { verifyAuth } from '../middlewares/auth';
 import { requireAdmin } from '../middlewares/admin';
@@ -59,5 +60,6 @@ router.post('/registrations/manual', validateRequest(adminManualRegistrationSche
 // Event Schedule & Config
 router.get('/event/config', getEventConfig);
 router.put('/event/config', updateEventConfig);
+router.post('/event/qr-token', generateCheckInToken);
 
 export default router;

@@ -68,5 +68,16 @@ export const adminService = {
     const res = await apiClient.put(`/teams/admin/${teamId}/impostor`, { collegeId });
     return res.data;
   },
+
+  // Generate or Regenerate Venue Check-in QR Token
+  generateCheckInToken: async (): Promise<{
+    success: boolean;
+    token: string;
+    updatedAt: string;
+    message: string;
+  }> => {
+    const res = await apiClient.post('/admin/event/qr-token');
+    return res.data;
+  },
 };
 
