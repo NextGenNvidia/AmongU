@@ -246,7 +246,7 @@ export default function CadetClearancePortalPage() {
       console.log('💾 Stored registration draft. Redirecting to official Razorpay payment page...');
 
       // Redirect to Razorpay Payment Page
-      window.location.href = 'https://rzp.io/rzp/ndsGBt0O';
+      window.location.href = 'https://rzp.io/rzp/VpIdCLo';
     }
   };
 
