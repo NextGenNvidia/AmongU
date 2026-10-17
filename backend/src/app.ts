@@ -19,10 +19,12 @@ const allowedOrigins = env.CORS_ORIGIN.split(',').map((origin) => origin.trim().
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin, matched CORS_ORIGIN, or any localhost port in development
+      // Allow requests with no origin, matched CORS_ORIGIN, Vercel deployments, or localhost in dev
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
+        origin === 'https://amongu.vercel.app' ||
+        origin.endsWith('.vercel.app') ||
         (env.NODE_ENV === 'development' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))
       ) {
         callback(null, true);
