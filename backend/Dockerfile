@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install all dependencies (including devDependencies required for compilation)
-RUN npm ci
+RUN npm ci || npm install
 
 # Copy TypeScript configuration and source code
 COPY tsconfig.json ./
