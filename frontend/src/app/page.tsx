@@ -27,7 +27,7 @@ export default function AmongUHomePage() {
     if (isRegistered || profile?.hasRegistered || localTicket) {
       router.push('/dashboard');
     } else {
-      router.push('/register');
+      router.push('/portal/cadet-clearance-7b92');
     }
   };
 
@@ -49,8 +49,8 @@ export default function AmongUHomePage() {
         console.log('✅ Cadet already registered, redirecting to dashboard');
         router.push('/dashboard');
       } else {
-        console.log('🚀 Cadet authenticated, taking to registration screen');
-        router.push('/register');
+        console.log('🚀 Cadet authenticated, taking to unguessable clearance screen');
+        router.push('/portal/cadet-clearance-7b92');
       }
     } catch (err: any) {
       console.error('Sign-in error from modal:', err);
