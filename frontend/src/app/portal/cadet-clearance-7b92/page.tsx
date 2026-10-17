@@ -249,7 +249,7 @@ export default function CadetClearancePortalPage() {
       console.log('💾 Stored registration draft. Redirecting to official Razorpay payment page...');
 
       // Redirect to Razorpay Payment Page
-      window.location.href = 'https://rzp.io/rzp/VpIdCLo';
+      window.location.assign('https://rzp.io/rzp/VpIdCLo');
     }
   };
 
