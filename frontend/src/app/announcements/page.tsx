@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '../../hooks/useAuth';
 import { apiClient } from '../../services/api';
 import { Announcement, AnnouncementCategory } from '../../types/announcement';
+import { MarkdownRenderer } from '../../components/common/MarkdownRenderer';
 
 export default function AnnouncementsPage() {
   const { firebaseUser, isRegistered, loading: authLoading } = useAuth();
@@ -254,9 +255,7 @@ export default function AnnouncementsPage() {
 
                   {/* Content */}
                   <div className="border-t border-gray-800/80 pt-4">
-                    <p className="text-sm sm:text-base text-gray-200 font-sans leading-relaxed whitespace-pre-line">
-                      {ann.content || ann.message}
-                    </p>
+                    <MarkdownRenderer content={ann.content || ann.message || ''} />
                   </div>
                 </div>
               );
