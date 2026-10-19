@@ -1,6 +1,7 @@
 import app from './app';
 import { env } from './config/env';
 import { connectDatabase } from './config/db';
+import { reminderService } from './services/reminder.service';
 
 const startServer = async () => {
   console.log('🚀 Initializing AmongU Backend Service...');
@@ -8,7 +9,10 @@ const startServer = async () => {
   // 1. Establish MongoDB connection
   await connectDatabase();
 
-  // 2. Start HTTP listener
+  // 2. Start automated periodic 24-hr reminder scheduler for unpaid cadets
+  reminderService.startPeriodicReminderScheduler();
+
+  // 3. Start HTTP listener
   app.listen(env.PORT, () => {
     console.log(`=================================================`);
     console.log(`✨ AmongU API Server is running on port ${env.PORT}`);

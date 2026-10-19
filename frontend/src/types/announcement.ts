@@ -1,12 +1,15 @@
 export type AnnouncementCategory = 'general' | 'round_alert' | 'emergency_meeting' | 'result';
 
 export interface Announcement {
-  id: string;
+  _id?: string;
+  id?: string;
   title: string;
-  message: string;
+  content: string;
+  message?: string;
   category: AnnouncementCategory;
-  round: 'all' | 'round1' | 'round2' | 'round3';
-  isEmergencyAlert: boolean;
-  publishedBy: string;
+  authorName?: string;
+  publishedBy?: string;
+  isPinned?: boolean;
+  isEmergencyAlert?: boolean;
   createdAt: string;
 }

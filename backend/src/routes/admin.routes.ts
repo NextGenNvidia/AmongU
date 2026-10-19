@@ -13,7 +13,14 @@ import {
   getEventConfig,
   updateEventConfig,
   generateCheckInToken,
+  getReminderStatus,
+  triggerManualReminders,
 } from '../controllers/admin.controller';
+import {
+  getAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
+} from '../controllers/announcement.controller';
 import { verifyAuth } from '../middlewares/auth';
 import { requireAdmin } from '../middlewares/admin';
 import {
@@ -61,5 +68,14 @@ router.post('/registrations/manual', validateRequest(adminManualRegistrationSche
 router.get('/event/config', getEventConfig);
 router.put('/event/config', updateEventConfig);
 router.post('/event/qr-token', generateCheckInToken);
+
+// Periodic 24-Hour Registration Reminders
+router.get('/reminders/status', getReminderStatus);
+router.post('/reminders/send', triggerManualReminders);
+
+// Official Organizer Announcements Management
+router.get('/announcements', getAnnouncements);
+router.post('/announcements', createAnnouncement);
+router.delete('/announcements/:id', deleteAnnouncement);
 
 export default router;

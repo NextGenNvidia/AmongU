@@ -6,6 +6,7 @@ import { EventConfig } from '../models/EventConfig';
 import { env } from '../config/env';
 import { firebaseAuth } from '../config/firebase';
 import { convertRegistrationsToCsv } from '../utils/csvExporter';
+import { reminderService } from '../services/reminder.service';
 
 export const getRegistrations = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -314,6 +315,7 @@ export const getAllUsers = async (_req: Request, res: Response): Promise<void> =
         firebaseUid: u.firebaseUid,
         createdAt: u.createdAt,
         updatedAt: u.updatedAt,
+        lastReminderSentAt: u.lastReminderSentAt || null,
         hasRegistered: Boolean(reg && reg.paymentStatus === 'success'),
         registration: reg
           ? {
@@ -516,6 +518,29 @@ export const generateCheckInToken = async (_req: Request, res: Response): Promis
   }
 };
 
+export const getReminderStatus = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const status = await reminderService.getReminderStatus();
+    res.status(200).json({
+      success: true,
+      data: status,
+    });
+  } catch (error: any) {
+    console.error('getReminderStatus error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
-
-
+export const triggerManualReminders = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await reminderService.processUnpaidRegistrationReminders(true);
+    res.status(200).json({
+      success: true,
+      message: `Dispatched ${result.sentCount} registration reminder email(s) successfully!`,
+      data: result,
+    });
+  } catch (error: any) {
+    console.error('triggerManualReminders error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

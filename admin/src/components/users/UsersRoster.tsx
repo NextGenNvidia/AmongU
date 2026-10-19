@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LoggedInUserRecord } from '../../types';
 import { adminService } from '../../services/admin.service';
 
@@ -20,6 +20,14 @@ export default function UsersRoster({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTab, setFilterTab] = useState<'all' | 'registered' | 'pending' | 'blocked'>('all');
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // 24-Hour Reminder Transmission State
+  const [reminderStatus, setReminderStatus] = useState<{
+    lastReminderSentAt: string | null;
+    lastReminderSentCount: number;
+    totalUnpaidCadets: number;
+  } | null>(null);
+  const [dispatchingReminders, setDispatchingReminders] = useState<boolean>(false);
 
   // User currently selected for deletion modal
   const [userToDelete, setUserToDelete] = useState<LoggedInUserRecord | null>(null);
@@ -59,6 +67,36 @@ export default function UsersRoster({
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ message, type });
     setTimeout(() => setFeedback(null), 3500);
+  };
+
+  const loadReminderStatus = async () => {
+    try {
+      const res = await adminService.getReminderStatus();
+      if (res && res.data) {
+        setReminderStatus(res.data);
+      }
+    } catch (err: any) {
+      console.warn('Could not load reminder status:', err.message);
+    }
+  };
+
+  useEffect(() => {
+    loadReminderStatus();
+  }, [users]);
+
+  const handleManualTriggerReminders = async () => {
+    if (dispatchingReminders) return;
+    try {
+      setDispatchingReminders(true);
+      const res = await adminService.triggerManualReminders();
+      showToast(res.message || '24-hour reminder transmission complete!', 'success');
+      await Promise.all([loadReminderStatus(), onRefresh()]);
+    } catch (err: any) {
+      console.error('Manual reminder dispatch error:', err);
+      showToast(err?.response?.data?.message || 'Failed to dispatch reminders', 'error');
+    } finally {
+      setDispatchingReminders(false);
+    }
   };
 
   const handleCopy = (text: string, label: string) => {
@@ -242,6 +280,57 @@ export default function UsersRoster({
         </div>
       </div>
 
+      {/* 24-Hour Automated Reminder Command Deck */}
+      <div className="bg-gradient-to-r from-red-950/40 via-gray-900 to-black border-2 border-red-900/60 rounded-2xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-crew-red animate-ping" />
+              <span className="font-mono text-xs font-bold uppercase tracking-wider text-crew-red">
+                24-HOUR AUTOMATED REMINDER ENGINE
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-black/60 text-emerald-400 border border-emerald-500/40">
+                ACTIVE
+              </span>
+            </div>
+            <h3 className="font-display text-xl text-white">
+              UNPAID CADET RETENTION PROTOCOL
+            </h3>
+            <p className="text-xs text-gray-300 font-sans max-w-2xl leading-relaxed">
+              Every cadet who authenticates is automatically tracked. If their ₹55 clearance is unpaid after 24 hours, an emergency reminder is dispatched. Once paid, they are immediately excluded.
+            </p>
+            <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-gray-400 pt-1">
+              <span>
+                ⏰ Last Broadcast:{' '}
+                <strong className="text-crew-cyan">
+                  {reminderStatus?.lastReminderSentAt
+                    ? `${formatTimestamp(reminderStatus.lastReminderSentAt)} (${reminderStatus.lastReminderSentCount || 0} sent)`
+                    : 'Scheduled on startup / Pending run'}
+                </strong>
+              </span>
+              <span>•</span>
+              <span>
+                👥 Pending Unpaid Cadets:{' '}
+                <strong className="text-crew-yellow">{pendingCount}</strong>
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 w-full md:w-auto">
+            <button
+              onClick={handleManualTriggerReminders}
+              disabled={dispatchingReminders || pendingCount === 0}
+              className="au-btn bg-crew-red hover:bg-red-600 disabled:opacity-40 text-white font-display text-xs sm:text-sm py-3 px-5 rounded-xl shadow-[0_0_20px_rgba(197,17,17,0.4)] flex items-center justify-center gap-2 transition-all cursor-pointer font-bold"
+            >
+              <svg className={`w-4 h-4 ${dispatchingReminders ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              <span>{dispatchingReminders ? 'DISPATCHING TRANSMISSIONS...' : 'SEND 24-HR REMINDERS NOW 🚀'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Search & Filter Controls */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-gray-900/90 border border-gray-800 p-3 rounded-2xl">
         {/* Search Input */}
@@ -345,6 +434,7 @@ export default function UsersRoster({
                   <th className="py-3.5 px-4 font-bold">College &amp; Branch</th>
                   <th className="py-3.5 px-4 font-bold">Track &amp; Payment</th>
                   <th className="py-3.5 px-4 font-bold">First Logged In</th>
+                  <th className="py-3.5 px-4 font-bold">24h Reminder</th>
                   <th className="py-3.5 px-4 font-bold text-right">Moderation &amp; Actions</th>
                 </tr>
               </thead>
@@ -448,6 +538,26 @@ export default function UsersRoster({
                       {/* First Logged In Date */}
                       <td className="py-3.5 px-4 font-mono text-xs text-gray-400 whitespace-nowrap">
                         {formatTimestamp(user.createdAt)}
+                      </td>
+
+                      {/* 24h Reminder Status */}
+                      <td className="py-3.5 px-4 font-mono text-xs whitespace-nowrap">
+                        {user.hasRegistered ? (
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-950/70 text-green-400 border border-green-500/40">
+                            Paid • Excluded ✓
+                          </span>
+                        ) : user.lastReminderSentAt ? (
+                          <div className="space-y-0.5">
+                            <span className="text-crew-cyan font-bold block text-[11px]">
+                              Sent: {formatTimestamp(user.lastReminderSentAt)}
+                            </span>
+                            <span className="text-[10px] text-gray-500 block">Next in ~24h</span>
+                          </div>
+                        ) : (
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-950/70 text-yellow-400 border border-yellow-500/40">
+                            Queued for Dispatch
+                          </span>
+                        )}
                       </td>
 
                       {/* Actions */}

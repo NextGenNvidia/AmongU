@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { teamService } from '../../services/team.service';
 import { useAuth } from '../../hooks/useAuth';
 import { registrationService } from '../../services/registration.service';
+import { apiClient } from '../../services/api';
 
 interface UserTicket {
   name: string;
@@ -172,11 +173,26 @@ export default function UserDashboardPage() {
 
     loadRealRegistration();
 
-    // 4. Sync admin broadcast announcement
-    const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
-    if (broadcastStored && broadcastStored.length > 0) {
-      setAdminBroadcast(broadcastStored);
-    }
+    // 4. Sync admin broadcast announcement from live backend
+    apiClient
+      .get('/announcements')
+      .then((res) => {
+        if (res.data?.data && res.data.data.length > 0) {
+          const latest = res.data.data[0];
+          setAdminBroadcast(`${latest.title} — ${latest.content || latest.message}`);
+        } else {
+          const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
+          if (broadcastStored && broadcastStored.length > 0) {
+            setAdminBroadcast(broadcastStored);
+          }
+        }
+      })
+      .catch(() => {
+        const broadcastStored = localStorage.getItem('amongu_admin_broadcast');
+        if (broadcastStored && broadcastStored.length > 0) {
+          setAdminBroadcast(broadcastStored);
+        }
+      });
 
     // 5. Sync countdown timer
     const timerStored = localStorage.getItem('amongu_timer_remaining_seconds');
@@ -397,6 +413,12 @@ export default function UserDashboardPage() {
               {ticket?.email}
             </span>
             <Link
+              href="/announcements"
+              className="au-btn bg-purple-600 hover:bg-purple-500 text-white font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 font-bold shadow"
+            >
+              <span>ALERTS 📢</span>
+            </Link>
+            <Link
               href="/squad"
               className="au-btn bg-crew-yellow hover:bg-yellow-400 text-black font-display text-xs sm:text-sm py-2 px-3.5 rounded-full flex items-center gap-1 font-bold shadow"
             >
@@ -498,20 +520,28 @@ export default function UserDashboardPage() {
 
         {/* LIVE ADMIN ANNOUNCEMENT BROADCAST */}
         {adminBroadcast && (
-          <div className={`border-2 rounded-2xl p-4 flex items-center gap-3 shadow-lg animate-pulse ${
+          <div className={`border-2 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg ${
             isImpostor
               ? 'bg-gradient-to-r from-red-950/90 via-black to-red-950/80 border-red-500'
               : 'bg-gradient-to-r from-red-950/80 via-black to-yellow-950/80 border-crew-yellow'
           }`}>
-            <span className="text-2xl">{isImpostor ? '🚨' : '📢'}</span>
-            <div className="flex-1">
-              <span className={`text-[10px] font-mono font-bold uppercase tracking-wider block ${
-                isImpostor ? 'text-red-400' : 'text-crew-yellow'
-              }`}>
-                ORGANIZER TRANSMISSION / EVENT ANNOUNCEMENT
-              </span>
-              <p className="text-white text-xs sm:text-sm font-mono font-bold">{adminBroadcast}</p>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{isImpostor ? '🚨' : '📢'}</span>
+              <div>
+                <span className={`text-[10px] font-mono font-bold uppercase tracking-wider block ${
+                  isImpostor ? 'text-red-400' : 'text-crew-yellow'
+                }`}>
+                  ORGANIZER TRANSMISSION / EVENT ANNOUNCEMENT
+                </span>
+                <p className="text-white text-xs sm:text-sm font-mono font-bold">{adminBroadcast}</p>
+              </div>
             </div>
+            <Link
+              href="/announcements"
+              className="text-xs font-mono font-bold text-crew-cyan hover:underline underline-offset-4 shrink-0 bg-black/60 px-3 py-1.5 rounded-xl border border-gray-700"
+            >
+              View All Transmissions →
+            </Link>
           </div>
         )}
 

@@ -10,6 +10,8 @@ export interface IEventConfig extends Document {
   prizePool: string;
   activeCheckInToken?: string;
   checkInTokenUpdatedAt?: Date;
+  lastReminderSentAt?: Date;
+  lastReminderSentCount?: number;
   updatedAt: Date;
   createdAt: Date;
 }
@@ -59,6 +61,14 @@ const eventConfigSchema = new Schema<IEventConfig>(
     checkInTokenUpdatedAt: {
       type: Date,
       default: Date.now,
+    },
+    lastReminderSentAt: {
+      type: Date,
+      default: null,
+    },
+    lastReminderSentCount: {
+      type: Number,
+      default: 0,
     },
   },
   {

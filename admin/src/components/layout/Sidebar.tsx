@@ -3,8 +3,8 @@
 import React from 'react';
 
 interface SidebarProps {
-  currentTab?: 'users' | 'settings' | 'teams' | 'venue-qr';
-  onSelectTab?: (tab: 'users' | 'settings' | 'teams' | 'venue-qr') => void;
+  currentTab?: 'users' | 'settings' | 'teams' | 'venue-qr' | 'announcements';
+  onSelectTab?: (tab: 'users' | 'settings' | 'teams' | 'venue-qr' | 'announcements') => void;
   onLogout: () => void;
   totalUsersCount: number;
 }
@@ -110,7 +110,28 @@ export default function Sidebar({
           </span>
         </button>
 
-        {/* 4. EVENT SCHEDULE & SETTINGS TAB */}
+        {/* 4. ANNOUNCEMENTS TAB */}
+        <button
+          type="button"
+          onClick={() => onSelectTab?.('announcements')}
+          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-display tracking-wide transition-all text-left cursor-pointer ${
+            currentTab === 'announcements'
+              ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)] border border-purple-500 font-bold'
+              : 'text-gray-400 hover:text-white hover:bg-gray-900 border border-transparent'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+            </svg>
+            <span>Announcements</span>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-black/60 text-purple-300">
+            Broadcast
+          </span>
+        </button>
+
+        {/* 5. EVENT SCHEDULE & SETTINGS TAB */}
         <button
           type="button"
           onClick={() => onSelectTab?.('settings')}

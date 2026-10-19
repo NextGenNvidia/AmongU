@@ -8,6 +8,7 @@ export interface IUser extends Document {
   name: string;
   role: UserRole;
   isBlocked?: boolean;
+  lastReminderSentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +43,10 @@ const userSchema = new Schema<IUser>(
     isBlocked: {
       type: Boolean,
       default: false,
+    },
+    lastReminderSentAt: {
+      type: Date,
+      default: null,
     },
   },
   {

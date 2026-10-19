@@ -215,6 +215,112 @@ class MailService {
       return true;
     }
   }
+
+  /**
+   * Dispatch 24-hour periodic reminder email to cadets who haven't completed registration/payment
+   */
+  async sendRegistrationReminderEmail(toEmail: string, name: string = 'Cadet'): Promise<boolean> {
+    const subject = `🚨 [AmongU Action Required] Cadet ${name}, Your Seat Reservation is Pending!`;
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #070b14; color: #f3f4f6; margin: 0; padding: 20px; }
+        .container { max-width: 550px; margin: 0 auto; background: #0f172a; border: 3px solid #1e293b; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        .header { background: linear-gradient(135deg, #c51111 0%, #7f1d1d 100%); padding: 25px 20px; text-align: center; border-bottom: 3px solid #000; }
+        .header h1 { margin: 0; font-size: 26px; color: #ffffff; letter-spacing: 2px; text-transform: uppercase; font-weight: 900; }
+        .badge { display: inline-block; background: #000000; color: #facc15; font-weight: 800; font-size: 11px; padding: 5px 14px; border-radius: 9999px; margin-top: 10px; border: 1px solid #facc15; text-transform: uppercase; letter-spacing: 1px; }
+        .content { padding: 30px 25px; }
+        .greeting { font-size: 20px; font-weight: 800; color: #38fedc; margin-bottom: 12px; }
+        .message { color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+        .card { background: #000000; border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin: 20px 0; }
+        .card-title { color: #ef4444; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+        .card-text { color: #94a3b8; font-size: 13px; margin: 0; line-height: 1.5; }
+        .perks { margin: 20px 0; padding: 0; list-style: none; }
+        .perks li { padding: 6px 0; font-size: 13px; color: #e2e8f0; display: flex; align-items: center; }
+        .btn-wrapper { text-align: center; margin: 30px 0 15px 0; }
+        .btn { display: inline-block; background: #c51111; color: #ffffff !important; font-weight: 900; font-size: 15px; padding: 14px 32px; border-radius: 9999px; text-decoration: none; text-transform: uppercase; letter-spacing: 1.5px; border: 2px solid #000; box-shadow: 0 4px 15px rgba(197,17,17,0.5); }
+        .note { color: #64748b; font-size: 11px; text-align: center; line-height: 1.5; margin-top: 15px; }
+        .footer { background: #020617; padding: 16px; text-align: center; font-size: 11px; color: #475569; border-top: 1px solid #1e293b; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🚨 EMERGENCY MEETING</h1>
+          <div class="badge">MISSION ALERT • SEAT RESERVATION PENDING</div>
+        </div>
+        <div class="content">
+          <div class="greeting">Greetings, Cadet ${name}!</div>
+          <p class="message">
+            We noticed you initiated your clearance for <strong>AmongU Hackathon 2026</strong> at KIET Deemed to be University, but your registration has <strong>not yet been completed or paid</strong>.
+          </p>
+
+          <div class="card">
+            <div class="card-title">⚠️ LIMITED SLOTS REMAINING</div>
+            <p class="card-text">
+              Seats are allocated on a strictly first-come, first-served basis. Secure your spot now before ship capacity is reached and registration shuts down!
+            </p>
+          </div>
+
+          <p style="color: #38fedc; font-weight: 700; font-size: 13px; margin-bottom: 5px; text-transform: uppercase;">
+            What Awaits You Onboard:
+          </p>
+          <ul class="perks">
+            <li>💰 <strong>₹10,000 Cash Prize Pool</strong> + exclusive trophy & certificates</li>
+            <li>🕵️ <strong>Social Deduction Mechanics</strong>: Code, collaborate, and identify the covert Impostor</li>
+            <li>🍕 <strong>Food, Fuel & Crewmate Swag</strong> throughout the hackathon</li>
+            <li>🤝 <strong>Squad Formations & Mentorship</strong> under NextGen Supercomputing Club</li>
+          </ul>
+
+          <div class="btn-wrapper">
+            <a href="https://amongu.vercel.app/portal/cadet-clearance-7b92" class="btn">
+              Complete Clearance &amp; Pay (₹55) →
+            </a>
+          </div>
+
+          <p class="note">
+            ⚡ <em>Already paid or changed your mind? Once your clearance is confirmed, this reminder timer will automatically deactivate.</em>
+          </p>
+        </div>
+        <div class="footer">
+          AmongU Hackathon • Organized by NextGen Supercomputing Club • KIET Deemed to be University
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+
+    console.log(`\n======================================================`);
+    console.log(`⏰ [MAIL DISPATCH] 24-Hour Registration Reminder`);
+    console.log(`🎯 Recipient: ${toEmail} (${name})`);
+
+    if (this.isConfigured && this.transporter) {
+      try {
+        const info = await this.transporter.sendMail({
+          from: env.SMTP_FROM,
+          to: toEmail,
+          subject,
+          html: htmlContent,
+        });
+        console.log(`✅ [Mail Service] Reminder email dispatched via SMTP! Message ID: ${info.messageId}`);
+        console.log(`======================================================\n`);
+        return true;
+      } catch (err: any) {
+        console.error(`❌ [Mail Service] Failed to send reminder email:`, err.message);
+        console.log(`======================================================\n`);
+        return false;
+      }
+    } else {
+      console.log(`💡 [Simulated Dispatch] To send real emails, ensure SMTP credentials in backend/.env`);
+      console.log(`======================================================\n`);
+      return true;
+    }
+  }
 }
 
 export const mailService = new MailService();
+

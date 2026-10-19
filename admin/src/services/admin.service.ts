@@ -79,5 +79,61 @@ export const adminService = {
     const res = await apiClient.post('/admin/event/qr-token');
     return res.data;
   },
-};
 
+  // Periodic 24-Hour Registration Reminders Status & Manual Dispatch
+  getReminderStatus: async (): Promise<{
+    success: boolean;
+    data: {
+      lastReminderSentAt: string | null;
+      lastReminderSentCount: number;
+      totalUnpaidCadets: number;
+      totalRegisteredCadets: number;
+      totalCadets: number;
+    };
+  }> => {
+    const res = await apiClient.get('/admin/reminders/status');
+    return res.data;
+  },
+
+  triggerManualReminders: async (): Promise<{
+    success: boolean;
+    message: string;
+    data: any;
+  }> => {
+    const res = await apiClient.post('/admin/reminders/send');
+    return res.data;
+  },
+
+  // Official Organizer Announcements Management
+  getAnnouncements: async (): Promise<{
+    success: boolean;
+    data: any[];
+    count: number;
+  }> => {
+    const res = await apiClient.get('/admin/announcements');
+    return res.data;
+  },
+
+  createAnnouncement: async (announcement: {
+    title: string;
+    content: string;
+    category: string;
+    authorName?: string;
+    isPinned?: boolean;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: any;
+  }> => {
+    const res = await apiClient.post('/admin/announcements', announcement);
+    return res.data;
+  },
+
+  deleteAnnouncement: async (id: string): Promise<{
+    success: boolean;
+    message: string;
+  }> => {
+    const res = await apiClient.delete(`/admin/announcements/${id}`);
+    return res.data;
+  },
+};

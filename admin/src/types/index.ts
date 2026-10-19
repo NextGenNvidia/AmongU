@@ -7,6 +7,7 @@ export interface LoggedInUserRecord {
   firebaseUid: string;
   createdAt: string;
   updatedAt: string;
+  lastReminderSentAt?: string | null;
   hasRegistered: boolean;
   registration?: {
     collegeId: string;
@@ -21,6 +22,25 @@ export interface LoggedInUserRecord {
     registeredAt?: string;
     isPresent?: boolean;
   } | null;
+}
+
+export interface ReminderStatus {
+  lastReminderSentAt: string | null;
+  lastReminderSentCount: number;
+  totalUnpaidCadets: number;
+  totalRegisteredCadets: number;
+  totalCadets: number;
+}
+
+export interface AnnouncementRecord {
+  _id: string;
+  title: string;
+  content: string;
+  category: 'general' | 'round_alert' | 'emergency_meeting' | 'result';
+  authorName: string;
+  isPinned: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AdminLoginResponse {
