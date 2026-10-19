@@ -36,10 +36,25 @@ class MailService {
   }
 
   /**
+   * Resolve an aligned sender address to ensure 100% SPF/DKIM/DMARC compliance.
+   * If using personal/workspace Gmail SMTP without a custom domain, the From header MUST
+   * match SMTP_USER; otherwise Google and receiving mailboxes will flag it as spam/spoofing.
+   */
+  private getSenderAddress(): string {
+    if (env.SMTP_USER && env.SMTP_USER.includes('@')) {
+      if (env.SMTP_FROM && !env.SMTP_FROM.includes('amongu.kiet.edu')) {
+        return env.SMTP_FROM;
+      }
+      return `"AmongU Hackathon" <${env.SMTP_USER}>`;
+    }
+    return env.SMTP_FROM;
+  }
+
+  /**
    * Dispatch 6-digit clearance transmission passcode (OTP)
    */
   async sendOtpEmail(toEmail: string, otpCode: string, name: string = 'Cadet'): Promise<boolean> {
-    const subject = `🚨 [AmongU Clearance] Transmission Passcode: ${otpCode}`;
+    const subject = `AmongU Verification Passcode: ${otpCode}`;
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -95,12 +110,16 @@ class MailService {
     console.log(`🔑 OTP Code: ${otpCode}`);
     console.log(`⏰ Expiry: 10 minutes`);
 
+    const plainText = `Greetings, Cadet ${name}!\n\nYour clearance verification passcode for AmongU Hackathon is: ${otpCode}\n\nThis passcode is valid for 10 minutes.\n\nAmongU Hackathon 2026 - KIET Deemed to be University`;
+
     if (this.isConfigured && this.transporter) {
       try {
         const info = await this.transporter.sendMail({
-          from: env.SMTP_FROM,
+          from: this.getSenderAddress(),
+          replyTo: env.SMTP_USER || undefined,
           to: toEmail,
           subject,
+          text: plainText,
           html: htmlContent,
         });
         console.log(`✅ [Mail Service] Real email dispatched via SMTP! Message ID: ${info.messageId}`);
@@ -193,12 +212,16 @@ class MailService {
     console.log(`💳 Payment ID: ${ticket.paymentId}`);
     console.log(`🎓 College ID: ${ticket.collegeId}`);
 
+    const ticketPlainText = `Hello ${ticket.name},\n\nYour registration and payment for AmongU Hackathon have been successfully confirmed!\n\nRegistration Details:\n- Name: ${ticket.name}\n- College ID: ${ticket.collegeId}\n- Track: ${ticket.track || 'Web Development'}\n- Payment ID: ${ticket.paymentId || 'CONFIRMED'}\n- Fee Paid: INR 55.00\n\nVisit your dashboard: https://amongu.vercel.app/dashboard\n\nAmongU Hackathon 2026 - KIET Deemed to be University`;
+
     if (this.isConfigured && this.transporter) {
       try {
         const info = await this.transporter.sendMail({
-          from: env.SMTP_FROM,
+          from: this.getSenderAddress(),
+          replyTo: env.SMTP_USER || undefined,
           to: toEmail,
           subject,
+          text: ticketPlainText,
           html: htmlContent,
         });
         console.log(`✅ [Mail Service] Ticket email dispatched via SMTP! Message ID: ${info.messageId}`);
@@ -220,7 +243,7 @@ class MailService {
    * Dispatch 24-hour periodic reminder email to cadets who haven't completed registration/payment
    */
   async sendRegistrationReminderEmail(toEmail: string, name: string = 'Cadet'): Promise<boolean> {
-    const subject = `🚨 [AmongU Action Required] Cadet ${name}, Your Seat Reservation is Pending!`;
+    const subject = `AmongU Hackathon: Complete your registration reservation (${name})`;
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -250,7 +273,7 @@ class MailService {
     <body>
       <div class="container">
         <div class="header">
-          <h1>🚨 EMERGENCY MEETING</h1>
+          <h1>AmongU Hackathon</h1>
           <div class="badge">MISSION ALERT • SEAT RESERVATION PENDING</div>
         </div>
         <div class="content">
@@ -298,12 +321,16 @@ class MailService {
     console.log(`⏰ [MAIL DISPATCH] 24-Hour Registration Reminder`);
     console.log(`🎯 Recipient: ${toEmail} (${name})`);
 
+    const reminderPlainText = `Greetings, Cadet ${name}!\n\nWe noticed you initiated your clearance for AmongU Hackathon 2026, but your registration has not yet been completed.\n\nSeats are allocated on a strictly first-come, first-served basis. Secure your spot now:\nhttps://amongu.vercel.app/portal/cadet-clearance-7b92\n\nEvent Highlights:\n- INR 10,000 Cash Prize Pool\n- Social Deduction Hackathon Mechanics\n- Food, Fuel & Crewmate Swag\n- Squad Formations & Mentorship\n\nAmongU Hackathon 2026 • Organized by NextGen Supercomputing Club • KIET Deemed to be University`;
+
     if (this.isConfigured && this.transporter) {
       try {
         const info = await this.transporter.sendMail({
-          from: env.SMTP_FROM,
+          from: this.getSenderAddress(),
+          replyTo: env.SMTP_USER || undefined,
           to: toEmail,
           subject,
+          text: reminderPlainText,
           html: htmlContent,
         });
         console.log(`✅ [Mail Service] Reminder email dispatched via SMTP! Message ID: ${info.messageId}`);
