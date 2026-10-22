@@ -83,6 +83,7 @@ const envSchema = z.object({
   SMTP_FROM: z.string().optional().default('"AmongU Hackathon" <no-reply@amongu.kiet.edu>'),
   ADMIN_USERNAME: z.string().optional().default(''),
   ADMIN_PASSWORD: z.string().optional().default(''),
+  ADMIN_SESSION_SECRET: z.string().optional().default(''),
 });
 
 const parseEnv = () => {

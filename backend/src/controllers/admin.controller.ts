@@ -7,6 +7,7 @@ import { env } from '../config/env';
 import { firebaseAuth } from '../config/firebase';
 import { convertRegistrationsToCsv } from '../utils/csvExporter';
 import { reminderService } from '../services/reminder.service';
+import { generateAdminSessionToken } from '../utils/adminAuth';
 
 export const getRegistrations = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -275,10 +276,12 @@ export const adminLoginWithCredentials = async (req: Request, res: Response): Pr
     console.log(`⏰ Time: ${new Date().toLocaleString()}`);
     console.log(`======================================================\n`);
 
+    const sessionToken = generateAdminSessionToken(id);
+
     res.status(200).json({
       success: true,
       message: 'Admin authenticated successfully',
-      token: 'amongu_admin_secret_token_2026',
+      token: sessionToken,
       admin: {
         id: 'admin_master_super',
         username: id,

@@ -27,11 +27,30 @@ export default function AdminDashboardPage() {
     if (typeof window !== 'undefined') {
       const token = sessionStorage.getItem('amongu_admin_token') || localStorage.getItem('amongu_admin_token');
       const isAuth = sessionStorage.getItem('amongu_admin_auth') || localStorage.getItem('amongu_admin_auth');
-      if (token && isAuth === 'true') {
+
+      // Instantly reject legacy/hardcoded tokens
+      if (token === 'amongu_admin_secret_token_2026' || token?.startsWith('amongu_admin_')) {
+        sessionStorage.removeItem('amongu_admin_token');
+        sessionStorage.removeItem('amongu_admin_auth');
+        localStorage.removeItem('amongu_admin_token');
+        localStorage.removeItem('amongu_admin_auth');
+        setIsAuthenticated(false);
+      } else if (token && isAuth === 'true') {
         setIsAuthenticated(true);
       }
     }
     setIsCheckingAuth(false);
+  }, []);
+
+  // Listen for force-logout events from API interceptor
+  useEffect(() => {
+    const onForceLogout = () => {
+      setIsAuthenticated(false);
+      setUsers([]);
+      setUsersError(null);
+    };
+    window.addEventListener('amongu_admin_force_logout', onForceLogout);
+    return () => window.removeEventListener('amongu_admin_force_logout', onForceLogout);
   }, []);
 
   const loadUsers = async () => {
@@ -44,6 +63,10 @@ export default function AdminDashboardPage() {
       }
     } catch (err: any) {
       console.error('Error fetching users in admin:', err);
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        handleLogout();
+        return;
+      }
       setUsersError(err?.response?.data?.message || err?.message || 'Failed to fetch users from database');
     } finally {
       setUsersLoading(false);

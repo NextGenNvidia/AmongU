@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { firebaseAuth } from '../config/firebase';
 import { User, IUser } from '../models/User';
+import { verifyAdminSessionToken } from '../utils/adminAuth';
 
 export interface AuthenticatedUser {
   uid: string;
@@ -39,8 +40,8 @@ export const verifyAuth = async (req: Request, res: Response, next: NextFunction
     return;
   }
 
-  // Support Admin session token
-  if (idToken === 'amongu_admin_secret_token_2026' || idToken.startsWith('amongu_admin_')) {
+  // Support dynamic Admin session token (invalidated on credential or secret change)
+  if (verifyAdminSessionToken(idToken)) {
     req.user = {
       uid: 'admin_master_super',
       email: 'admin.lead@kiet.edu',

@@ -26,15 +26,14 @@ export default function LoginScreen({ onSuccess }: LoginScreenProps) {
 
     try {
       const res = await adminService.login(id.trim(), password.trim());
-      if (res && res.success) {
-        const token = res.token || 'amongu_admin_secret_token_2026';
-        sessionStorage.setItem('amongu_admin_token', token);
+      if (res && res.success && res.token) {
+        sessionStorage.setItem('amongu_admin_token', res.token);
         sessionStorage.setItem('amongu_admin_auth', 'true');
-        localStorage.setItem('amongu_admin_token', token);
+        localStorage.setItem('amongu_admin_token', res.token);
         localStorage.setItem('amongu_admin_auth', 'true');
         onSuccess();
       } else {
-        setError(res.message || 'Invalid Admin ID or Password');
+        setError(res?.message || 'Invalid Admin ID or Password');
       }
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || 'Invalid Admin ID or Password');
