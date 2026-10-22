@@ -33,11 +33,15 @@ jobs:
             cd ~/AmongU
             git pull origin main
 
-            # 2. Rebuild and launch the backend container
+            # 2. Reclaim disk space on EC2 before building (wipe old unused images & builder cache)
+            sudo docker image prune -af || true
+            sudo docker builder prune -af || true
+
+            # 3. Rebuild and launch the backend container
             cd backend
             sudo docker compose up -d --build
 
-            # 3. Clean up dangling images to preserve disk space
-            sudo docker image prune -f
+            # 4. Clean up dangling images to preserve disk space
+            sudo docker image prune -f || true
 
             echo "✅ Deployment completed successfully!"
