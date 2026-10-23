@@ -69,6 +69,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenRegister, userEmail, onLog
               <a href="#prizes" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-lg">
                 Prizes
               </a>
+              <Link href="/sponsors" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-lg">
+                Sponsors
+              </Link>
               <a href="#faq" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-lg">
                 FAQ
               </a>
@@ -140,6 +143,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenRegister, userEmail, onLog
             >
               Prizes
             </a>
+            <Link
+              href="/sponsors"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-md text-base font-bold hover:bg-gray-800 hover:text-crew-cyan"
+            >
+              Sponsors
+            </Link>
             <a
               href="#faq"
               onClick={() => setMobileMenuOpen(false)}

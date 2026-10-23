@@ -204,6 +204,9 @@ export default function AmongUHomePage() {
               <a href="#prizes" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 Prizes
               </a>
+              <Link href="/sponsors" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
+                Sponsors
+              </Link>
               <a href="#faq" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 FAQ
               </a>
@@ -329,6 +332,13 @@ export default function AmongUHomePage() {
               >
                 Prizes
               </a>
+              <Link
+                href="/sponsors"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-base font-bold hover:bg-gray-800 hover:text-crew-cyan"
+              >
+                Sponsors
+              </Link>
               <a
                 href="#faq"
                 onClick={() => setMobileMenuOpen(false)}
@@ -886,6 +896,10 @@ export default function AmongUHomePage() {
 
           {/* Compliance & Policy Links for Payment Gateway */}
           <div className="flex flex-wrap justify-center md:justify-end gap-x-5 gap-y-2 text-xs font-mono text-gray-400">
+            <Link href="/sponsors" className="hover:text-crew-cyan transition-colors underline-offset-4 hover:underline">
+              Sponsors
+            </Link>
+            <span className="text-gray-700">•</span>
             <Link href="/privacy" className="hover:text-crew-cyan transition-colors underline-offset-4 hover:underline">
               Privacy Policy
             </Link>
