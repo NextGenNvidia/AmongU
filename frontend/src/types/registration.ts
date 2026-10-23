@@ -4,7 +4,7 @@ export type PaymentMethod = 'razorpay' | 'manual_cash';
 export interface RegistrationFormData {
   name: string;
   collegeId: string;
-  year: '1' | '2';
+  year: '1' | '2' | '3' | '4';
   branch: string;
   section: 'A' | 'B' | 'C' | 'D' | 'E';
   phone: string;

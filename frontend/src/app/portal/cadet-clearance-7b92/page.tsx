@@ -10,7 +10,7 @@ import { registrationService } from '../../../services/registration.service';
 interface RegistrationData {
   name: string;
   collegeId: string;
-  year: '1' | '2';
+  year: '1' | '2' | '3' | '4';
   branch: string;
   section: 'A' | 'B' | 'C' | 'D' | 'E';
   phone: string;
@@ -648,7 +648,7 @@ export default function CadetClearancePortalPage() {
                       <label className="block text-crew-cyan font-bold mb-1 text-xs sm:text-sm">Year</label>
                       <select
                         value={formData.year}
-                        onChange={(e) => setFormData({ ...formData, year: e.target.value as '1' | '2' })}
+                        onChange={(e) => setFormData({ ...formData, year: e.target.value as '1' | '2' | '3' | '4' })}
                         className="w-full bg-black au-border rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-crew-cyan text-sm"
                       >
                         {ALLOWED_YEARS.map((y) => (

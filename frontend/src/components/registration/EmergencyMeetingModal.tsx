@@ -266,7 +266,7 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
                 <label className="block text-crew-cyan font-bold mb-1 text-sm">Year</label>
                 <select
                   value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: e.target.value as '1' | '2' })}
+                  onChange={(e) => setFormData({ ...formData, year: e.target.value as '1' | '2' | '3' | '4' })}
                   className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan"
                 >
                   {ALLOWED_YEARS.map((y) => (

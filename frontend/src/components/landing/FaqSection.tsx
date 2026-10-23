@@ -18,7 +18,7 @@ export const FaqSection: React.FC = () => {
               <span className="text-crew-cyan group-open:rotate-45 transition-transform text-2xl">+</span>
             </summary>
             <div className="px-6 pb-6 text-gray-300 font-bold border-t-2 border-gray-800 pt-4">
-              All 1st and 2nd year students of KIET Group of Institutions with an active @kiet.edu email ID.
+              All 1st, 2nd, 3rd, and 4th year students of KIET Group of Institutions with an active @kiet.edu email ID.
             </div>
           </details>
 

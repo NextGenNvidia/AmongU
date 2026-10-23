@@ -5,7 +5,7 @@ export interface TeamMember {
   email: string;
   phone: string;
   branch: string;
-  year: '1' | '2';
+  year: '1' | '2' | '3' | '4';
   section: string;
   suitColor: string;
   role: 'crewmate' | 'impostor' | 'unassigned';

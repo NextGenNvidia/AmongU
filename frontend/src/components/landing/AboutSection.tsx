@@ -30,7 +30,7 @@ export const AboutSection: React.FC = () => {
                 <span className="text-3xl">👥</span>
                 <div>
                   <p className="text-sm text-gray-400 font-bold uppercase">Eligibility</p>
-                  <p className="text-xl font-display text-white">1st &amp; 2nd Year Only</p>
+                  <p className="text-xl font-display text-white">All Years (1st - 4th)</p>
                 </div>
               </div>
               <div className="bg-black/50 rounded-xl p-4 au-border flex items-center gap-3">

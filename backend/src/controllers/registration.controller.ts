@@ -26,10 +26,13 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     const { name, collegeId, year, branch, section, phone, email } = req.body;
 
     // 2. Prevent duplicate successful registrations
+    const cleanCollegeId = collegeId ? collegeId.trim() : '';
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+
     const existingPaid = await Registration.findOne({
       $or: [
-        { collegeId, paymentStatus: 'success' },
-        { email: email.toLowerCase(), paymentStatus: 'success' },
+        { collegeId: new RegExp(`^${cleanCollegeId}$`, 'i'), paymentStatus: 'success' },
+        { email: cleanEmail, paymentStatus: 'success' },
         { firebaseUid: req.user.uid, paymentStatus: 'success' },
       ],
     });
@@ -408,11 +411,11 @@ export const confirmRegistration = async (req: Request, res: Response): Promise<
     console.log(`🎯 Track: ${track}`);
     console.log(`💾 Saving participant record to MongoDB...`);
 
-    // Upsert registration in MongoDB by collegeId or email
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Upsert registration in MongoDB strictly by email (so one cadet's typoed roll number never hijacks another cadet's record)
     const registration = await Registration.findOneAndUpdate(
-      {
-        $or: [{ collegeId }, { email: email.toLowerCase().trim() }],
-      },
+      { email: normalizedEmail },
       {
         userId: finalUserId || undefined,
         firebaseUid: finalUid || 'direct_user',

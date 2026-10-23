@@ -15,7 +15,7 @@ export const ALLOWED_BRANCHES = [
 
 export type Branch = (typeof ALLOWED_BRANCHES)[number];
 
-export const ALLOWED_YEARS = ['1', '2'] as const;
+export const ALLOWED_YEARS = ['1', '2', '3', '4'] as const;
 export type Year = (typeof ALLOWED_YEARS)[number];
 
 export const ALLOWED_SECTIONS = ['A', 'B', 'C', 'D', 'E'] as const;
