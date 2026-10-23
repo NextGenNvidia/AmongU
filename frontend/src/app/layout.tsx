@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://amongu.vercel.app'),
   title: 'AmongU',
   description:
-    'Join AmongU — an immersive social deduction hackathon at KIET Deemed to be University. Team up, ship software, and deduce the covert Impostor before the final reveal. ₹10,000 Prize Pool.',
+    'Join AmongU — an immersive social deduction hackathon at KIET Deemed to be University. Team up, ship software, and deduce the covert Impostor before the final reveal. ₹25,000 Prize Pool.',
   keywords: [
     'AmongU',
     'Hackathon',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'AmongU',
     description:
-      'Code with your crew, ship real projects, and uncover the secret Impostor among you. Organized by NextGen Supercomputing Club at KIET Deemed to be University. ₹10,000 in Prizes.',
+      'Code with your crew, ship real projects, and uncover the secret Impostor among you. Organized by NextGen Supercomputing Club at KIET Deemed to be University. ₹25,000 in Prizes.',
     url: 'https://amongu.vercel.app',
     siteName: 'AmongU',
     images: [

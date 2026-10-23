@@ -10,6 +10,9 @@ export const PrizesSection: React.FC = () => {
         >
           BOUNTY <span className="text-crew-yellow">REWARDS</span>
         </h2>
+        <p className="text-center font-display text-2xl text-crew-lime mb-16" style={{ textShadow: '2px 2px 0 #000' }}>
+          Total Prize Pool: ₹25,000
+        </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
           {/* 2nd Place */}

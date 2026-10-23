@@ -1041,11 +1041,11 @@ export default function UserDashboardPage() {
                 </li>
                 <li className="flex items-center justify-between border-b border-gray-800 pb-1.5">
                   <span className="text-gray-400">Duration:</span>
-                  <span className="text-white">3h 45m Competition</span>
+                  <span className="text-white">9:00 AM - 6:00 PM</span>
                 </li>
                 <li className="flex items-center justify-between border-b border-gray-800 pb-1.5">
                   <span className="text-gray-400">Prize Pool:</span>
-                  <span className="text-crew-lime font-display">₹10,000</span>
+                  <span className="text-crew-lime font-display">₹25,000</span>
                 </li>
                 <li className="flex items-center justify-between pt-1">
                   <span className="text-gray-400">Venue:</span>

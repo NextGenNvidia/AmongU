@@ -531,14 +531,14 @@ export default function AmongUHomePage() {
                   <span className="text-3xl">⏳</span>
                   <div>
                     <p className="text-sm text-gray-400 font-bold uppercase">Duration</p>
-                    <p className="text-xl font-display text-white">3 Hours 45 Minutes of Competition</p>
+                    <p className="text-xl font-display text-white">9:00 AM to 6:00 PM</p>
                   </div>
                 </div>
                 <div className="bg-black/50 rounded-xl p-4 au-border flex items-center gap-3">
                   <span className="text-3xl">💰</span>
                   <div>
                     <p className="text-sm text-gray-400 font-bold uppercase">Prize Pool</p>
-                    <p className="text-xl font-display text-crew-lime">₹10,000</p>
+                    <p className="text-xl font-display text-crew-lime">₹25,000</p>
                   </div>
                 </div>
               </div>
@@ -683,7 +683,7 @@ export default function AmongUHomePage() {
             BOUNTY <span className="text-crew-yellow">REWARDS</span>
           </h2>
           <p className="text-center font-display text-2xl text-crew-lime mb-16" style={{ textShadow: '2px 2px 0 #000' }}>
-            Total Prize Pool: ₹10,000
+            Total Prize Pool: ₹25,000
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -693,7 +693,7 @@ export default function AmongUHomePage() {
                 <span className="text-4xl">👑</span>
               </div>
               <h3 className="font-display text-xl text-black mb-1">Best Development Team</h3>
-              <p className="text-4xl font-display text-black mt-2 drop-shadow-md">₹4,000</p>
+              <p className="text-4xl font-display text-black mt-2 drop-shadow-md">₹10,000</p>
             </div>
 
             {/* Prize 2 */}
@@ -702,7 +702,7 @@ export default function AmongUHomePage() {
                 <span className="text-4xl">🔪</span>
               </div>
               <h3 className="font-display text-xl text-white mb-1">Best Impostor</h3>
-              <p className="text-4xl font-display text-white mt-2 drop-shadow-md">₹3,000</p>
+              <p className="text-4xl font-display text-white mt-2 drop-shadow-md">₹5,000</p>
             </div>
 
             {/* Prize 3 */}
@@ -711,7 +711,7 @@ export default function AmongUHomePage() {
                 <span className="text-4xl">🥈</span>
               </div>
               <h3 className="font-display text-xl text-gray-200 mb-1">Second-Best Development Team</h3>
-              <p className="text-4xl font-display text-crew-lime mt-2">₹2,000</p>
+              <p className="text-4xl font-display text-crew-lime mt-2">₹7,000</p>
             </div>
 
             {/* Prize 4 */}
@@ -720,7 +720,7 @@ export default function AmongUHomePage() {
                 <span className="text-4xl">🎭</span>
               </div>
               <h3 className="font-display text-xl text-gray-200 mb-1">Second-Best Impostor</h3>
-              <p className="text-4xl font-display text-crew-yellow mt-2">₹1,000</p>
+              <p className="text-4xl font-display text-crew-yellow mt-2">₹3,000</p>
             </div>
           </div>
         </div>

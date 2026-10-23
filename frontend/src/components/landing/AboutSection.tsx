@@ -37,7 +37,7 @@ export const AboutSection: React.FC = () => {
                 <span className="text-3xl">⏳</span>
                 <div>
                   <p className="text-sm text-gray-400 font-bold uppercase">Duration</p>
-                  <p className="text-xl font-display text-white">48 Hours</p>
+                  <p className="text-xl font-display text-white">9:00 AM - 6:00 PM</p>
                 </div>
               </div>
               <div className="bg-black/50 rounded-xl p-4 au-border flex items-center gap-3">
