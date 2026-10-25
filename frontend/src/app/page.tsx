@@ -227,12 +227,20 @@ export default function AmongUHomePage() {
                       </Link>
                     </>
                   ) : (
-                    <Link
-                      href="/dashboard"
-                      className="au-btn bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/60 font-display text-xs py-2 px-3 rounded-full flex items-center gap-1.5 transition-all"
-                    >
-                      <span>REGISTRATIONS CLOSED</span>
-                    </Link>
+                    <div className="relative group inline-block">
+                      <button
+                        type="button"
+                        disabled
+                        className="au-btn bg-gray-800 text-gray-400 border border-red-500/60 font-display text-xs py-2 px-3 rounded-full flex items-center gap-1.5 cursor-not-allowed opacity-80 select-none group-hover:border-red-500 group-hover:text-red-300"
+                        title="Registration Closed"
+                      >
+                        <span className="line-through decoration-red-500 font-bold">REGISTER</span>
+                        <span>🔒</span>
+                      </button>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1 px-2.5 py-1 bg-red-950/95 border border-red-500 text-red-200 text-xs font-mono font-bold rounded-xl whitespace-nowrap shadow-xl pointer-events-none z-50">
+                        Registration Closed
+                      </div>
+                    </div>
                   )}
                   <button
                     type="button"
@@ -244,9 +252,20 @@ export default function AmongUHomePage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-amber-400 font-bold bg-amber-950/70 border border-amber-500/60 px-3 py-1.5 rounded-full">
-                    REGISTRATIONS CLOSED 🔒
-                  </span>
+                  <div className="relative group inline-block">
+                    <button
+                      type="button"
+                      disabled
+                      className="au-btn bg-gray-800 text-gray-400 border-2 border-red-500/60 font-display text-sm py-2 px-5 rounded-full flex items-center gap-1.5 cursor-not-allowed opacity-80 select-none transition-all group-hover:border-red-500 group-hover:text-red-300"
+                      title="Registration Closed"
+                    >
+                      <span className="line-through decoration-red-500 font-bold">REGISTER</span>
+                      <span className="text-xs">🔒</span>
+                    </button>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1 bg-red-950/95 border-2 border-red-500 text-red-200 text-xs font-mono font-bold rounded-xl whitespace-nowrap shadow-[0_0_15px_rgba(239,68,68,0.5)] pointer-events-none z-50">
+                      <span>⚠️</span> Registration Closed
+                    </div>
+                  </div>
                   <button
                     type="button"
                     onClick={handleRegisterClick}
@@ -274,13 +293,29 @@ export default function AmongUHomePage() {
                   </Link>
                 </>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleRegisterClick}
-                  className="au-btn bg-crew-cyan text-black font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 cursor-pointer font-bold"
-                >
-                  <span>LOGIN</span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <div className="relative group inline-block">
+                    <button
+                      type="button"
+                      disabled
+                      className="au-btn bg-gray-800 text-gray-400 border border-red-500/60 font-display text-xs py-1.5 px-2.5 rounded-full flex items-center gap-1 cursor-not-allowed opacity-80 select-none group-hover:border-red-500 group-hover:text-red-300"
+                      title="Registration Closed"
+                    >
+                      <span className="line-through decoration-red-500 text-[11px] font-bold">REGISTER</span>
+                      <span className="text-[10px]">🔒</span>
+                    </button>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:flex items-center gap-1 px-2 py-0.5 bg-red-950/95 border border-red-500 text-red-200 text-[10px] font-mono font-bold rounded-lg whitespace-nowrap shadow-xl pointer-events-none z-50">
+                      Registration Closed
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRegisterClick}
+                    className="au-btn bg-crew-cyan text-black font-display text-xs py-1.5 px-2.5 rounded-full flex items-center gap-1 cursor-pointer font-bold"
+                  >
+                    <span>LOGIN</span>
+                  </button>
+                </div>
               )}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -340,16 +375,32 @@ export default function AmongUHomePage() {
               >
                 FAQ
               </a>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleRegisterClick();
-                }}
-                className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 shadow-[0_0_12px_rgba(80,239,57,0.8)] cursor-pointer"
-              >
-                <span>{firebaseUser ? (isRegistered || profile?.hasRegistered ? 'MISSION DASHBOARD' : 'DASHBOARD (CLOSED)') : 'CADET LOGIN'}</span>
-              </button>
+              <div className="relative group w-full mt-2">
+                <button
+                  type="button"
+                  disabled
+                  className="w-full au-btn bg-gray-900 text-gray-400 border-2 border-red-600/70 font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed opacity-85 select-none group-hover:border-red-500 group-hover:text-red-300"
+                  title="Registration Closed"
+                >
+                  <span className="line-through decoration-red-500 font-bold">REGISTER</span>
+                  <span>🔒</span>
+                </button>
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1.5 px-3 py-1 bg-red-950/95 border border-red-500 text-red-200 text-xs font-mono font-bold rounded-xl whitespace-nowrap shadow-xl pointer-events-none z-50">
+                  <span>⚠️</span> Registration Closed
+                </div>
+              </div>
+              {!firebaseUser && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleRegisterClick();
+                  }}
+                  className="w-full au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 cursor-pointer font-bold"
+                >
+                  <span>CADET LOGIN →</span>
+                </button>
+              )}
 
               {firebaseUser && (isRegistered || profile?.hasRegistered) && (
                 <>
@@ -477,26 +528,35 @@ export default function AmongUHomePage() {
                   </Link>
                 </>
               ) : (
-                <>
-                  <div className="flex flex-col items-center gap-1.5">
-                    <span className="au-btn bg-gray-900 border-2 border-amber-500/80 text-amber-300 font-display text-xl sm:text-2xl py-3.5 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
-                      <span>🔒 REGISTRATIONS CLOSED</span>
-                    </span>
-                    <span className="text-xs font-mono text-amber-400 font-bold">
-                      We are not accepting any new registrations
-                    </span>
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mt-2">
+                  <div className="relative group inline-block">
+                    <button
+                      type="button"
+                      disabled
+                      className="au-btn bg-gray-900 border-4 border-red-600/70 text-gray-400 font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 cursor-not-allowed shadow-[0_0_20px_rgba(239,68,68,0.3)] opacity-85 select-none transition-all group-hover:border-red-500 group-hover:text-red-300 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]"
+                      title="Registration Closed"
+                    >
+                      <span className="line-through decoration-red-500 font-black">REGISTER NOW</span>
+                      <span className="text-xl">🔒</span>
+                    </button>
+                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-2 px-4 py-2 bg-red-950/95 border-2 border-red-500 text-red-200 font-mono text-xs sm:text-sm font-bold rounded-2xl whitespace-nowrap shadow-[0_0_25px_rgba(239,68,68,0.8)] pointer-events-none z-50 animate-bounce">
+                      <span>🚨</span>
+                      <span>Registration Closed</span>
+                    </div>
                   </div>
+
                   <button
                     type="button"
                     onClick={handleRegisterClick}
-                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-xl py-4 px-8 rounded-full font-bold cursor-pointer transition-all shadow-[0_0_20px_rgba(6,182,212,0.5)] flex items-center gap-2"
+                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_25px_rgba(6,182,212,0.6)] hover:scale-105 transition-all cursor-pointer font-bold"
                   >
                     <span>CADET LOGIN →</span>
                   </button>
+
                   <a href="#about" className="au-btn bg-crew-white text-black hover:bg-gray-200 font-display text-xl py-4 px-8 rounded-full">
                     VIEW MISSIONS
                   </a>
-                </>
+                </div>
               )}
             </div>
           </div>

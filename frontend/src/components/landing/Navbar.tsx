@@ -89,12 +89,29 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenRegister, userEmail, onLog
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={onOpenRegister}
-                  className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-sm py-2 px-5 rounded-full"
-                >
-                  REGISTER / LOGIN
-                </button>
+                <div className="flex items-center gap-3">
+                  <div className="relative group inline-block">
+                    <button
+                      type="button"
+                      disabled
+                      className="au-btn bg-gray-800 text-gray-400 border border-red-500/60 font-display text-sm py-2 px-5 rounded-full flex items-center gap-1.5 cursor-not-allowed opacity-80 select-none group-hover:border-red-500 group-hover:text-red-300"
+                      title="Registration Closed"
+                    >
+                      <span className="line-through decoration-red-500 font-bold">REGISTER</span>
+                      <span className="text-xs">🔒</span>
+                    </button>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1 px-3 py-1 bg-red-950/95 border border-red-500 text-red-200 text-xs font-mono font-bold rounded-xl whitespace-nowrap shadow-xl pointer-events-none z-50">
+                      <span>⚠️</span> Registration Closed
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onOpenRegister}
+                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-sm py-2 px-4 rounded-full font-bold cursor-pointer"
+                  >
+                    LOGIN
+                  </button>
+                </div>
               )}
             </div>
           </div>
