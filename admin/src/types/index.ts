@@ -30,6 +30,7 @@ export interface ReminderStatus {
   totalUnpaidCadets: number;
   totalRegisteredCadets: number;
   totalCadets: number;
+  remindersEnabled?: boolean;
 }
 
 export interface AnnouncementRecord {

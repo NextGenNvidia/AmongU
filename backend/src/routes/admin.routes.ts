@@ -15,6 +15,7 @@ import {
   generateCheckInToken,
   getReminderStatus,
   triggerManualReminders,
+  toggleReminderStatus,
 } from '../controllers/admin.controller';
 import {
   getAnnouncements,
@@ -72,6 +73,7 @@ router.post('/event/qr-token', generateCheckInToken);
 // Periodic 24-Hour Registration Reminders
 router.get('/reminders/status', getReminderStatus);
 router.post('/reminders/send', triggerManualReminders);
+router.post('/reminders/toggle', toggleReminderStatus);
 
 // Official Organizer Announcements Management
 router.get('/announcements', getAnnouncements);

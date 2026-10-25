@@ -25,9 +25,11 @@ export default function UsersRoster({
   const [reminderStatus, setReminderStatus] = useState<{
     lastReminderSentAt: string | null;
     lastReminderSentCount: number;
-    totalUnpaidCadets: number;
+    totalUnpaidCadets?: number;
+    remindersEnabled?: boolean;
   } | null>(null);
   const [dispatchingReminders, setDispatchingReminders] = useState<boolean>(false);
+  const [togglingReminders, setTogglingReminders] = useState<boolean>(false);
 
   // User currently selected for deletion modal
   const [userToDelete, setUserToDelete] = useState<LoggedInUserRecord | null>(null);
@@ -96,6 +98,22 @@ export default function UsersRoster({
       showToast(err?.response?.data?.message || 'Failed to dispatch reminders', 'error');
     } finally {
       setDispatchingReminders(false);
+    }
+  };
+
+  const handleToggleReminders = async () => {
+    if (togglingReminders) return;
+    const nextState = !reminderStatus?.remindersEnabled;
+    try {
+      setTogglingReminders(true);
+      const res = await adminService.toggleReminders(nextState);
+      showToast(res.message || (nextState ? '24-Hour reminders enabled!' : '24-Hour reminders stopped!'), 'success');
+      await loadReminderStatus();
+    } catch (err: any) {
+      console.error('Toggle reminder error:', err);
+      showToast(err?.response?.data?.message || 'Failed to update reminder engine state', 'error');
+    } finally {
+      setTogglingReminders(false);
     }
   };
 
@@ -285,19 +303,32 @@ export default function UsersRoster({
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-crew-red animate-ping" />
+              <span className={`w-2.5 h-2.5 rounded-full ${reminderStatus?.remindersEnabled ? 'bg-emerald-400 animate-ping' : 'bg-red-500'}`} />
               <span className="font-mono text-xs font-bold uppercase tracking-wider text-crew-red">
                 24-HOUR AUTOMATED REMINDER ENGINE
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-black/60 text-emerald-400 border border-emerald-500/40">
-                ACTIVE
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                reminderStatus?.remindersEnabled
+                  ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/50'
+                  : 'bg-red-950/80 text-red-300 border-red-500/50'
+              }`}>
+                {reminderStatus?.remindersEnabled ? '● ACTIVE / RUNNING' : '■ STOPPED / PAUSED'}
               </span>
             </div>
             <h3 className="font-display text-xl text-white">
               UNPAID CADET RETENTION PROTOCOL
             </h3>
             <p className="text-xs text-gray-300 font-sans max-w-2xl leading-relaxed">
-              Every cadet who authenticates is automatically tracked. If their ₹55 clearance is unpaid after 24 hours, an emergency reminder is dispatched. Once paid, they are immediately excluded.
+              Every cadet who authenticates is automatically tracked. If their ₹55 clearance is unpaid after 24 hours, an emergency reminder is dispatched.
+              {reminderStatus?.remindersEnabled ? (
+                <span className="text-emerald-400 block mt-1 font-mono text-[11px]">
+                  ✓ Automated hourly scanner is active and checking for 24-hour milestones.
+                </span>
+              ) : (
+                <span className="text-amber-400 block mt-1 font-mono text-[11px]">
+                  ⏸️ Automated 24-hour reminder engine is currently STOPPED. No reminder emails will be dispatched.
+                </span>
+              )}
             </p>
             <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-gray-400 pt-1">
               <span>
@@ -317,10 +348,33 @@ export default function UsersRoster({
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 w-full md:w-auto">
+            {/* STOP / RESUME OPTION */}
             <button
+              type="button"
+              onClick={handleToggleReminders}
+              disabled={togglingReminders}
+              className={`au-btn font-display text-xs sm:text-sm py-3 px-5 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer font-bold ${
+                reminderStatus?.remindersEnabled
+                  ? 'bg-red-950/90 hover:bg-red-900 text-red-200 border-2 border-red-600 shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                  : 'bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border-2 border-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.4)]'
+              }`}
+            >
+              <span>
+                {togglingReminders
+                  ? 'UPDATING...'
+                  : reminderStatus?.remindersEnabled
+                  ? '🛑 STOP 24-HR REMINDERS'
+                  : '▶️ RESUME 24-HR REMINDERS'}
+              </span>
+            </button>
+
+            {/* MANUAL DISPATCH */}
+            <button
+              type="button"
               onClick={handleManualTriggerReminders}
-              disabled={dispatchingReminders || pendingCount === 0}
+              disabled={dispatchingReminders || pendingCount === 0 || !reminderStatus?.remindersEnabled}
               className="au-btn bg-crew-red hover:bg-red-600 disabled:opacity-40 text-white font-display text-xs sm:text-sm py-3 px-5 rounded-xl shadow-[0_0_20px_rgba(197,17,17,0.4)] flex items-center justify-center gap-2 transition-all cursor-pointer font-bold"
+              title={!reminderStatus?.remindersEnabled ? '24-hour reminder engine is stopped' : ''}
             >
               <svg className={`w-4 h-4 ${dispatchingReminders ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

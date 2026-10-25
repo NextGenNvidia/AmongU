@@ -26,7 +26,23 @@ class ReminderService {
    * @param force If true (e.g. manual admin trigger), bypasses the 24-hr elapsed check for unpaid users
    */
   async processUnpaidRegistrationReminders(force: boolean = false): Promise<ReminderRunResult> {
-    if (!env.REGISTRATION_OPEN) {
+    const config = await EventConfig.findOne({ key: 'main_event' }).lean();
+    const remindersEnabled = config?.remindersEnabled ?? false;
+
+    if (!remindersEnabled && !force) {
+      console.log('🛑 [Reminder Service] 24-hour reminder engine is currently stopped by admin. Skipping reminder scan.');
+      return {
+        totalUsers: 0,
+        paidCount: 0,
+        unpaidCount: 0,
+        eligibleCount: 0,
+        sentCount: 0,
+        failedCount: 0,
+        timestamp: new Date(),
+      };
+    }
+
+    if (!env.REGISTRATION_OPEN && !force) {
       console.log('🛑 [Reminder Service] Registrations are closed. Skipping reminder scan.');
       return {
         totalUsers: 0,
@@ -215,7 +231,21 @@ class ReminderService {
       totalUnpaidCadets: unpaidCount,
       totalRegisteredCadets: paidRegistrations.length,
       totalCadets: allUsers.length,
+      remindersEnabled: config?.remindersEnabled ?? false,
     };
+  }
+
+  /**
+   * Enable or stop the automated 24-hr reminder engine
+   */
+  async setRemindersEnabled(enabled: boolean): Promise<boolean> {
+    const config = await EventConfig.findOneAndUpdate(
+      { key: 'main_event' },
+      { $set: { remindersEnabled: enabled } },
+      { upsert: true, new: true }
+    );
+    console.log(`⚙️ [Reminder Service] 24-Hour reminder engine state set to: ${enabled ? 'ENABLED' : 'STOPPED'}`);
+    return Boolean(config.remindersEnabled);
   }
 }
 

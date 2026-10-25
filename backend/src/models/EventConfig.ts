@@ -12,6 +12,7 @@ export interface IEventConfig extends Document {
   checkInTokenUpdatedAt?: Date;
   lastReminderSentAt?: Date;
   lastReminderSentCount?: number;
+  remindersEnabled?: boolean;
   updatedAt: Date;
   createdAt: Date;
 }
@@ -69,6 +70,10 @@ const eventConfigSchema = new Schema<IEventConfig>(
     lastReminderSentCount: {
       type: Number,
       default: 0,
+    },
+    remindersEnabled: {
+      type: Boolean,
+      default: false,
     },
   },
   {

@@ -89,6 +89,7 @@ export const adminService = {
       totalUnpaidCadets: number;
       totalRegisteredCadets: number;
       totalCadets: number;
+      remindersEnabled?: boolean;
     };
   }> => {
     const res = await apiClient.get('/admin/reminders/status');
@@ -101,6 +102,15 @@ export const adminService = {
     data: any;
   }> => {
     const res = await apiClient.post('/admin/reminders/send');
+    return res.data;
+  },
+
+  toggleReminders: async (enabled: boolean): Promise<{
+    success: boolean;
+    message: string;
+    remindersEnabled: boolean;
+  }> => {
+    const res = await apiClient.post('/admin/reminders/toggle', { enabled });
     return res.data;
   },
 

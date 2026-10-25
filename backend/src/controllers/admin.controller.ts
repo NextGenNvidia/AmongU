@@ -547,3 +547,21 @@ export const triggerManualReminders = async (_req: Request, res: Response): Prom
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const toggleReminderStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { enabled } = req.body;
+    const isEnabled = Boolean(enabled);
+    const result = await reminderService.setRemindersEnabled(isEnabled);
+    res.status(200).json({
+      success: true,
+      message: isEnabled
+        ? '24-Hour automated reminder engine has been ACTIVATED.'
+        : '24-Hour automated reminder engine has been STOPPED.',
+      remindersEnabled: result,
+    });
+  } catch (error: any) {
+    console.error('toggleReminderStatus error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

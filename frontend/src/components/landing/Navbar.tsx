@@ -95,13 +95,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenRegister, userEmail, onLog
                       type="button"
                       disabled
                       className="au-btn bg-gray-800 text-gray-400 border border-red-500/60 font-display text-sm py-2 px-5 rounded-full flex items-center gap-1.5 cursor-not-allowed opacity-80 select-none group-hover:border-red-500 group-hover:text-red-300"
-                      title="Registration Closed"
+                      title="The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience."
                     >
                       <span className="line-through decoration-red-500 font-bold">REGISTER</span>
                       <span className="text-xs">🔒</span>
                     </button>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1 px-3 py-1 bg-red-950/95 border border-red-500 text-red-200 text-xs font-mono font-bold rounded-xl whitespace-nowrap shadow-xl pointer-events-none z-50">
-                      <span>⚠️</span> Registration Closed
+                    <div className="absolute top-full right-0 mt-2 hidden group-hover:flex flex-col items-start w-[320px] sm:w-[420px] p-3.5 bg-gray-950/95 border-2 border-red-500 text-red-100 rounded-2xl shadow-xl pointer-events-none z-50 text-left">
+                      <div className="flex items-center gap-1.5 text-crew-yellow font-display text-xs font-bold uppercase mb-1.5 border-b border-red-900/60 pb-1 w-full">
+                        <span>📢</span> Important Notice
+                      </div>
+                      <p className="text-xs font-sans font-medium text-gray-200 leading-relaxed">
+                        The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience.
+                      </p>
                     </div>
                   </div>
                   <button

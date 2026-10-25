@@ -257,13 +257,18 @@ export default function AmongUHomePage() {
                       type="button"
                       disabled
                       className="au-btn bg-gray-800 text-gray-400 border-2 border-red-500/60 font-display text-sm py-2 px-5 rounded-full flex items-center gap-1.5 cursor-not-allowed opacity-80 select-none transition-all group-hover:border-red-500 group-hover:text-red-300"
-                      title="Registration Closed"
+                      title="The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience."
                     >
                       <span className="line-through decoration-red-500 font-bold">REGISTER</span>
                       <span className="text-xs">🔒</span>
                     </button>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1.5 px-3 py-1 bg-red-950/95 border-2 border-red-500 text-red-200 text-xs font-mono font-bold rounded-xl whitespace-nowrap shadow-[0_0_15px_rgba(239,68,68,0.5)] pointer-events-none z-50">
-                      <span>⚠️</span> Registration Closed
+                    <div className="absolute top-full right-0 mt-2 hidden group-hover:flex flex-col items-start w-[320px] sm:w-[420px] p-3.5 bg-gray-950/95 border-2 border-red-500 text-red-100 rounded-2xl shadow-[0_0_25px_rgba(239,68,68,0.7)] backdrop-blur-md pointer-events-none z-50 text-left">
+                      <div className="flex items-center gap-1.5 text-crew-yellow font-display text-xs font-bold uppercase mb-1.5 border-b border-red-900/60 pb-1 w-full">
+                        <span>📢</span> Important Notice
+                      </div>
+                      <p className="text-xs font-sans font-medium text-gray-200 leading-relaxed">
+                        The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience.
+                      </p>
                     </div>
                   </div>
                   <button
@@ -478,32 +483,25 @@ export default function AmongUHomePage() {
             </p>
 
             <p className="text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto font-bold mb-6 bg-black/50 p-4 rounded-xl au-border">
-              October 28, 2026 • KIET Deemed to be University
+              To Be Announced • KIET Deemed to be University
             </p>
 
-            {/* Live Event Countdown to October 28, 2026 */}
+            {/* Mission Liftoff Status */}
             <div className="mb-8 max-w-xl mx-auto w-full px-2">
               <div className="bg-black/80 au-border rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(56,254,220,0.25)] border-2 border-crew-cyan">
                 <div className="flex items-center justify-center gap-2 text-crew-cyan font-mono text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">
                   <span className="w-2.5 h-2.5 rounded-full bg-crew-lime animate-ping"></span>
-                  <span>MISSION LIFTOFF COUNTDOWN</span>
+                  <span>MISSION LIFTOFF</span>
                 </div>
-                <div className="grid grid-cols-4 gap-2 sm:gap-4 text-center">
-                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
-                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-lime">{timeLeft.days}</div>
-                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Days</div>
+                <div className="bg-gray-900/90 au-border rounded-xl p-4 sm:p-5 text-center">
+                  <div
+                    className="font-display text-2xl sm:text-4xl font-black text-crew-yellow tracking-wider"
+                    style={{ textShadow: '2px 2px 0 #000' }}
+                  >
+                    TO BE ANNOUNCED
                   </div>
-                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
-                    <div className="font-mono text-2xl sm:text-4xl font-black text-white">{timeLeft.hours.toString().padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Hours</div>
-                  </div>
-                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
-                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-cyan">{timeLeft.minutes.toString().padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Mins</div>
-                  </div>
-                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
-                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-yellow">{timeLeft.seconds.toString().padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Secs</div>
+                  <div className="text-xs sm:text-sm font-mono font-bold text-gray-400 uppercase mt-2">
+                    Postponed Until After Diwali • Revised Date Coming Soon
                   </div>
                 </div>
               </div>
@@ -534,14 +532,21 @@ export default function AmongUHomePage() {
                       type="button"
                       disabled
                       className="au-btn bg-gray-900 border-4 border-red-600/70 text-gray-400 font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 cursor-not-allowed shadow-[0_0_20px_rgba(239,68,68,0.3)] opacity-85 select-none transition-all group-hover:border-red-500 group-hover:text-red-300 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]"
-                      title="Registration Closed"
+                      title="The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience."
                     >
                       <span className="line-through decoration-red-500 font-black">REGISTER NOW</span>
                       <span className="text-xl">🔒</span>
                     </button>
-                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-2 px-4 py-2 bg-red-950/95 border-2 border-red-500 text-red-200 font-mono text-xs sm:text-sm font-bold rounded-2xl whitespace-nowrap shadow-[0_0_25px_rgba(239,68,68,0.8)] pointer-events-none z-50 animate-bounce">
-                      <span>🚨</span>
-                      <span>Registration Closed</span>
+                    {/* Hover Postponement Notice */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 hidden group-hover:flex flex-col items-start w-[320px] sm:w-[460px] max-w-[90vw] p-4 bg-gray-950/95 border-2 border-red-500 text-red-100 rounded-2xl shadow-[0_0_35px_rgba(239,68,68,0.85)] backdrop-blur-md pointer-events-none z-50 text-left">
+                      <div className="flex items-center gap-2 text-crew-yellow font-display text-xs sm:text-sm font-black uppercase tracking-wider mb-2 border-b border-red-900/60 pb-1.5 w-full">
+                        <span>📢</span>
+                        <span>IMPORTANT NOTICE</span>
+                      </div>
+                      <p className="text-xs sm:text-sm font-sans font-semibold text-gray-200 leading-relaxed">
+                        The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience.
+                      </p>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-red-500"></div>
                     </div>
                   </div>
 
