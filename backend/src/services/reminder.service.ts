@@ -2,6 +2,7 @@ import { User } from '../models/User';
 import { Registration } from '../models/Registration';
 import { EventConfig } from '../models/EventConfig';
 import { mailService } from './mail.service';
+import { env } from '../config/env';
 
 const RATE_LIMIT_DELAY_MS = 350; // Delay between sequential SMTP sends to avoid socket flooding
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -25,6 +26,19 @@ class ReminderService {
    * @param force If true (e.g. manual admin trigger), bypasses the 24-hr elapsed check for unpaid users
    */
   async processUnpaidRegistrationReminders(force: boolean = false): Promise<ReminderRunResult> {
+    if (!env.REGISTRATION_OPEN) {
+      console.log('🛑 [Reminder Service] Registrations are closed. Skipping reminder scan.');
+      return {
+        totalUsers: 0,
+        paidCount: 0,
+        unpaidCount: 0,
+        eligibleCount: 0,
+        sentCount: 0,
+        failedCount: 0,
+        timestamp: new Date(),
+      };
+    }
+
     if (this.isProcessing) {
       console.warn('⚠️ [Reminder Service] A reminder transmission cycle is already currently running. Skipping duplicate call.');
       return {

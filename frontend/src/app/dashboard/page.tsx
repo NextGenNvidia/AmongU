@@ -90,7 +90,7 @@ export default function UserDashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const { firebaseUser, profile, isRegistered, loading: authLoading } = useAuth();
+  const { firebaseUser, profile, isRegistered, loading: authLoading, logout } = useAuth();
 
   useEffect(() => {
     if (authLoading) return;
@@ -101,10 +101,10 @@ export default function UserDashboardPage() {
       return;
     }
 
-    // 2. Strict Registration Check: if user has NOT registered, send them to registration
+    // 2. Strict Registration Check: if user has NOT registered, stop loading to show closed screen
     if (!profile?.hasRegistered && !isRegistered) {
-      console.log('Cadet has not registered yet. Redirecting to clearance portal...');
-      router.replace('/portal/cadet-clearance-7b92');
+      console.log('Cadet has not registered yet. Showing closed registration notice...');
+      setLoading(false);
       return;
     }
 
@@ -160,8 +160,9 @@ export default function UserDashboardPage() {
           setTicket(realTicket);
           localStorage.setItem('amongu_user_ticket', JSON.stringify(realTicket));
         } else {
-          // If no registration record in MongoDB, bounce to registration
-          router.replace('/portal/cadet-clearance-7b92');
+          // If no registration record in MongoDB
+          setTicket(null);
+          setLoading(false);
           return;
         }
       } catch (err) {
@@ -283,6 +284,53 @@ export default function UserDashboardPage() {
     return (
       <div className="min-h-screen bg-space flex items-center justify-center">
         <p className="font-display text-2xl text-crew-cyan animate-pulse">CONNECTING TO DROP-SHIP DASHBOARD...</p>
+      </div>
+    );
+  }
+
+  if (!ticket && (!profile?.hasRegistered && !isRegistered)) {
+    return (
+      <div className="min-h-screen bg-space font-body text-gray-100 antialiased flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        {/* Moving Stars and Twinkling Starfield */}
+        <div className="stars pointer-events-none"></div>
+        <div className="twinkling pointer-events-none"></div>
+
+        <div className="au-card bg-gray-900/95 border-4 border-amber-500 max-w-xl w-full p-8 rounded-3xl text-center relative z-10 shadow-[0_0_50px_rgba(245,158,11,0.35)]">
+          <div className="w-20 h-20 mx-auto rounded-full bg-amber-500/20 border-4 border-amber-500 flex items-center justify-center mb-6 shadow-[0_0_25px_rgba(245,158,11,0.6)]">
+            <span className="text-4xl animate-bounce">📢</span>
+          </div>
+
+          <span className="inline-block px-3 py-1 bg-amber-500/20 border border-amber-500 text-amber-300 font-mono text-xs font-bold uppercase rounded-full mb-3 tracking-widest">
+            DROP-SHIP NOTIFICATION
+          </span>
+
+          <h1 className="font-display text-3xl sm:text-4xl text-white mb-3" style={{ textShadow: '2px 2px 0 #000' }}>
+            REGISTRATIONS ARE CLOSED
+          </h1>
+
+          <div className="bg-amber-950/80 border-2 border-amber-500/80 rounded-2xl p-4 mb-6 text-amber-100 text-sm font-bold leading-relaxed">
+            We are not accepting any new registrations for AmongU Hackathon. All participant slots have been locked.
+          </div>
+
+          <p className="text-gray-400 text-xs font-mono mb-6">
+            Cadet: <span className="text-crew-cyan">{firebaseUser?.email}</span> (No confirmed registration found)
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/"
+              className="au-btn bg-crew-white hover:bg-gray-200 text-black font-display text-sm py-3 px-6 rounded-full font-bold"
+            >
+              RETURN TO HOME
+            </Link>
+            <button
+              onClick={() => logout()}
+              className="au-btn bg-black hover:bg-gray-800 text-gray-300 border border-gray-700 font-display text-sm py-3 px-6 rounded-full cursor-pointer"
+            >
+              LOGOUT / SWITCH ACCOUNT
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -442,6 +490,30 @@ export default function UserDashboardPage() {
 
       {/* Main Dashboard Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7 relative z-10">
+        {/* OFFICIAL REGISTRATIONS CLOSED NOTICE */}
+        <div className="rounded-2xl p-4 sm:p-5 border-4 border-amber-500/90 bg-gradient-to-r from-amber-950/90 via-black to-amber-950/80 shadow-[0_0_35px_rgba(245,158,11,0.3)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.5)]">
+              <span className="text-2xl animate-pulse">📢</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-black uppercase px-2.5 py-0.5 rounded bg-amber-500 text-black shadow">
+                  OFFICIAL NOTICE
+                </span>
+                <span className="text-xs font-mono text-amber-300 font-bold uppercase tracking-wider">
+                  REGISTRATIONS CLOSED
+                </span>
+              </div>
+              <p className="text-sm font-bold text-amber-100 mt-1">
+                We are not accepting any new registrations. All participant clearances have been finalized.
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-mono font-bold text-amber-300 bg-black/80 px-3.5 py-1.5 rounded-xl border border-amber-500/50 shrink-0">
+            ADMISSIONS CLOSED 🔒
+          </span>
+        </div>
         {/* OFFICIAL ROUND 3 ROLE NOTIFICATION (AUTOMATICALLY DICTATED BY EVENT ADMIN) */}
         {isImpostor && (
           <div className="rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border bg-red-950/85 border-red-700/80 shadow-[0_0_30px_rgba(239,68,68,0.3)] animate-pulse">

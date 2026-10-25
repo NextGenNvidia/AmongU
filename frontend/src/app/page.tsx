@@ -61,11 +61,7 @@ export default function AmongUHomePage() {
       return;
     }
 
-    if (isRegistered || profile?.hasRegistered) {
-      router.push('/dashboard');
-    } else {
-      router.push('/portal/cadet-clearance-7b92');
-    }
+    router.push('/dashboard');
   };
 
   const handleSignInWithGoogle = async () => {
@@ -80,14 +76,7 @@ export default function AmongUHomePage() {
       }
 
       setShowSignInModal(false);
-
-      if (loggedIn.hasRegistered) {
-        console.log('✅ Cadet already registered, redirecting to dashboard');
-        router.push('/dashboard');
-      } else {
-        console.log('🚀 Cadet authenticated and unregistered, taking to registration clearance screen');
-        router.push('/portal/cadet-clearance-7b92');
-      }
+      router.push('/dashboard');
     } catch (err: any) {
       console.error('Sign-in error from modal:', err);
       setModalAuthError(
@@ -204,9 +193,9 @@ export default function AmongUHomePage() {
               <a href="#prizes" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 Prizes
               </a>
-              <Link href="/sponsors" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
+              {/* <Link href="/sponsors" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 Sponsors
-              </Link>
+              </Link> */}
               <a href="#faq" className="hover:text-crew-cyan hover:-translate-y-1 transition-transform font-bold text-sm lg:text-base">
                 FAQ
               </a>
@@ -239,10 +228,10 @@ export default function AmongUHomePage() {
                     </>
                   ) : (
                     <Link
-                      href="/portal/cadet-clearance-7b92"
-                      className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-sm py-2 px-4 rounded-full flex items-center gap-1.5 transition-all"
+                      href="/dashboard"
+                      className="au-btn bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/60 font-display text-xs py-2 px-3 rounded-full flex items-center gap-1.5 transition-all"
                     >
-                      <span>REGISTER</span>
+                      <span>REGISTRATIONS CLOSED</span>
                     </Link>
                   )}
                   <button
@@ -254,13 +243,18 @@ export default function AmongUHomePage() {
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleRegisterClick}
-                  className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-sm py-2 px-5 rounded-full flex items-center gap-2 shadow-[0_0_12px_rgba(80,239,57,0.8)] hover:scale-105 transition-all cursor-pointer"
-                >
-                  <span>REGISTER</span>
-                </button>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-mono text-amber-400 font-bold bg-amber-950/70 border border-amber-500/60 px-3 py-1.5 rounded-full">
+                    REGISTRATIONS CLOSED 🔒
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRegisterClick}
+                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-sm py-2 px-4 rounded-full flex items-center gap-2 shadow-[0_0_12px_rgba(6,182,212,0.6)] hover:scale-105 transition-all cursor-pointer font-bold"
+                  >
+                    <span>LOGIN</span>
+                  </button>
+                </div>
               )}
             </div>
             <div className="md:hidden flex items-center gap-2">
@@ -283,9 +277,9 @@ export default function AmongUHomePage() {
                 <button
                   type="button"
                   onClick={handleRegisterClick}
-                  className="au-btn bg-crew-lime text-black font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 cursor-pointer"
+                  className="au-btn bg-crew-cyan text-black font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 cursor-pointer font-bold"
                 >
-                  <span>REGISTER</span>
+                  <span>LOGIN</span>
                 </button>
               )}
               <button
@@ -354,7 +348,7 @@ export default function AmongUHomePage() {
                 }}
                 className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 shadow-[0_0_12px_rgba(80,239,57,0.8)] cursor-pointer"
               >
-                <span>{firebaseUser ? (isRegistered || profile?.hasRegistered ? 'MISSION DASHBOARD' : 'REGISTER') : 'REGISTER'}</span>
+                <span>{firebaseUser ? (isRegistered || profile?.hasRegistered ? 'MISSION DASHBOARD' : 'DASHBOARD (CLOSED)') : 'CADET LOGIN'}</span>
               </button>
 
               {firebaseUser && (isRegistered || profile?.hasRegistered) && (
@@ -484,19 +478,20 @@ export default function AmongUHomePage() {
                 </>
               ) : (
                 <>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <span className="au-btn bg-gray-900 border-2 border-amber-500/80 text-amber-300 font-display text-xl sm:text-2xl py-3.5 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                      <span>🔒 REGISTRATIONS CLOSED</span>
+                    </span>
+                    <span className="text-xs font-mono text-amber-400 font-bold">
+                      We are not accepting any new registrations
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={handleRegisterClick}
-                    className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_25px_rgba(197,17,17,0.8)] animate-pulse hover:animate-none transition-all cursor-pointer"
+                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-xl py-4 px-8 rounded-full font-bold cursor-pointer transition-all shadow-[0_0_20px_rgba(6,182,212,0.5)] flex items-center gap-2"
                   >
-                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
-                    <span>REGISTER NOW</span>
+                    <span>CADET LOGIN →</span>
                   </button>
                   <a href="#about" className="au-btn bg-crew-white text-black hover:bg-gray-200 font-display text-xl py-4 px-8 rounded-full">
                     VIEW MISSIONS
@@ -959,11 +954,14 @@ export default function AmongUHomePage() {
             </div>
 
             <h3 className="font-display text-2xl sm:text-3xl text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>
-              SIGN IN TO REGISTER
+              CADET SIGN IN
             </h3>
-            <p className="text-gray-300 font-bold text-xs sm:text-sm mb-5 leading-relaxed">
-              Sign in with your official KIET Google account to proceed to hackathon registration.
+            <p className="text-gray-300 font-bold text-xs sm:text-sm mb-3 leading-relaxed">
+              Registrations are officially closed. Sign in with your registered KIET Google account to access your Mission Dashboard.
             </p>
+            <div className="bg-amber-950/80 border border-amber-500/80 rounded-xl p-2.5 mb-5 text-amber-200 text-xs font-bold text-center">
+              ⚠️ Notice: We are no longer accepting any new registrations.
+            </div>
 
             {/* KIET Domain Notice */}
             <div className="bg-black/60 border border-gray-800 rounded-2xl p-3.5 mb-5 text-left text-xs font-mono">

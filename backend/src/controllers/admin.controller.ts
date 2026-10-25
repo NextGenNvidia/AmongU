@@ -443,7 +443,7 @@ export const getEventConfig = async (req: Request, res: Response): Promise<void>
         eventTitle: 'AmongU Hackathon',
         eventStartDate: '2026-10-28T09:00:00+05:30',
         venue: 'KIET Deemed to be University',
-        registrationOpen: true,
+        registrationOpen: false,
         registrationFeeINR: 55,
         prizePool: '₹10,000',
       });

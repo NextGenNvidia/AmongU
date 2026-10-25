@@ -15,10 +15,11 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     }
 
     // 1. Verify registrations are open
-    if (!env.REGISTRATION_OPEN) {
+    const config = await EventConfig.findOne({ key: 'main_event' });
+    if (!env.REGISTRATION_OPEN || (config && config.registrationOpen === false)) {
       res.status(400).json({
         success: false,
-        message: 'Registrations are currently closed for AmongU event',
+        message: 'Registrations are currently closed. We are not accepting any new registrations.',
       });
       return;
     }
@@ -346,6 +347,15 @@ export const venueCheckIn = async (req: Request, res: Response): Promise<void> =
 
 export const initiateRegistration = async (req: Request, res: Response): Promise<void> => {
   try {
+    const config = await EventConfig.findOne({ key: 'main_event' });
+    if (!env.REGISTRATION_OPEN || (config && config.registrationOpen === false)) {
+      res.status(403).json({
+        success: false,
+        message: 'Registrations are currently closed. We are not accepting any new registrations.',
+      });
+      return;
+    }
+
     const { name, email, collegeId, branch, year, section, track, phone } = req.body;
     
     // Generate a secure 6-digit transmission clearance code
@@ -376,6 +386,15 @@ export const initiateRegistration = async (req: Request, res: Response): Promise
 
 export const confirmRegistration = async (req: Request, res: Response): Promise<void> => {
   try {
+    const config = await EventConfig.findOne({ key: 'main_event' });
+    if (!env.REGISTRATION_OPEN || (config && config.registrationOpen === false)) {
+      res.status(403).json({
+        success: false,
+        message: 'Registrations are currently closed. We are not accepting any new registrations.',
+      });
+      return;
+    }
+
     const { name, email, collegeId, branch, year, section, track, phone, paymentId } = req.body;
 
     let finalUserId = req.user?.dbUser?._id;

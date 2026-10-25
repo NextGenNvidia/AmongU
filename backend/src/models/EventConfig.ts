@@ -42,7 +42,7 @@ const eventConfigSchema = new Schema<IEventConfig>(
     },
     registrationOpen: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     registrationFeeINR: {
       type: Number,
