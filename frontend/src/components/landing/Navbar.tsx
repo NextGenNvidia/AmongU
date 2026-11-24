@@ -89,34 +89,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenRegister, userEmail, onLog
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <div className="relative group inline-block">
-                    <button
-                      type="button"
-                      disabled
-                      className="au-btn bg-gray-800 text-gray-400 border border-red-500/60 font-display text-sm py-2 px-5 rounded-full flex items-center gap-1.5 cursor-not-allowed opacity-80 select-none group-hover:border-red-500 group-hover:text-red-300"
-                      title="The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience."
-                    >
-                      <span className="line-through decoration-red-500 font-bold">REGISTER</span>
-                      <span className="text-xs">🔒</span>
-                    </button>
-                    <div className="absolute top-full right-0 mt-2 hidden group-hover:flex flex-col items-start w-[320px] sm:w-[420px] p-3.5 bg-gray-950/95 border-2 border-red-500 text-red-100 rounded-2xl shadow-xl pointer-events-none z-50 text-left">
-                      <div className="flex items-center gap-1.5 text-crew-yellow font-display text-xs font-bold uppercase mb-1.5 border-b border-red-900/60 pb-1 w-full">
-                        <span>📢</span> Important Notice
-                      </div>
-                      <p className="text-xs font-sans font-medium text-gray-200 leading-relaxed">
-                        The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={onOpenRegister}
-                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-sm py-2 px-4 rounded-full font-bold cursor-pointer"
-                  >
-                    LOGIN
-                  </button>
-                </div>
+                <button
+                  onClick={onOpenRegister}
+                  className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-sm py-2 px-5 rounded-full font-bold"
+                >
+                  REGISTER / LOGIN
+                </button>
               )}
             </div>
           </div>

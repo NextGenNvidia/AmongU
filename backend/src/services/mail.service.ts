@@ -293,10 +293,9 @@ class MailService {
             What Awaits You Onboard:
           </p>
           <ul class="perks">
-            <li>💰 <strong>₹10,000 Cash Prize Pool</strong> + exclusive trophy & certificates</li>
+            <li>💰 <strong>₹25,000 Cash Prize Pool</strong> + exclusive trophy &amp; certificates</li>
             <li>🕵️ <strong>Social Deduction Mechanics</strong>: Code, collaborate, and identify the covert Impostor</li>
-            <li>🍕 <strong>Food, Fuel & Crewmate Swag</strong> throughout the hackathon</li>
-            <li>🤝 <strong>Squad Formations & Mentorship</strong> under NextGen Supercomputing Club</li>
+            <li>🤝 <strong>Squad Formations &amp; Mentorship</strong> under NextGen Supercomputing Club</li>
           </ul>
 
           <div class="btn-wrapper">
@@ -321,7 +320,7 @@ class MailService {
     console.log(`⏰ [MAIL DISPATCH] 24-Hour Registration Reminder`);
     console.log(`🎯 Recipient: ${toEmail} (${name})`);
 
-    const reminderPlainText = `Greetings, Cadet ${name}!\n\nWe noticed you initiated your clearance for AmongU Hackathon 2026, but your registration has not yet been completed.\n\nSeats are allocated on a strictly first-come, first-served basis. Secure your spot now:\nhttps://amongu.vercel.app/portal/cadet-clearance-7b92\n\nEvent Highlights:\n- INR 10,000 Cash Prize Pool\n- Social Deduction Hackathon Mechanics\n- Food, Fuel & Crewmate Swag\n- Squad Formations & Mentorship\n\nAmongU Hackathon 2026 • Organized by NextGen Supercomputing Club • KIET Deemed to be University`;
+    const reminderPlainText = `Greetings, Cadet ${name}!\n\nWe noticed you initiated your clearance for AmongU Hackathon 2026, but your registration has not yet been completed.\n\nSeats are allocated on a strictly first-come, first-served basis. Secure your spot now:\nhttps://amongu.vercel.app/portal/cadet-clearance-7b92\n\nEvent Highlights:\n- INR 25,000 Cash Prize Pool\n- Social Deduction Hackathon Mechanics\n- Squad Formations & Mentorship\n\nAmongU Hackathon 2026 • Organized by NextGen Supercomputing Club • KIET Deemed to be University`;
 
     if (this.isConfigured && this.transporter) {
       try {

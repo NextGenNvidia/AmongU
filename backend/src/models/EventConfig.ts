@@ -33,7 +33,7 @@ const eventConfigSchema = new Schema<IEventConfig>(
     },
     eventStartDate: {
       type: String,
-      default: '2026-10-28T09:00:00+05:30',
+      default: '2026-11-28T09:00:00+05:30',
       trim: true,
     },
     venue: {
@@ -43,7 +43,7 @@ const eventConfigSchema = new Schema<IEventConfig>(
     },
     registrationOpen: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     registrationFeeINR: {
       type: Number,
@@ -51,7 +51,7 @@ const eventConfigSchema = new Schema<IEventConfig>(
     },
     prizePool: {
       type: String,
-      default: '₹10,000',
+      default: '₹25,000',
       trim: true,
     },
     activeCheckInToken: {

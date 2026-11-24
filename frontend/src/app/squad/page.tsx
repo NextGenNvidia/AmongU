@@ -41,7 +41,7 @@ export default function SquadPage() {
   }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
 
   useEffect(() => {
-    let target = new Date('2026-10-28T09:00:00+05:30').getTime();
+    let target = new Date('2026-11-28T09:00:00+05:30').getTime();
 
     const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
     const cleanApi = rawApiUrl.replace(/\/api\/?$/, '');
@@ -603,7 +603,7 @@ export default function SquadPage() {
                     : 'EVENT LIFTOFF IN PROGRESS'}
                 </span>
                 <span className="text-[11px] text-gray-500 block mt-1">
-                  Target: October 28, 2026 • 09:00 AM IST
+                  Target: November 28, 2026 • 09:00 AM IST
                 </span>
               </div>
 

@@ -16,7 +16,7 @@ export default function AmongUHomePage() {
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [modalAuthError, setModalAuthError] = useState<string | null>(null);
 
-  // Countdown to October 28, 2026 (09:00 AM IST)
+  // Countdown to November 28, 2026 (09:00 AM IST)
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
     days: 0,
     hours: 0,
@@ -25,7 +25,7 @@ export default function AmongUHomePage() {
   });
 
   useEffect(() => {
-    let target = new Date('2026-10-28T09:00:00+05:30').getTime();
+    let target = new Date('2026-11-28T09:00:00+05:30').getTime();
 
     const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || '';
     const cleanApi = rawApiUrl.replace(/\/api\/?$/, '');
@@ -61,7 +61,11 @@ export default function AmongUHomePage() {
       return;
     }
 
-    router.push('/dashboard');
+    if (isRegistered || profile?.hasRegistered) {
+      router.push('/dashboard');
+    } else {
+      router.push('/portal/cadet-clearance-7b92');
+    }
   };
 
   const handleSignInWithGoogle = async () => {
@@ -76,7 +80,14 @@ export default function AmongUHomePage() {
       }
 
       setShowSignInModal(false);
-      router.push('/dashboard');
+
+      if (loggedIn.hasRegistered) {
+        console.log('✅ Cadet already registered, redirecting to dashboard');
+        router.push('/dashboard');
+      } else {
+        console.log('🚀 Cadet authenticated and unregistered, taking to registration clearance screen');
+        router.push('/portal/cadet-clearance-7b92');
+      }
     } catch (err: any) {
       console.error('Sign-in error from modal:', err);
       setModalAuthError(
@@ -227,20 +238,12 @@ export default function AmongUHomePage() {
                       </Link>
                     </>
                   ) : (
-                    <div className="relative group inline-block">
-                      <button
-                        type="button"
-                        disabled
-                        className="au-btn bg-gray-800 text-gray-400 border border-red-500/60 font-display text-xs py-2 px-3 rounded-full flex items-center gap-1.5 cursor-not-allowed opacity-80 select-none group-hover:border-red-500 group-hover:text-red-300"
-                        title="Registration Closed"
-                      >
-                        <span className="line-through decoration-red-500 font-bold">REGISTER</span>
-                        <span>🔒</span>
-                      </button>
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex items-center gap-1 px-2.5 py-1 bg-red-950/95 border border-red-500 text-red-200 text-xs font-mono font-bold rounded-xl whitespace-nowrap shadow-xl pointer-events-none z-50">
-                        Registration Closed
-                      </div>
-                    </div>
+                    <Link
+                      href="/portal/cadet-clearance-7b92"
+                      className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-sm py-2 px-4 rounded-full flex items-center gap-1.5 transition-all"
+                    >
+                      <span>REGISTER</span>
+                    </Link>
                   )}
                   <button
                     type="button"
@@ -251,34 +254,13 @@ export default function AmongUHomePage() {
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <div className="relative group inline-block">
-                    <button
-                      type="button"
-                      disabled
-                      className="au-btn bg-gray-800 text-gray-400 border-2 border-red-500/60 font-display text-sm py-2 px-5 rounded-full flex items-center gap-1.5 cursor-not-allowed opacity-80 select-none transition-all group-hover:border-red-500 group-hover:text-red-300"
-                      title="The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience."
-                    >
-                      <span className="line-through decoration-red-500 font-bold">REGISTER</span>
-                      <span className="text-xs">🔒</span>
-                    </button>
-                    <div className="absolute top-full right-0 mt-2 hidden group-hover:flex flex-col items-start w-[320px] sm:w-[420px] p-3.5 bg-gray-950/95 border-2 border-red-500 text-red-100 rounded-2xl shadow-[0_0_25px_rgba(239,68,68,0.7)] backdrop-blur-md pointer-events-none z-50 text-left">
-                      <div className="flex items-center gap-1.5 text-crew-yellow font-display text-xs font-bold uppercase mb-1.5 border-b border-red-900/60 pb-1 w-full">
-                        <span>📢</span> Important Notice
-                      </div>
-                      <p className="text-xs font-sans font-medium text-gray-200 leading-relaxed">
-                        The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRegisterClick}
-                    className="au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-sm py-2 px-4 rounded-full flex items-center gap-2 shadow-[0_0_12px_rgba(6,182,212,0.6)] hover:scale-105 transition-all cursor-pointer font-bold"
-                  >
-                    <span>LOGIN</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleRegisterClick}
+                  className="au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-sm py-2 px-5 rounded-full flex items-center gap-2 shadow-[0_0_12px_rgba(80,239,57,0.8)] hover:scale-105 transition-all cursor-pointer font-bold"
+                >
+                  <span>REGISTER</span>
+                </button>
               )}
             </div>
             <div className="md:hidden flex items-center gap-2">
@@ -298,29 +280,13 @@ export default function AmongUHomePage() {
                   </Link>
                 </>
               ) : (
-                <div className="flex items-center gap-1.5">
-                  <div className="relative group inline-block">
-                    <button
-                      type="button"
-                      disabled
-                      className="au-btn bg-gray-800 text-gray-400 border border-red-500/60 font-display text-xs py-1.5 px-2.5 rounded-full flex items-center gap-1 cursor-not-allowed opacity-80 select-none group-hover:border-red-500 group-hover:text-red-300"
-                      title="Registration Closed"
-                    >
-                      <span className="line-through decoration-red-500 text-[11px] font-bold">REGISTER</span>
-                      <span className="text-[10px]">🔒</span>
-                    </button>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 hidden group-hover:flex items-center gap-1 px-2 py-0.5 bg-red-950/95 border border-red-500 text-red-200 text-[10px] font-mono font-bold rounded-lg whitespace-nowrap shadow-xl pointer-events-none z-50">
-                      Registration Closed
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRegisterClick}
-                    className="au-btn bg-crew-cyan text-black font-display text-xs py-1.5 px-2.5 rounded-full flex items-center gap-1 cursor-pointer font-bold"
-                  >
-                    <span>LOGIN</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleRegisterClick}
+                  className="au-btn bg-crew-lime text-black font-display text-xs py-1.5 px-3 rounded-full flex items-center gap-1.5 cursor-pointer font-bold"
+                >
+                  <span>REGISTER</span>
+                </button>
               )}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -380,32 +346,16 @@ export default function AmongUHomePage() {
               >
                 FAQ
               </a>
-              <div className="relative group w-full mt-2">
-                <button
-                  type="button"
-                  disabled
-                  className="w-full au-btn bg-gray-900 text-gray-400 border-2 border-red-600/70 font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed opacity-85 select-none group-hover:border-red-500 group-hover:text-red-300"
-                  title="Registration Closed"
-                >
-                  <span className="line-through decoration-red-500 font-bold">REGISTER</span>
-                  <span>🔒</span>
-                </button>
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1.5 px-3 py-1 bg-red-950/95 border border-red-500 text-red-200 text-xs font-mono font-bold rounded-xl whitespace-nowrap shadow-xl pointer-events-none z-50">
-                  <span>⚠️</span> Registration Closed
-                </div>
-              </div>
-              {!firebaseUser && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleRegisterClick();
-                  }}
-                  className="w-full au-btn bg-crew-cyan hover:bg-cyan-300 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 cursor-pointer font-bold"
-                >
-                  <span>CADET LOGIN →</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleRegisterClick();
+                }}
+                className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-base py-3 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 shadow-[0_0_12px_rgba(80,239,57,0.8)] cursor-pointer font-bold"
+              >
+                <span>{firebaseUser ? (isRegistered || profile?.hasRegistered ? 'MISSION DASHBOARD' : 'REGISTER') : 'REGISTER'}</span>
+              </button>
 
               {firebaseUser && (isRegistered || profile?.hasRegistered) && (
                 <>
@@ -483,25 +433,32 @@ export default function AmongUHomePage() {
             </p>
 
             <p className="text-lg md:text-2xl text-gray-300 max-w-3xl mx-auto font-bold mb-6 bg-black/50 p-4 rounded-xl au-border">
-              To Be Announced • KIET Deemed to be University
+              November 28, 2026 • KIET Deemed to be University
             </p>
 
-            {/* Mission Liftoff Status */}
+            {/* Live Event Countdown to November 28, 2026 */}
             <div className="mb-8 max-w-xl mx-auto w-full px-2">
               <div className="bg-black/80 au-border rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(56,254,220,0.25)] border-2 border-crew-cyan">
                 <div className="flex items-center justify-center gap-2 text-crew-cyan font-mono text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">
                   <span className="w-2.5 h-2.5 rounded-full bg-crew-lime animate-ping"></span>
-                  <span>MISSION LIFTOFF</span>
+                  <span>MISSION LIFTOFF COUNTDOWN</span>
                 </div>
-                <div className="bg-gray-900/90 au-border rounded-xl p-4 sm:p-5 text-center">
-                  <div
-                    className="font-display text-2xl sm:text-4xl font-black text-crew-yellow tracking-wider"
-                    style={{ textShadow: '2px 2px 0 #000' }}
-                  >
-                    TO BE ANNOUNCED
+                <div className="grid grid-cols-4 gap-2 sm:gap-4 text-center">
+                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
+                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-lime">{timeLeft.days}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Days</div>
                   </div>
-                  <div className="text-xs sm:text-sm font-mono font-bold text-gray-400 uppercase mt-2">
-                    Postponed Until After Diwali • Revised Date Coming Soon
+                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
+                    <div className="font-mono text-2xl sm:text-4xl font-black text-white">{timeLeft.hours.toString().padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Hours</div>
+                  </div>
+                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
+                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-cyan">{timeLeft.minutes.toString().padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Mins</div>
+                  </div>
+                  <div className="bg-gray-900/90 au-border rounded-xl p-2 sm:p-3">
+                    <div className="font-mono text-2xl sm:text-4xl font-black text-crew-yellow">{timeLeft.seconds.toString().padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase mt-1">Secs</div>
                   </div>
                 </div>
               </div>
@@ -527,28 +484,20 @@ export default function AmongUHomePage() {
                 </>
               ) : (
                 <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mt-2">
-                  <div className="relative group inline-block">
-                    <button
-                      type="button"
-                      disabled
-                      className="au-btn bg-gray-900 border-4 border-red-600/70 text-gray-400 font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 cursor-not-allowed shadow-[0_0_20px_rgba(239,68,68,0.3)] opacity-85 select-none transition-all group-hover:border-red-500 group-hover:text-red-300 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]"
-                      title="The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience."
-                    >
-                      <span className="line-through decoration-red-500 font-black">REGISTER NOW</span>
-                      <span className="text-xl">🔒</span>
-                    </button>
-                    {/* Hover Postponement Notice */}
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 hidden group-hover:flex flex-col items-start w-[320px] sm:w-[460px] max-w-[90vw] p-4 bg-gray-950/95 border-2 border-red-500 text-red-100 rounded-2xl shadow-[0_0_35px_rgba(239,68,68,0.85)] backdrop-blur-md pointer-events-none z-50 text-left">
-                      <div className="flex items-center gap-2 text-crew-yellow font-display text-xs sm:text-sm font-black uppercase tracking-wider mb-2 border-b border-red-900/60 pb-1.5 w-full">
-                        <span>📢</span>
-                        <span>IMPORTANT NOTICE</span>
-                      </div>
-                      <p className="text-xs sm:text-sm font-sans font-semibold text-gray-200 leading-relaxed">
-                        The AmongU Hackathon, scheduled for 28th October, has been postponed until after Diwali due to overlapping events and InnoTech commitments. Please note that the hackathon is not cancelled. The revised date will be announced soon. We regret the inconvenience.
-                      </p>
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-red-500"></div>
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRegisterClick}
+                    className="au-btn bg-crew-red hover:bg-red-500 text-white font-display text-xl sm:text-2xl py-4 px-8 sm:px-10 rounded-full flex items-center gap-3 shadow-[0_0_25px_rgba(197,17,17,0.8)] animate-pulse hover:animate-none transition-all cursor-pointer font-bold"
+                  >
+                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                    <span>REGISTER NOW</span>
+                  </button>
 
                   <button
                     type="button"
@@ -1019,14 +968,11 @@ export default function AmongUHomePage() {
             </div>
 
             <h3 className="font-display text-2xl sm:text-3xl text-white mb-2" style={{ textShadow: '2px 2px 0 #000' }}>
-              CADET SIGN IN
+              SIGN IN TO REGISTER
             </h3>
-            <p className="text-gray-300 font-bold text-xs sm:text-sm mb-3 leading-relaxed">
-              Registrations are officially closed. Sign in with your registered KIET Google account to access your Mission Dashboard.
+            <p className="text-gray-300 font-bold text-xs sm:text-sm mb-5 leading-relaxed">
+              Sign in with your official KIET Google account to proceed to hackathon registration.
             </p>
-            <div className="bg-amber-950/80 border border-amber-500/80 rounded-xl p-2.5 mb-5 text-amber-200 text-xs font-bold text-center">
-              ⚠️ Notice: We are no longer accepting any new registrations.
-            </div>
 
             {/* KIET Domain Notice */}
             <div className="bg-black/60 border border-gray-800 rounded-2xl p-3.5 mb-5 text-left text-xs font-mono">

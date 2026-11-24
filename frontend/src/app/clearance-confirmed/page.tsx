@@ -217,7 +217,7 @@ function ClearanceConfirmedContent() {
                 </div>
                 <div className="flex justify-between items-center pt-1 text-xs sm:text-sm">
                   <span className="text-gray-400">Event Date:</span>
-                  <span className="text-crew-yellow font-bold">OCTOBER 28, 2026 • 09:00 AM IST</span>
+                  <span className="text-crew-yellow font-bold">NOVEMBER 28, 2026 • 09:00 AM IST</span>
                 </div>
               </div>
 
