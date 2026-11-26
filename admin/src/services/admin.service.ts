@@ -146,4 +146,12 @@ export const adminService = {
     const res = await apiClient.delete(`/admin/announcements/${id}`);
     return res.data;
   },
+
+  // Export registrations and cadets CSV from backend
+  exportRegistrationsCsv: async (type: 'registered' | 'all' | 'pending' = 'registered'): Promise<Blob> => {
+    const res = await apiClient.get(`/admin/export/csv?type=${type}`, {
+      responseType: 'blob',
+    });
+    return res.data;
+  },
 };

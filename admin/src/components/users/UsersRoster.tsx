@@ -39,6 +39,10 @@ export default function UsersRoster({
   // User currently having their block status toggled
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
+  // CSV Export State
+  const [isExportingCsv, setIsExportingCsv] = useState<boolean>(false);
+  const [csvMenuOpen, setCsvMenuOpen] = useState<boolean>(false);
+
   // Stats calculation
   const totalCount = users.length;
   const registeredCount = useMemo(() => users.filter((u) => u.hasRegistered).length, [users]);
@@ -172,6 +176,105 @@ export default function UsersRoster({
     }
   };
 
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    }, 100);
+  };
+
+  const handleExportServerCsv = async (type: 'registered' | 'all' | 'pending' = 'registered') => {
+    try {
+      setIsExportingCsv(true);
+      setCsvMenuOpen(false);
+      const filename =
+        type === 'registered'
+          ? `amongu-confirmed-registrations-${new Date().toISOString().slice(0, 10)}.csv`
+          : type === 'pending'
+          ? `amongu-pending-users-${new Date().toISOString().slice(0, 10)}.csv`
+          : `amongu-all-users-${new Date().toISOString().slice(0, 10)}.csv`;
+
+      showToast(`Generating ${filename}...`, 'success');
+      const blob = await adminService.exportRegistrationsCsv(type);
+      downloadBlob(blob, filename);
+      showToast(`Downloaded ${filename} successfully!`, 'success');
+    } catch (err: any) {
+      console.error('Error downloading CSV:', err);
+      showToast(err?.response?.data?.message || err?.message || 'Failed to download CSV', 'error');
+    } finally {
+      setIsExportingCsv(false);
+    }
+  };
+
+  const handleExportFilteredCsv = () => {
+    try {
+      if (filteredUsers.length === 0) {
+        showToast('No users in current filter to export', 'error');
+        return;
+      }
+      setCsvMenuOpen(false);
+      const headers = [
+        'Cadet Name',
+        'Official Email',
+        'Registration Status',
+        'College ID',
+        'Year',
+        'Branch',
+        'Section',
+        'WhatsApp Phone',
+        'Track',
+        'Fee Paid (INR)',
+        'Payment ID',
+        'Attendance',
+        'Account Status',
+        'First Logged In',
+        'Registered At',
+        'Last 24h Reminder',
+        'Firebase UID',
+      ];
+
+      const escapeField = (val: any) => {
+        if (val === null || val === undefined) return '""';
+        return `"${String(val).replace(/"/g, '""')}"`;
+      };
+
+      const rows = filteredUsers.map((u) => [
+        escapeField(u.name || ''),
+        escapeField(u.email || ''),
+        escapeField(u.hasRegistered ? 'Registered (Paid)' : 'Pending (Unpaid)'),
+        escapeField(u.registration?.collegeId || ''),
+        escapeField(u.registration?.year || ''),
+        escapeField(u.registration?.branch || ''),
+        escapeField(u.registration?.section || ''),
+        escapeField(u.registration?.phone || ''),
+        escapeField(u.registration?.track || ''),
+        escapeField(u.hasRegistered ? (u.registration?.amount || 55) : 0),
+        escapeField(u.registration?.paymentId || ''),
+        escapeField(u.registration?.isPresent ? 'Present' : 'Absent'),
+        escapeField(u.isBlocked ? 'Blocked' : 'Active'),
+        escapeField(u.createdAt ? new Date(u.createdAt).toLocaleString('en-IN') : ''),
+        escapeField(u.registration?.registeredAt ? new Date(u.registration.registeredAt).toLocaleString('en-IN') : ''),
+        escapeField(u.lastReminderSentAt ? new Date(u.lastReminderSentAt).toLocaleString('en-IN') : ''),
+        escapeField(u.firebaseUid || ''),
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const filename = `amongu-filtered-cadets-${filterTab}-${new Date().toISOString().slice(0, 10)}.csv`;
+      downloadBlob(blob, filename);
+      showToast(`Exported ${filteredUsers.length} cadets to ${filename}!`, 'success');
+    } catch (err: any) {
+      console.error('Error exporting filtered CSV:', err);
+      showToast('Failed to export filtered list', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6 font-sans">
       {/* Toast Notification */}
@@ -211,16 +314,127 @@ export default function UsersRoster({
           </p>
         </div>
 
-        <button
-          onClick={onRefresh}
-          disabled={loading}
-          className="au-btn bg-gray-800 hover:bg-gray-700 text-crew-cyan hover:text-white font-display text-xs sm:text-sm py-2.5 px-4 rounded-xl border border-gray-700 flex items-center gap-2 transition-all cursor-pointer"
-        >
-          <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span>{loading ? 'SYNCING...' : 'REFRESH ROSTER'}</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* CSV Export Dropdown Button */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setCsvMenuOpen(!csvMenuOpen)}
+              disabled={isExportingCsv || users.length === 0}
+              className="au-btn bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 hover:text-white font-display text-xs sm:text-sm py-2.5 px-4 rounded-xl border border-emerald-600/60 shadow-[0_0_15px_rgba(16,185,129,0.25)] flex items-center gap-2 transition-all cursor-pointer font-bold disabled:opacity-50"
+            >
+              {isExportingCsv ? (
+                <svg className="w-4 h-4 animate-spin text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              )}
+              <span>{isExportingCsv ? 'EXPORTING...' : 'DOWNLOAD CSV'}</span>
+              <svg className={`w-3.5 h-3.5 text-emerald-400 transition-transform ${csvMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Backdrop to dismiss dropdown */}
+            {csvMenuOpen && (
+              <div
+                className="fixed inset-0 z-30"
+                onClick={() => setCsvMenuOpen(false)}
+              />
+            )}
+
+            {/* Dropdown Menu */}
+            {csvMenuOpen && (
+              <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-gray-950 border-2 border-emerald-700/80 rounded-2xl p-2 shadow-[0_10px_35px_rgba(0,0,0,0.8)] z-40 animate-in fade-in zoom-in-95 space-y-1">
+                <div className="px-3 py-2 border-b border-gray-800">
+                  <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                    CADET DATA EXPORTS
+                  </p>
+                  <p className="text-[10px] text-gray-400 font-sans">
+                    Download complete spreadsheet for Excel / Google Sheets
+                  </p>
+                </div>
+
+                {/* Option 1: Confirmed Registrations */}
+                <button
+                  type="button"
+                  onClick={() => handleExportServerCsv('registered')}
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-emerald-950/60 transition-colors flex items-start gap-2.5 cursor-pointer group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-emerald-900/50 border border-emerald-500/40 flex items-center justify-center text-emerald-300 shrink-0 mt-0.5 group-hover:bg-emerald-500 group-hover:text-black transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs font-display font-bold text-white group-hover:text-emerald-300">
+                      Confirmed Registrations (CSV)
+                    </p>
+                    <p className="text-[10px] text-gray-400 leading-tight">
+                      Official ₹55 paid cadets with Roll No, Branch, Track, Phone &amp; Team ({registeredCount} records)
+                    </p>
+                  </div>
+                </button>
+
+                {/* Option 2: All Logged-in Cadets */}
+                <button
+                  type="button"
+                  onClick={() => handleExportServerCsv('all')}
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-gray-900 transition-colors flex items-start gap-2.5 cursor-pointer group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center text-crew-cyan shrink-0 mt-0.5 group-hover:bg-crew-cyan group-hover:text-black transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs font-display font-bold text-white group-hover:text-crew-cyan">
+                      All Logged-in Cadets (CSV)
+                    </p>
+                    <p className="text-[10px] text-gray-400 leading-tight">
+                      Complete database roster including unpaid signups ({totalCount} total cadets)
+                    </p>
+                  </div>
+                </button>
+
+                {/* Option 3: Current Filtered View */}
+                <button
+                  type="button"
+                  onClick={handleExportFilteredCsv}
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-gray-900 transition-colors flex items-start gap-2.5 cursor-pointer group border-t border-gray-800/80"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-yellow-950/40 border border-yellow-500/40 flex items-center justify-center text-crew-yellow shrink-0 mt-0.5 group-hover:bg-crew-yellow group-hover:text-black transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs font-display font-bold text-white group-hover:text-crew-yellow">
+                      Current Filtered View (CSV)
+                    </p>
+                    <p className="text-[10px] text-gray-400 leading-tight">
+                      Exports only what is currently showing ({filteredUsers.length} cadets)
+                    </p>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={onRefresh}
+            disabled={loading}
+            className="au-btn bg-gray-800 hover:bg-gray-700 text-crew-cyan hover:text-white font-display text-xs sm:text-sm py-2.5 px-4 rounded-xl border border-gray-700 flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>{loading ? 'SYNCING...' : 'REFRESH ROSTER'}</span>
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats Cards */}
@@ -444,6 +658,20 @@ export default function UsersRoster({
             }`}
           >
             Blocked ({blockedCount})
+          </button>
+
+          {/* Quick Filter CSV Export */}
+          <button
+            type="button"
+            onClick={handleExportFilteredCsv}
+            disabled={filteredUsers.length === 0}
+            title="Download CSV of the currently active table list"
+            className="px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-white border border-emerald-600/50 flex items-center gap-1.5 transition-all cursor-pointer ml-1 disabled:opacity-40"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>EXPORT CSV ({filteredUsers.length})</span>
           </button>
         </div>
       </div>

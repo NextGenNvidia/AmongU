@@ -5,7 +5,7 @@ import { User } from '../models/User';
 import { EventConfig } from '../models/EventConfig';
 import { env } from '../config/env';
 import { firebaseAuth } from '../config/firebase';
-import { convertRegistrationsToCsv } from '../utils/csvExporter';
+import { convertRegistrationsToCsv, convertUsersToCsv } from '../utils/csvExporter';
 import { reminderService } from '../services/reminder.service';
 import { generateAdminSessionToken } from '../utils/adminAuth';
 
@@ -235,13 +235,70 @@ export const getStats = async (_req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const exportRegistrationsCsv = async (_req: Request, res: Response): Promise<void> => {
+export const exportRegistrationsCsv = async (req: Request, res: Response): Promise<void> => {
   try {
+    const type = (req.query.type as string) || 'registered';
+
+    if (type === 'all' || type === 'pending') {
+      const users = await User.find().sort({ createdAt: -1 }).lean();
+      const registrations = await Registration.find().lean();
+
+      const regByUid = new Map<string, any>();
+      const regByEmail = new Map<string, any>();
+      registrations.forEach((r) => {
+        if (r.firebaseUid) regByUid.set(r.firebaseUid, r);
+        if (r.email) regByEmail.set(r.email.toLowerCase(), r);
+      });
+
+      const enrichedUsers = users.map((u) => {
+        const reg = regByUid.get(u.firebaseUid) || regByEmail.get(u.email.toLowerCase()) || null;
+        return {
+          id: u._id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          isBlocked: Boolean(u.isBlocked),
+          firebaseUid: u.firebaseUid,
+          createdAt: u.createdAt,
+          updatedAt: u.updatedAt,
+          lastReminderSentAt: u.lastReminderSentAt || null,
+          hasRegistered: Boolean(reg && reg.paymentStatus === 'success'),
+          registration: reg
+            ? {
+                collegeId: reg.collegeId,
+                branch: reg.branch,
+                year: reg.year,
+                section: reg.section,
+                phone: reg.phone,
+                track: reg.notes?.includes('Track:') ? reg.notes.split('Track:')[1]?.trim() : (reg as any).track || 'Web Development',
+                paymentStatus: reg.paymentStatus,
+                amount: reg.amount,
+                paymentId: reg.razorpayPaymentId,
+                registeredAt: reg.createdAt,
+                isPresent: reg.isPresent,
+              }
+            : null,
+        };
+      });
+
+      const targetUsers = type === 'pending'
+        ? enrichedUsers.filter((u) => !u.hasRegistered)
+        : enrichedUsers;
+
+      const csvData = convertUsersToCsv(targetUsers);
+      const filename = type === 'pending' ? 'amongu-pending-users.csv' : 'amongu-all-users.csv';
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.status(200).send(csvData);
+      return;
+    }
+
     const registrations = await Registration.find().sort({ createdAt: -1 });
     const csvData = convertRegistrationsToCsv(registrations);
 
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="amongu-registrations.csv"');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="amongu-registered-cadets.csv"');
     res.status(200).send(csvData);
   } catch (error: any) {
     console.error('Admin CSV Export Error:', error);
