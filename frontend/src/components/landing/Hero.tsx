@@ -28,7 +28,7 @@ export const Hero: React.FC<HeroProps> = ({ onJoinClick, feeINR = 55 }) => {
           </h1>
 
           <p className="mt-4 text-xl md:text-3xl text-gray-300 max-w-3xl mx-auto font-bold mb-8 bg-black/50 p-4 rounded-xl au-border">
-            November 28, 2026 • Registration Fee: ₹{feeINR}
+            November 28, 2026 • <span className="text-crew-red">🔴 Registrations Closed</span>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-6">

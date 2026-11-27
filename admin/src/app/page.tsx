@@ -8,6 +8,7 @@ import EventSettings from '../components/settings/EventSettings';
 import TeamsManager from '../components/teams/TeamsManager';
 import VenueQRPass from '../components/venue/VenueQRPass';
 import AnnouncementsManager from '../components/announcements/AnnouncementsManager';
+import RefundsManager from '../components/refunds/RefundsManager';
 import { adminService } from '../services/admin.service';
 import { LoggedInUserRecord } from '../types';
 
@@ -15,7 +16,7 @@ export default function AdminDashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'users' | 'settings' | 'teams' | 'venue-qr' | 'announcements'>('users');
+  const [currentTab, setCurrentTab] = useState<'users' | 'settings' | 'teams' | 'venue-qr' | 'announcements' | 'refunds'>('users');
 
   // Users State
   const [users, setUsers] = useState<LoggedInUserRecord[]>([]);
@@ -213,6 +214,24 @@ export default function AdminDashboardPage() {
 
             <button
               onClick={() => {
+                setCurrentTab('refunds');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-between p-3 rounded-xl font-display text-sm ${
+                currentTab === 'refunds' ? 'bg-amber-400 text-black font-bold' : 'bg-gray-900 text-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Refunds</span>
+              </div>
+              <span className="text-xs font-mono text-amber-300">Claims</span>
+            </button>
+
+            <button
+              onClick={() => {
                 setCurrentTab('settings');
                 setMobileMenuOpen(false);
               }}
@@ -256,6 +275,8 @@ export default function AdminDashboardPage() {
             <VenueQRPass onCheckInUpdate={loadUsers} />
           ) : currentTab === 'announcements' ? (
             <AnnouncementsManager />
+          ) : currentTab === 'refunds' ? (
+            <RefundsManager />
           ) : (
             <EventSettings />
           )}

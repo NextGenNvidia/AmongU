@@ -22,6 +22,10 @@ import {
   createAnnouncement,
   deleteAnnouncement,
 } from '../controllers/announcement.controller';
+import {
+  getAllRefundRequests,
+  updateRefundStatus,
+} from '../controllers/refund.controller';
 import { verifyAuth } from '../middlewares/auth';
 import { requireAdmin } from '../middlewares/admin';
 import {
@@ -79,5 +83,9 @@ router.post('/reminders/toggle', toggleReminderStatus);
 router.get('/announcements', getAnnouncements);
 router.post('/announcements', createAnnouncement);
 router.delete('/announcements/:id', deleteAnnouncement);
+
+// Cadet Refund Requests Management
+router.get('/refunds', getAllRefundRequests);
+router.patch('/refunds/:id/status', updateRefundStatus);
 
 export default router;

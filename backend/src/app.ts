@@ -8,6 +8,7 @@ import registrationRoutes from './routes/registration.routes';
 import adminRoutes from './routes/admin.routes';
 import teamRoutes from './routes/team.routes';
 import announcementRoutes from './routes/announcement.routes';
+import refundRoutes from './routes/refund.routes';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app: Application = express();
@@ -39,8 +40,8 @@ app.use(
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // Body parsers
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Health & System Info
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -64,6 +65,7 @@ app.use('/api/registrations', registrationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/refunds', refundRoutes);
 
 // 404 Handler for undefined routes
 app.use((_req: Request, res: Response) => {

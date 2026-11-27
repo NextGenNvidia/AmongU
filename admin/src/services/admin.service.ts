@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import { AdminLoginResponse, LoggedInUserRecord } from '../types';
+import { AdminLoginResponse, LoggedInUserRecord, RefundRequestRecord } from '../types';
 
 export const adminService = {
   // Login with Admin ID and Password
@@ -152,6 +152,25 @@ export const adminService = {
     const res = await apiClient.get(`/admin/export/csv?type=${type}`, {
       responseType: 'blob',
     });
+    return res.data;
+  },
+
+  // Refunds Management
+  getRefunds: async (params?: { status?: string; search?: string }): Promise<{
+    success: boolean;
+    total: number;
+    counts: { pending: number; approved: number; rejected: number; total: number };
+    refunds: RefundRequestRecord[];
+  }> => {
+    const res = await apiClient.get('/admin/refunds', { params });
+    return res.data;
+  },
+
+  updateRefundStatus: async (
+    id: string,
+    data: { status: 'approved' | 'rejected'; rejectionReason?: string; adminNotes?: string }
+  ): Promise<{ success: boolean; message: string; refund: RefundRequestRecord }> => {
+    const res = await apiClient.patch(`/admin/refunds/${id}/status`, data);
     return res.data;
   },
 };

@@ -68,6 +68,29 @@ export interface TeamMember {
   isPresent?: boolean;
 }
 
+export interface RefundRequestRecord {
+  _id: string;
+  userId: string;
+  firebaseUid: string;
+  registrationId?: string;
+  name: string;
+  email: string;
+  phone: string;
+  collegeId?: string;
+  amount: number;
+  paymentId?: string;
+  upiId: string;
+  reason: string;
+  screenshotUrl?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  adminNotes?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TeamRecord {
   _id?: string;
   teamId: string;

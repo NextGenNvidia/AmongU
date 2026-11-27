@@ -35,7 +35,7 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [confirmedRegistration, setConfirmedRegistration] = useState<RegistrationRecord | null>(null);
 
-  // Sync email & name when user logs in
+  // Check registration status on login
   React.useEffect(() => {
     if (profile) {
       setFormData((prev) => ({
@@ -43,6 +43,15 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
         name: prev.name || profile.name || '',
         email: profile.email || prev.email,
       }));
+
+      // Check if already registered
+      registrationService.getMyStatus()
+        .then((res) => {
+          if (res.success && res.registration) {
+            setConfirmedRegistration(res.registration);
+          }
+        })
+        .catch(() => {});
     }
   }, [profile]);
 
@@ -234,130 +243,38 @@ export const EmergencyMeetingModal: React.FC<EmergencyMeetingModalProps> = ({
             </button>
           </div>
         ) : (
-          /* Case 3: Registration Form */
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-crew-cyan font-bold mb-1 text-sm">Full Name (First &amp; Last)</label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan"
-                placeholder="e.g. John Doe"
-              />
+          /* Case 3: Registrations Closed Notice */
+          <div className="text-center py-4 space-y-4">
+            <div className="p-4 rounded-2xl bg-red-950/40 border-2 border-crew-red text-center space-y-2">
+              <span className="text-4xl">🛑</span>
+              <h4 className="font-display text-2xl text-crew-red">REGISTRATIONS CLOSED</h4>
+              <p className="text-gray-300 text-sm font-bold">
+                The dropship doors have sealed! All cadet slots for AmongU have been filled and registrations are officially closed.
+              </p>
             </div>
 
-            <div>
-              <label className="block text-crew-cyan font-bold mb-1 text-sm">College ID / Roll No. (Max 15 Characters)</label>
-              <input
-                type="text"
-                required
-                maxLength={15}
-                value={formData.collegeId}
-                onChange={(e) => setFormData({ ...formData, collegeId: e.target.value })}
-                className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan font-mono"
-                placeholder="e.g. 2630btech... or Roll Number"
-              />
+            <div className="bg-black/60 au-border rounded-xl p-4 text-xs text-gray-400 space-y-2 text-left">
+              <p className="font-bold text-gray-300">ℹ️ Already paid earlier?</p>
+              <p>
+                If you completed your registration fee or have a pending transaction and wish to claim a refund, you can submit your details and payment screenshot on the official Refund Portal.
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-crew-cyan font-bold mb-1 text-sm">Year</label>
-                <select
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: e.target.value as '1' | '2' | '3' | '4' })}
-                  className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan"
-                >
-                  {ALLOWED_YEARS.map((y) => (
-                    <option key={y} value={y}>
-                      Year {y}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-crew-cyan font-bold mb-1 text-sm">Section</label>
-                <select
-                  value={formData.section}
-                  onChange={(e) =>
-                    setFormData({ ...formData, section: e.target.value as 'A' | 'B' | 'C' | 'D' | 'E' })
-                  }
-                  className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan"
-                >
-                  {ALLOWED_SECTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      Section {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-crew-cyan font-bold mb-1 text-sm">Branch</label>
-              <select
-                value={formData.branch}
-                onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan font-bold uppercase text-sm"
-              >
-                {ALLOWED_BRANCHES.map((b) => (
-                  <option key={b} value={b} className="font-bold uppercase bg-gray-900 text-white">
-                    {b}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-crew-cyan font-bold mb-1 text-sm">WhatsApp Number</label>
-                <input
-                  type="tel"
-                  required
-                  maxLength={10}
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-black au-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-crew-cyan font-mono"
-                  placeholder="9876543210"
-                />
-              </div>
-
-              <div>
-                <label className="block text-crew-cyan font-bold mb-1 text-sm">KIET Email</label>
-                <input
-                  type="email"
-                  required
-                  value={formData.email}
-                  readOnly
-                  className="w-full bg-gray-900 au-border rounded-xl px-4 py-2.5 text-gray-300 focus:outline-none font-mono text-xs"
-                />
-              </div>
-            </div>
-
-            {/* Direct Razorpay Link Notice */}
-            <div className="bg-black/70 au-border rounded-xl p-3 flex items-center justify-between text-xs font-mono mt-2">
-              <span className="text-gray-400">Official Payment Link:</span>
+            <div className="flex flex-col gap-2 pt-2">
               <a
-                href="https://pages.razorpay.com/pl_Toye4lRXrvFFms/view"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-crew-cyan hover:underline font-bold flex items-center gap-1 bg-cyan-950/60 px-2.5 py-1 rounded-lg border border-crew-cyan/40"
+                href="/refund"
+                className="au-btn w-full bg-amber-400 hover:bg-amber-300 text-black font-display text-base py-3 rounded-xl flex items-center justify-center gap-2"
               >
-                <span>razorpay.com/view</span>
-                <span>↗</span>
+                <span>💰</span> GO TO REFUND PORTAL
               </a>
+              <button
+                onClick={onClose}
+                className="au-btn w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-display text-sm py-2.5 rounded-xl"
+              >
+                CLOSE
+              </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full au-btn bg-crew-lime hover:bg-green-400 text-black font-display text-lg sm:text-xl py-3.5 rounded-xl mt-4 flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(50,205,50,0.3)] hover:scale-[1.01]"
-            >
-              {submitting ? 'OPENING RAZORPAY...' : `PAY ₹${feeINR} VIA RAZORPAY ↗`}
-            </button>
-          </form>
+          </div>
         )}
       </div>
     </div>
