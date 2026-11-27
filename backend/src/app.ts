@@ -9,6 +9,7 @@ import adminRoutes from './routes/admin.routes';
 import teamRoutes from './routes/team.routes';
 import announcementRoutes from './routes/announcement.routes';
 import refundRoutes from './routes/refund.routes';
+import { EventConfig } from './models/EventConfig';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app: Application = express();
@@ -44,11 +45,18 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Health & System Info
-app.get('/api/health', (_req: Request, res: Response) => {
+app.get('/api/health', async (_req: Request, res: Response) => {
+  let isRegistrationOpen = env.REGISTRATION_OPEN;
+  try {
+    const config = await EventConfig.findOne({ key: 'main_event' });
+    if (config && typeof config.registrationOpen === 'boolean') {
+      isRegistrationOpen = config.registrationOpen;
+    }
+  } catch {}
   res.status(200).json({
     status: 'healthy',
     service: 'AmongU Backend API',
-    isRegistrationOpen: env.REGISTRATION_OPEN,
+    isRegistrationOpen,
     feeINR: env.REGISTRATION_FEE_INR,
     timestamp: new Date().toISOString(),
   });
